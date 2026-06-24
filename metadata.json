@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Калькулятор индекса SSI",
+  "description": "Калькулятор индекса самодостаточности бизнес-идеи (стартапа) по методологии TRUSEK-6 для Технопарка СКФУ",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

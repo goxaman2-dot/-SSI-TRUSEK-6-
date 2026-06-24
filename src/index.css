@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer utilities {
+  .clip-petal {
+    clip-path: ellipse(40% 50% at 50% 50%);
+  }
+}
+
+@keyframes som-card-glow {
+  0%, 100% {
+    stroke-width: var(--base-stroke, 3px);
+    stroke: var(--factor-color-stroke);
+    fill: #ffffff;
+  }
+  30%, 70% {
+    stroke-width: 18px;
+    stroke: var(--factor-color-stroke);
+    fill: var(--factor-color-bg-light, #f8fafc);
+  }
+  50% {
+    stroke-width: 28px;
+    stroke: #ffffff;
+    fill: var(--factor-color-stroke);
+  }
+}
+
+@keyframes som-petal-glow {
+  0%, 100% {
+    stroke-width: var(--base-petal-stroke, 4px);
+    fill-opacity: 0.8;
+  }
+  50% {
+    stroke-width: 18px;
+    stroke: #ffffff;
+    fill-opacity: 1.0;
+  }
+}
+
+.som-card-blink {
+  animation: som-card-glow 3.6s infinite ease-in-out;
+}
+
+.som-petal-blink {
+  animation: som-petal-glow 3.6s infinite ease-in-out;
+}
+
+@media print {
+  body, html {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Reset container styles for proper printing */
+  .container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force background colors on all elements during print rendering */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Hide tabs, tools, headers, buttons and helper widgets */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Keep important print elements clean and spaced */
+  .print\:break-inside-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+
+  .print\:border-none {
+    border: none !important;
+  }
+
+  /* Ensure the SVG is scaled appropriately for single-page print layouts */
+  svg {
+    max-height: 520px !important;
+    page-break-inside: avoid !important;
+  }
+}
+
+
