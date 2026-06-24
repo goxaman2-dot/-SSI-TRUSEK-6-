@@ -48,6 +48,7 @@ import { AIAgentTab } from './components/AIAgentTab';
 import { MarketCompareChart } from './components/MarketCompareChart';
 import { StartupReserves } from './components/StartupReserves';
 import { SalesRealismValidator } from './components/SalesRealismValidator';
+import { AuthPortal } from './components/AuthPortal';
 
 function getPastelBackground(ssi: number): { bg: string, text: string, border: string, badgeBg: string, badgeText: string } {
   if (ssi >= 8.5) {
@@ -102,6 +103,15 @@ function getPastelBackground(ssi: number): { bg: string, text: string, border: s
 }
 
 export default function App() {
+  const [user, setUser] = useState<{ name: string; email: string; phone: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem('ssi_user_auth');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [data, setData] = useState<StartupData>(() => {
     try {
       const saved = localStorage.getItem('ssi_calculator_data');
@@ -799,8 +809,8 @@ export default function App() {
                       }}
                       className={`flex-1 min-w-[75px] text-center py-2 px-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                         isActive
-                          ? 'bg-indigo-650 text-white shadow-xs font-extrabold scale-[1.01]'
-                          : 'text-slate-600 hover:text-indigo-650 hover:bg-white/80'
+                          ? 'bg-indigo-600 text-white shadow-xs font-extrabold scale-[1.01]'
+                          : 'text-slate-600 hover:text-indigo-600 hover:bg-white/80'
                       }`}
                     >
                       <span className="block sm:hidden">{step.num} этап</span>
@@ -826,7 +836,7 @@ export default function App() {
                         e.stopPropagation();
                         downloadStudentJsonTemplate();
                       }}
-                      className="mt-4 w-full bg-indigo-650 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                      className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
                       title="Скачать анкету стартапа (.JSON файл)"
                     >
                       <Download className="w-4 h-4" />
@@ -3151,7 +3161,7 @@ export default function App() {
                         </div>
                         {compareA && resultsA && (
                           <div className="mt-3 text-[11px] text-center max-w-xs text-slate-500 font-light leading-relaxed">
-                            Индекс SSI: <strong className="font-extrabold text-slate-800">{resultsA.finalSsi.toFixed(2)}</strong>. <span className="text-indigo-650 font-medium">{resultsA.interpretation.split('—')[0]}</span>
+                            Индекс SSI: <strong className="font-extrabold text-slate-800">{resultsA.finalSsi.toFixed(2)}</strong>. <span className="text-indigo-600 font-medium">{resultsA.interpretation.split('—')[0]}</span>
                           </div>
                         )}
                       </div>
