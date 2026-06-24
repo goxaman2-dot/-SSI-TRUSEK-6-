@@ -340,6 +340,132 @@ export default function App() {
     );
   };
 
+  const handleDownloadPdf = async () => {
+    showToast('⏳ Генерируем профессиональный PDF-отчет...', 'info');
+    
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: html2canvas } = await import('html2canvas');
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageHeightMm = 297;
+      const pageWidthMm = 210;
+      const marginMm = 10;
+      const contentStartY = 15;
+      const contentMaxY = 280;
+      const usableWidth = pageWidthMm - 2 * marginMm; // 190mm
+      const usableHeight = contentMaxY - contentStartY; // 265mm
+
+      // Cards we want to render in sequence
+      const cards = [
+        { id: 'pdf-results-header', name: 'Результаты' },
+        { id: 'pdf-lily-chart', name: 'Диаграмма Лилия' },
+        { id: 'pdf-factor-profile', name: 'Сводный профиль' },
+        { id: 'pdf-risk-analysis', name: 'Карта рисков' }
+      ];
+
+      let currentY = contentStartY;
+
+      for (const card of cards) {
+        const element = document.getElementById(card.id);
+        if (!element) continue;
+
+        // Render card to canvas
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+
+        const cardHeightMm = (canvas.height * usableWidth) / canvas.width;
+
+        if (cardHeightMm <= usableHeight) {
+          // Normal card that fits on one page
+          if (currentY + cardHeightMm > contentMaxY) {
+            pdf.addPage();
+            currentY = contentStartY;
+          }
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', marginMm, currentY, usableWidth, cardHeightMm, undefined, 'FAST');
+          currentY += cardHeightMm + 8;
+        } else {
+          // Tall card that needs slicing
+          let remainingHeight = canvas.height;
+          let sourceY = 0;
+
+          while (remainingHeight > 0) {
+            const currentUsableHeight = contentMaxY - currentY;
+            const currentCanvasHeight = (canvas.width * currentUsableHeight) / usableWidth;
+
+            const sliceHeight = Math.min(remainingHeight, currentCanvasHeight);
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = sliceHeight;
+            const ctx = tempCanvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(canvas, 0, sourceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+              const sliceImgData = tempCanvas.toDataURL('image/png');
+              const destHeight = (sliceHeight * usableWidth) / canvas.width;
+
+              pdf.addImage(sliceImgData, 'PNG', marginMm, currentY, usableWidth, destHeight, undefined, 'FAST');
+              currentY += destHeight;
+            }
+
+            remainingHeight -= sliceHeight;
+            sourceY += sliceHeight;
+
+            if (remainingHeight > 0) {
+              pdf.addPage();
+              currentY = contentStartY;
+            }
+          }
+          currentY += 8;
+        }
+      }
+
+      // Add Headers & Footers to all generated pages
+      const totalPages = (pdf as any).getNumberOfPages();
+      const timestamp = new Date().toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        
+        // Header
+        pdf.setFontSize(8);
+        pdf.setTextColor(140, 140, 140);
+        pdf.text("TRUSEK-6 STARTUP STABILITY INDEX REPORT", marginMm, 8);
+        pdf.text(timestamp, pageWidthMm - marginMm - 45, 8);
+
+        // Header separator line
+        pdf.setDrawColor(226, 232, 240); // slate-200
+        pdf.setLineWidth(0.2);
+        pdf.line(marginMm, 10, pageWidthMm - marginMm, 10);
+
+        // Footer separator line
+        pdf.line(marginMm, pageHeightMm - 10, pageWidthMm - marginMm, pageHeightMm - 10);
+
+        // Footer
+        pdf.text(`Страница ${i} из ${totalPages}`, marginMm, pageHeightMm - 6);
+        pdf.text("Индекс самодостаточности бизнес-идеи стартапа", pageWidthMm - marginMm - 75, pageHeightMm - 6);
+      }
+
+      // Save the generated document
+      const fileName = `${data.name ? data.name.replace(/[^a-zA-Z0-9а-яА-Я_]/g, '_') : 'Startup'}_SSI_Report.pdf`;
+      pdf.save(fileName);
+      showToast('✅ PDF-отчет успешно сохранен!', 'success');
+    } catch (e) {
+      console.error('PDF creation error:', e);
+      showToast('❌ Ошибка при генерации PDF', 'error');
+    }
+  };
+
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1917,7 +2043,7 @@ export default function App() {
             <div className="space-y-8 print:space-y-6">
 
               {/* CRITICAL RENDER RESULTS CARD */}
-              <div className="relative text-white rounded-3xl p-6 md:p-8 overflow-hidden shadow-lg border border-slate-800" 
+              <div id="pdf-results-header" className="relative text-white rounded-3xl p-6 md:p-8 overflow-hidden shadow-lg border border-slate-800" 
                    style={{ background: `linear-gradient(135deg, ${results.color} 0%, #0f172a 100%)` }}>
                 
                 {/* Visual decoration inside result report banner */}
@@ -1989,7 +2115,7 @@ export default function App() {
               <div className="space-y-8">
                 
                 {/* Vector Canvas Container - Expanded size for premium visual fidelity and layout clarity */}
-                <div className="flex flex-col items-center justify-center bg-slate-50 border border-slate-200/60 p-6 md:p-10 rounded-3xl shadow-sm relative min-h-[640px]">
+                <div id="pdf-lily-chart" className="flex flex-col items-center justify-center bg-slate-50 border border-slate-200/60 p-6 md:p-10 rounded-3xl shadow-sm relative min-h-[640px]">
                   <div className="absolute top-4 left-4 text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">
                     Лилия бизнес идеи TRUSEK-6 (+Оценки подфакторов)
                   </div>
@@ -2044,7 +2170,7 @@ export default function App() {
                 </div>
 
                 {/* SIDE STATS AND INTERACTIVE KEY LEGEND - Now rendered in a modern 2-column grid beneath the majestic flower! */}
-                <div className="space-y-4">
+                <div id="pdf-factor-profile" className="space-y-4">
                   <h3 className="font-display font-extrabold text-lg text-slate-950 uppercase tracking-wide border-b border-slate-100 pb-2">
                     Сводный факторный профиль
                   </h3>
@@ -2243,7 +2369,7 @@ export default function App() {
               </div>
 
               {/* BRAND NEW SECTION: RISK & THREAT ANALYSIS ON ABNORMALLY LOW FACTORS */}
-              <div className="bg-rose-50/15 p-6 md:p-8 rounded-3xl border border-rose-200/40 relative overflow-hidden">
+              <div id="pdf-risk-analysis" className="bg-rose-50/15 p-6 md:p-8 rounded-3xl border border-rose-200/40 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-2xl pointer-events-none" />
                 
                 <h3 className="font-display font-extrabold text-rose-950 text-lg flex items-center gap-2 mb-2">
@@ -2392,6 +2518,15 @@ export default function App() {
                 >
                   <Printer className="w-4 h-4 text-slate-400" />
                   <span>Печать текущего варианта стартапа</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer border border-indigo-100 shadow-xs"
+                >
+                  <Download className="w-4 h-4 text-indigo-500" />
+                  <span>Скачать PDF-отчет</span>
                 </button>
 
                 <button
