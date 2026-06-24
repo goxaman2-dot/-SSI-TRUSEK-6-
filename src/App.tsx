@@ -22,9 +22,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Image,
   Scale,
   ArrowLeftRight,
-  Bot
+  Bot,
+  ExternalLink,
+  FileText
 } from 'lucide-react';
 import { StartupData, Subfactors, CalculationResult, DataWarning } from './types';
 import { 
@@ -46,6 +49,58 @@ import { MarketCompareChart } from './components/MarketCompareChart';
 import { StartupReserves } from './components/StartupReserves';
 import { SalesRealismValidator } from './components/SalesRealismValidator';
 
+function getPastelBackground(ssi: number): { bg: string, text: string, border: string, badgeBg: string, badgeText: string } {
+  if (ssi >= 8.5) {
+    return {
+      bg: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)',
+      text: 'text-emerald-950',
+      border: 'border-emerald-200/80',
+      badgeBg: 'bg-emerald-100/80',
+      badgeText: 'text-emerald-900'
+    };
+  } else if (ssi >= 7.5) {
+    return {
+      bg: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)',
+      text: 'text-blue-950',
+      border: 'border-blue-200/80',
+      badgeBg: 'bg-blue-100/80',
+      badgeText: 'text-blue-900'
+    };
+  } else if (ssi >= 6.5) {
+    return {
+      bg: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+      text: 'text-amber-950',
+      border: 'border-amber-200/80',
+      badgeBg: 'bg-amber-100/80',
+      badgeText: 'text-amber-900'
+    };
+  } else if (ssi >= 5.0) {
+    return {
+      bg: 'linear-gradient(135deg, #fff7ed 0%, #fffaf5 100%)',
+      text: 'text-orange-950',
+      border: 'border-orange-200/80',
+      badgeBg: 'bg-orange-100/80',
+      badgeText: 'text-orange-900'
+    };
+  } else if (ssi >= 3.5) {
+    return {
+      bg: 'linear-gradient(135deg, #fdf2f8 0%, #fdf4ff 100%)',
+      text: 'text-pink-950',
+      border: 'border-pink-200/80',
+      badgeBg: 'bg-pink-100/80',
+      badgeText: 'text-pink-900'
+    };
+  } else {
+    return {
+      bg: 'linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%)',
+      text: 'text-rose-950',
+      border: 'border-rose-200/80',
+      badgeBg: 'bg-rose-100/80',
+      badgeText: 'text-rose-900'
+    };
+  }
+}
+
 export default function App() {
   const [data, setData] = useState<StartupData>(() => {
     try {
@@ -63,6 +118,7 @@ export default function App() {
       return 'agent';
     }
   });
+  const [activeSmartStep, setActiveSmartStep] = useState<number>(1);
 
   const [compareA, setCompareA] = useState<StartupData | null>(() => {
     try {
@@ -340,6 +396,45 @@ export default function App() {
     );
   };
 
+  const handleExportDocx = async () => {
+    showToast('⏳ Генерируем академический отчет в Word (DOCX по ГОСТ)...', 'info');
+    try {
+      const response = await fetch('/api/export-docx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data,
+          results: {
+            finalSsi: results.finalSsi,
+            interpretation: results.interpretation,
+            subfactors: results.subfactors,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка сервера: ' + response.statusText);
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const sanitizedName = (data.name || "startup_report")
+        .replace(/[^a-zA-Z0-9а-яА-ЯёЁ_-]/g, "_")
+        .substring(0, 50);
+      a.download = `${sanitizedName}_SSI_Report.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('✅ Академический отчет DOCX успешно сохранен!', 'success');
+    } catch (e: any) {
+      console.error('Docx export error:', e);
+      showToast('❌ Ошибка при генерации Word-отчета: ' + e.message, 'error');
+    }
+  };
+
   const handleDownloadPdf = async () => {
     showToast('⏳ Генерируем профессиональный PDF-отчет...', 'info');
     
@@ -466,6 +561,36 @@ export default function App() {
     }
   };
 
+  const handleDownloadPng = async () => {
+    showToast('⏳ Генерируем PNG-изображение диаграммы...', 'info');
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const element = document.getElementById('pdf-lily-chart');
+      if (!element) {
+        showToast('❌ Диаграмма не найдена', 'error');
+        return;
+      }
+
+      const canvas = await html2canvas(element, {
+        scale: 3, // High scale for great print quality
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+
+      const image = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      const fileName = `${data.name ? data.name.replace(/[^a-zA-Z0-9а-яА-Я_]/g, '_') : 'Startup'}_Lily_Chart.png`;
+      link.download = fileName;
+      link.href = image;
+      link.click();
+      showToast('✅ Изображение успешно скачано!', 'success');
+    } catch (e) {
+      console.error('PNG creation error:', e);
+      showToast('❌ Ошибка при генерации PNG', 'error');
+    }
+  };
+
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -537,6 +662,14 @@ export default function App() {
   const results = calculateResult(data);
   const factorInterpretations = getFactorInterpretations(results.subfactors);
 
+  const blockNames: Record<string, string> = {
+    agent: 'БЛОК 1: 🤖 ИИ Агент (Старт)',
+    anketa: 'БЛОК 2: 📝 Ручной ввод показателей',
+    expert: 'БЛОК 3: 🔬 Режим эксперта',
+    result: 'БЛОК 4: 🌸 Результат & Лилия SSI',
+    compare: 'БЛОК 5: ⚖️ Сравнение анкет'
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased pb-20 selection:bg-indigo-500 selection:text-white">
       
@@ -568,18 +701,18 @@ export default function App() {
 
       {/* HEADER SECTION */}
       <header className="container max-w-6xl mx-auto pt-8 px-4 print:pt-4">
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-indigo-900/30 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-50/90 via-purple-50/80 to-violet-50/90 text-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-indigo-100/80 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
           
           {/* Decorative background vectors */}
-          <div className="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-          <div className="absolute -left-10 -top-10 w-44 h-44 rounded-full bg-violet-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-indigo-200/20 blur-3xl pointer-events-none" />
+          <div className="absolute -left-10 -top-10 w-44 h-44 rounded-full bg-violet-200/20 blur-3xl pointer-events-none" />
 
           {/* Left badge fallback / logo placeholder */}
-          <div className="flex-shrink-0 flex flex-col items-center justify-center bg-white/5 backdrop-blur-md px-5 py-4 rounded-2xl border border-white/10 w-36 h-24 select-none z-10 mx-auto md:mx-0">
-            <span className="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-indigo-200 via-white to-indigo-100 bg-clip-text text-transparent">
+          <div className="flex-shrink-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-md px-5 py-4 rounded-2xl border border-indigo-100/60 w-36 h-24 select-none z-10 mx-auto md:mx-0 shadow-xs">
+            <span className="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-indigo-700 via-purple-800 to-indigo-800 bg-clip-text text-transparent">
               СКФУ
             </span>
-            <span className="text-[9px] font-medium tracking-widest text-indigo-300 mt-1 uppercase text-center leading-tight">
+            <span className="text-[9px] font-bold tracking-widest text-indigo-700 mt-1 uppercase text-center leading-tight">
               Технопарк
             </span>
           </div>
@@ -587,36 +720,36 @@ export default function App() {
           <div className="flex-1 text-center flex flex-col items-center z-10 w-full px-2">
             <button
               onClick={() => setIsAuthorsOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-400/30 text-indigo-300 text-xs font-bold rounded-full mb-3 tracking-wide transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-md group"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200/80 border border-indigo-200/60 text-xs font-bold rounded-full mb-3 tracking-wide transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-xs group"
               title="Нажмите, чтобы увидеть информацию об авторах методологии и публикации"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse group-hover:rotate-12 transition-transform duration-300" />
-              <span>TRUSEK-6 FRAMEWORK</span>
-              <Info className="w-3 h-3 text-indigo-300 opacity-80 group-hover:opacity-100" />
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse group-hover:rotate-12 transition-transform duration-300" />
+              <span>TRUSEK-6 FRAMEWORK — Просмотр методологии калькулятора</span>
+              <Info className="w-3 h-3 text-indigo-600 opacity-80 group-hover:opacity-100" />
             </button>
-            <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tight leading-snug text-center">
+            <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight leading-snug text-center text-slate-900">
               Калькулятор индекса SSI <br />
               самодостаточности бизнес-идеи
             </h1>
-            <p className="text-indigo-200 text-sm mt-2 opacity-90 font-light max-w-2xl text-center">
+            <p className="text-slate-600 text-sm mt-2 font-normal max-w-2xl text-center">
               Инструмент прединвестиционной экспресс-оценки самодостаточности технологических стартапов. Разработка для Технопарка Северо-Кавказского федерального университета.
             </p>
-            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-slate-400 text-xs mt-3.5 italic border-t border-white/5 pt-3 w-full">
+            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-slate-500 text-xs mt-3.5 italic border-t border-indigo-100/50 pt-3 w-full">
               <button
                 onClick={() => setIsAuthorsOpen(true)}
-                className="hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer group/author py-0.5"
+                className="hover:text-indigo-700 transition-colors flex items-center gap-1 cursor-pointer group/author py-0.5"
                 title="Подробнее об авторах проекта и научной публикации"
               >
-                <span>Авторы методологии: <strong className="text-slate-300 group-hover/author:text-amber-100 transition-colors">Мандрица И.В., Мандрица О.В.</strong></span>
-                <Info className="w-3.5 h-3.5 text-indigo-400 opacity-60 group-hover/author:opacity-100 transition-opacity shrink-0" />
+                <span>Авторы методологии: <strong className="text-slate-700 group-hover/author:text-indigo-900 transition-colors font-semibold">Мандрица И.В., Мандрица О.В.</strong></span>
+                <Info className="w-3.5 h-3.5 text-indigo-600 opacity-65 group-hover/author:opacity-100 transition-opacity shrink-0" />
               </button>
-              <span className="hidden md:inline text-white/20">•</span>
-              <span>Версия калькулятора: <strong className="text-indigo-300 font-mono">v2.0 (2026)</strong></span>
+              <span className="hidden md:inline text-indigo-200">•</span>
+              <span>Версия калькулятора: <strong className="text-indigo-700 font-mono font-bold">v2.0 (2026)</strong></span>
             </div>
           </div>
 
           {/* Right badge - Beautiful Lily mirroring the Technopark logo */}
-          <div className="flex-shrink-0 flex items-center justify-center bg-white/5 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 w-36 h-24 select-none z-10 mx-auto md:mx-0">
+          <div className="flex-shrink-0 flex items-center justify-center bg-white/70 backdrop-blur-md p-1.5 rounded-2xl border border-indigo-100/60 w-36 h-24 select-none z-10 mx-auto md:mx-0 shadow-xs">
             <MiniLily subfactors={results.subfactors} />
           </div>
         </div>
@@ -627,321 +760,381 @@ export default function App() {
         {/* SMART PASTE HINT BAR (HIDDEN IN PRINT) */}
         <section className="print:hidden mb-6">
           <div 
-            className="group relative bg-gradient-to-br from-violet-600 via-indigo-600 to-indigo-800 text-white p-5 md:p-6 rounded-2xl shadow-xl border border-indigo-500/20 transition-all duration-300 overflow-hidden"
+            className="group relative bg-gradient-to-br from-indigo-50/90 via-purple-50/80 to-slate-100/95 text-slate-900 p-5 md:p-6 rounded-2xl shadow-xs border border-indigo-100/60 transition-all duration-300 overflow-hidden"
           >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_50%)] pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.05),transparent_50%)] pointer-events-none" />
             
             <div className="flex flex-col gap-5 relative z-10">
               {/* Header Title */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 shadow-inner">
-                  <FileJson className="w-5 h-5 text-amber-300" />
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0 shadow-inner">
+                  <FileJson className="w-5 h-5 text-indigo-700" />
                 </div>
                 <div className="text-left">
-                  <h3 className="font-bold text-base md:text-lg tracking-wide text-white drop-shadow-sm flex items-center gap-2">
-                    🚀 Умное автозаполнение по Ctrl + V <span className="text-xs md:text-sm font-normal text-indigo-200">— для тех кто &quot;не боится&quot; утечки своих бизнес-идей в &quot;космос интернета&quot;</span>
+                  <h3 className="font-bold text-base md:text-lg tracking-wide text-slate-900 flex flex-col md:flex-row md:items-center gap-1.5">
+                    <span>🚀 Умное автозаполнение по Ctrl + V</span>
+                    <span className="text-xs md:text-sm font-normal text-slate-500">— для тех кто &quot;не боится&quot; утечки своих бизнес-идей в &quot;космос интернета&quot;</span>
                   </h3>
                 </div>
               </div>
 
-              {/* 6 Steps Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10 hover:bg-white/15 transition-all flex flex-col justify-between">
-                  <div>
-                    <div className="text-3xl md:text-[36px] font-black text-amber-300 mb-1.5 leading-none">1 этап</div>
-                    <p className="text-xs text-indigo-100 font-light leading-snug">
-                      Скачайте анкету <strong>"Анкета стартапа .JSON"</strong> на свой комп, ноут или гаджет (tablet) — нажмите кнопку ниже.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      downloadStudentJsonTemplate();
-                    }}
-                    className="mt-2.5 w-full bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5 shadow active:scale-95 cursor-pointer"
-                    title="Скачать анкету стартапа (.JSON файл)"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Анкета стартапа .JSON</span>
-                  </button>
-                  <div className="mt-1.5 text-[10px] text-indigo-100/90 font-light leading-snug border-t border-white/5 pt-1.5">
-                    <strong className="text-amber-300/95 font-medium">Примечание:</strong> обычно загруженный файл окажется в папке "Загрузки" или "Документы" (настройки Windows, iOS, Linux, Android)
-                  </div>
-                </div>
+              {/* 6 Steps Tabs Selector */}
+              <div className="flex flex-wrap gap-1.5 p-1 bg-white/60 backdrop-blur-xs rounded-xl border border-indigo-100/50 mb-2 shadow-xs">
+                {[
+                  { num: 1, title: "1 этап: Шаблон" },
+                  { num: 2, title: "2 этап: Чат ИИ" },
+                  { num: 3, title: "3 этап: Промпт" },
+                  { num: 4, title: "4 этап: Буфер" },
+                  { num: 5, title: "5 этап: Импорт" },
+                  { num: 6, title: "6 этап: Лилия" }
+                ].map((step) => {
+                  const isActive = activeSmartStep === step.num;
+                  return (
+                    <button
+                      key={step.num}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSmartStep(step.num);
+                      }}
+                      className={`flex-1 min-w-[75px] text-center py-2 px-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                        isActive
+                          ? 'bg-indigo-650 text-white shadow-xs font-extrabold scale-[1.01]'
+                          : 'text-slate-600 hover:text-indigo-650 hover:bg-white/80'
+                      }`}
+                    >
+                      <span className="block sm:hidden">{step.num} этап</span>
+                      <span className="hidden sm:block">{step.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
-                <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10 hover:bg-white/15 transition-all flex flex-col justify-between">
-                  <div>
-                    <div className="text-3xl md:text-[36px] font-black text-amber-300 mb-1.5 leading-none">2 этап</div>
-                    <p className="text-xs text-indigo-100 font-light leading-snug">
-                      Откройте чат в любой условно-бесплатной/ платной нейросети <strong>Claude / Qwen / Deepseek / ChatGPT / GigaChat / Kimi</strong> — и поочередно загрузите в чат: JSON анкету, презентации PPTX, документы по вашему стартапу в формате DOXC, файлы стартапа (сметы, исследование рынка и конкурентов, бизнес-план EXCELL, план производства и т.п.)
-                    </p>
-                  </div>
-                  <div className="mt-2 text-[10px] text-rose-300 bg-rose-950/40 p-2 rounded-lg border border-rose-500/20 leading-snug font-medium">
-                    ⚠️ Помните: закачанные файлы и их обработка в виде выходных файлов уже становятся достоянием нейросетей, в которых вы работаете.
-                  </div>
-                </div>
-
-                <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10 hover:bg-white/15 transition-all flex flex-col justify-between">
-                  <div>
-                    <div className="text-3xl md:text-[36px] font-black text-amber-300 mb-1.5 leading-none">3 этап</div>
-                    <p className="text-xs text-indigo-100 font-light leading-snug">
-                      Скопируйте текст промта для вашей нейросети:
-                    </p>
-                    <div className="relative mt-1.5 flex flex-col gap-1.5">
-                      <div className="font-mono text-amber-100 text-[11px] bg-indigo-950/40 p-2 pr-2.5 rounded border border-white/5 select-all leading-normal">
-                        "Создай мне JSON анкету моего стартапа по прикрепленным документам JSON, DOCX, XXLS, PPTX"
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigator.clipboard.writeText('Создай мне JSON анкету моего стартапа по прикрепленным документам JSON, DOCX, XXLS, PPTX');
-                          showToast('📋 Текст промпта скопирован в буфер обмена!', 'success');
-                        }}
-                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-1 rounded text-[10px] font-bold transition-all duration-150 flex items-center justify-center gap-1 active:scale-95 cursor-pointer shadow-sm"
-                        title="Скопировать в буфер памяти / обмена"
-                      >
-                        <Copy className="w-3 h-3" />
-                        <span>Скопировать в буфер обмена</span>
-                      </button>
-                      <div className="text-[10px] text-indigo-200 text-center font-semibold mt-0.5">
-                        — Начните чат с нейросетью
-                      </div>
-                      <div className="mt-1.5 text-[10px] text-indigo-100/90 font-light leading-snug border-t border-white/5 pt-1.5">
-                        <strong className="text-amber-300/95 font-medium">Примечание:</strong> "Вы ТАКЖЕ можете расширить поиск данных по стартапу внутри чата с нейросетью новыми промтами для поиска всех необходимых данных согласно анкете JSON".
-                      </div>
+              {/* Active Smart Step Content Card */}
+              <div className="min-h-[220px] transition-all duration-300">
+                {activeSmartStep === 1 && (
+                  <div className="bg-white/95 p-5 rounded-2xl border border-indigo-100/60 transition-all flex flex-col justify-between shadow-xs max-w-2xl mx-auto">
+                    <div>
+                      <div className="text-xl md:text-2xl font-black text-indigo-700 mb-2 leading-none">1 этап. Скачивание шаблона</div>
+                      <p className="text-xs md:text-sm text-slate-600 font-normal leading-relaxed">
+                        Скачайте анкету <strong>"Анкета стартапа .JSON"</strong> на свой комп, ноут или гаджет (tablet) — нажмите кнопку ниже.
+                      </p>
                     </div>
-                  </div>
-                </div>
-
-                <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10 hover:bg-white/15 transition-all">
-                  <div className="text-3xl md:text-[36px] font-black text-amber-300 mb-1.5 leading-none">4 этап</div>
-                  <p className="text-xs text-indigo-100 font-light leading-snug">
-                    Из чата с нейросетью скачайте полученный результат анкеты, и откройте проводник и перейдите в папку, куда скачан файл. Встав на файл анкеты <code className="text-amber-100 font-mono">[*****.json]</code> нажмите сочетание клавиш <kbd className="bg-white/15 px-1 rounded text-[10px] font-mono text-white">CTRL+C</kbd> — взять в память (в буфер обмена).
-                  </p>
-                  <div className="mt-1.5 text-[10px] text-indigo-200 font-normal leading-snug border-t border-white/5 pt-1.5">
-                    Для удобства пользователя, если ваша операционная система загружает все в папку "Загрузки" — перейдите на <strong className="text-amber-300 font-medium">5 этап</strong>.
-                  </div>
-                </div>
-
-                <div className="bg-white/10 backdrop-blur-sm p-3.5 rounded-xl border border-white/10 hover:bg-white/15 transition-all flex flex-col justify-between">
-                  <div>
-                    <div className="text-3xl md:text-[36px] font-black text-amber-300 mb-1.5 leading-none">5 этап</div>
-                    <p className="text-xs text-indigo-100 font-light leading-snug">
-                      Интегрируйте полученный JSON-файл анкеты в платформу любым удобным способом:
-                    </p>
-                    
-                    <div className="mt-3 flex flex-col gap-2.5">
-                      {/* Способ А (Файл) */}
-                      <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-                        <span className="text-[10px] text-amber-300 block font-semibold mb-1">Способ А: Загрузить файл с устройства (самый надежный)</span>
-                        <label className="w-full bg-white hover:bg-indigo-50 text-indigo-800 px-3 py-2 rounded-lg text-[11px] font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer">
-                          <Upload className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                          <span>Выбрать и загрузить .json файл</span>
-                          <input 
-                            type="file" 
-                            accept=".json" 
-                            className="hidden" 
-                            onChange={handleFileImport} 
-                          />
-                        </label>
-                      </div>
-
-                      {/* Способ Б (Буфер) */}
-                      <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-                        <span className="text-[10px] text-indigo-200 block font-normal mb-1">
-                          Способ Б: Если нажали <kbd className="bg-white/10 px-1 rounded text-[9px] font-mono text-white">CTRL+C</kbd> на файле или скопировали текстовое содержимое:
-                        </span>
-                        <button 
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePasteConsole();
-                          }}
-                          className="w-full bg-indigo-600/80 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shadow active:scale-95 border border-white/10"
-                        >
-                          <FileJson className="w-3.5 h-3.5 text-indigo-200 shrink-0" />
-                          <span>Интегрировать из буфера</span>
-                        </button>
-                      </div>
-
-                      <div className="text-[10px] text-indigo-100/90 font-light leading-snug border-t border-white/5 pt-1.5 mt-0.5">
-                        <strong className="text-amber-300/95 font-medium">Примечание:</strong> При копировании самого файла в проводнике Windows через Ctrl+C, некоторые браузеры блокируют чтение файла из буфера. В таком случае просто используйте <strong className="text-amber-300 font-normal">Способ А</strong>!
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white/10 backdrop-blur-sm p-3.5 rounded-xl border border-white/10 hover:bg-white/15 transition-all flex flex-col justify-between">
-                  <div>
-                    <div className="text-3xl md:text-[36px] font-black text-amber-300 mb-1.5 leading-none">6 этап</div>
-                    <p className="text-xs text-indigo-100 font-light leading-snug">
-                      Запустите рендер расчетного интерактивного лепесткового графика:
-                    </p>
-
-                    {/* Premium, high-contrast dynamic vector illustration of the TRUSEK-6 Lily flower */}
-                    <div className="my-3 bg-indigo-950/50 p-4 rounded-xl border border-white/10 flex flex-col items-center justify-center relative overflow-hidden group/stage-lily shadow-inner">
-                      {/* Scaled MiniLily widget */}
-                      <div className="w-56 h-56 flex items-center justify-center transition-transform duration-500 hover:scale-110 select-none">
-                        <MiniLily subfactors={results.subfactors} className="w-full h-full block drop-shadow-2xl select-none" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-2">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveTab('result');
-                        showToast('🌸 Расчет индекса SSI и рендер лилии завершен!', 'success');
+                        downloadStudentJsonTemplate();
                       }}
-                      className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 border border-amber-300 px-3 py-2.5 rounded-xl text-xs font-black tracking-wide shadow-md transition-all duration-250 hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1.5"
+                      className="mt-4 w-full bg-indigo-650 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                      title="Скачать анкету стартапа (.JSON файл)"
                     >
-                      <span>🌸 Построить лилию SSI</span>
+                      <Download className="w-4 h-4" />
+                      <span>Скачать: Анкета стартапа .JSON</span>
                     </button>
+                    <div className="mt-3 text-[11px] text-slate-500 font-normal leading-relaxed border-t border-slate-100 pt-2">
+                      <strong className="text-indigo-700 font-semibold">Примечание:</strong> обычно загруженный файл окажется в папке "Загрузки" или "Документы" (настройки Windows, iOS, Linux, Android)
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {activeSmartStep === 2 && (
+                  <div className="bg-white/95 p-5 rounded-2xl border border-indigo-100/60 transition-all flex flex-col justify-between shadow-xs max-w-2xl mx-auto">
+                    <div>
+                      <div className="text-xl md:text-2xl font-black text-indigo-700 mb-2 leading-none">2 этап. Работа в чате с нейросетью</div>
+                      <p className="text-xs md:text-sm text-slate-600 font-normal leading-relaxed">
+                        Откройте чат в любой условно-бесплатной/ платной нейросети <strong>Claude / Qwen / Deepseek / ChatGPT / GigaChat / Kimi</strong> — и поочередно загрузите в чат: JSON анкету, презентации PPTX, документы по вашему стартапу в формате DOXC, файлы стартапа (сметы, исследование рынка и конкурентов, бизнес-план EXCELL, план производства и т.п.)
+                      </p>
+                    </div>
+                    <div className="mt-4 text-xs text-rose-800 bg-rose-50 p-3 rounded-xl border border-rose-100 leading-relaxed font-medium">
+                      ⚠️ <strong>Помните:</strong> закачанные файлы и их обработка в виде выходных файлов уже становятся достоянием нейросетей, в которых вы работаете.
+                    </div>
+                  </div>
+                )}
+
+                {activeSmartStep === 3 && (
+                  <div className="bg-white/95 p-5 rounded-2xl border border-indigo-100/60 transition-all flex flex-col justify-between shadow-xs max-w-2xl mx-auto">
+                    <div>
+                      <div className="text-xl md:text-2xl font-black text-indigo-700 mb-2 leading-none">3 этап. Промпт для нейросети</div>
+                      <p className="text-xs md:text-sm text-slate-600 font-normal leading-relaxed">
+                        Скопируйте текст промта для вашей нейросети:
+                      </p>
+                      <div className="relative mt-3 flex flex-col gap-2">
+                        <div className="font-mono text-indigo-950 text-xs bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100/50 select-all leading-normal font-medium">
+                          "Создай мне JSON анкету моего стартапа по прикрепленным документам JSON, DOCX, XXLS, PPTX"
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText('Создай мне JSON анкету моего стартапа по прикрепленным документам JSON, DOCX, XXLS, PPTX');
+                            showToast('📋 Текст промпта скопирован в буфер обмена!', 'success');
+                          }}
+                          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-xs"
+                          title="Скопировать в буфер памяти / обмена"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Скопировать в буфер обмена</span>
+                        </button>
+                        <div className="text-xs text-indigo-600 text-center font-bold mt-1">
+                          — Начните чат с нейросетью
+                        </div>
+                        <div className="mt-2 text-[11px] text-slate-500 font-normal leading-relaxed border-t border-slate-100 pt-2">
+                          <strong className="text-indigo-700 font-semibold">Примечание:</strong> "Вы ТАКЖЕ можете расширить поиск данных по стартапу внутри чата с нейросетью новыми промтами для поиска всех необходимых данных согласно анкете JSON".
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSmartStep === 4 && (
+                  <div className="bg-white/95 p-5 rounded-2xl border border-indigo-100/60 transition-all flex flex-col justify-between shadow-xs max-w-2xl mx-auto">
+                    <div>
+                      <div className="text-xl md:text-2xl font-black text-indigo-700 mb-2 leading-none">4 этап. Скопировать JSON-файл</div>
+                      <p className="text-xs md:text-sm text-slate-600 font-normal leading-relaxed">
+                        Из чата с нейросетью скачайте полученный результат анкеты, и откройте проводник и перейдите в папку, куда скачан файл. Встав на файл анкеты <code className="text-indigo-800 font-mono font-semibold">[*****.json]</code> нажмите сочетание клавиш <kbd className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[11px] font-mono text-slate-800">CTRL+C</kbd> — взять в память (в буфер обмена).
+                      </p>
+                    </div>
+                    <div className="mt-4 text-[11px] text-slate-500 font-normal leading-relaxed border-t border-slate-100 pt-2">
+                      Для удобства пользователя, если ваша операционная система загружает все в папку "Загрузки" — перейдите на <strong className="text-indigo-700 font-semibold">5 этап</strong>.
+                    </div>
+                  </div>
+                )}
+
+                {activeSmartStep === 5 && (
+                  <div className="bg-white/95 p-5 rounded-2xl border border-indigo-100/60 transition-all flex flex-col justify-between shadow-xs max-w-2xl mx-auto">
+                    <div>
+                      <div className="text-xl md:text-2xl font-black text-indigo-700 mb-2 leading-none">5 этап. Интеграция анкеты</div>
+                      <p className="text-xs md:text-sm text-slate-600 font-normal leading-relaxed">
+                        Интегрируйте полученный JSON-файл анкеты в платформу любым удобным способом:
+                      </p>
+                      
+                      <div className="mt-4 flex flex-col gap-3">
+                        {/* Способ А (Файл) */}
+                        <div className="bg-indigo-50/40 p-3 rounded-xl border border-indigo-100/50">
+                          <span className="text-xs text-indigo-800 block font-bold mb-1.5">Способ А: Загрузить файл с устройства (самый надежный)</span>
+                          <label className="w-full bg-white hover:bg-indigo-50 text-indigo-800 px-3.5 py-2.5 rounded-xl border border-indigo-200/50 text-xs font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer">
+                            <Upload className="w-4 h-4 text-indigo-600 shrink-0" />
+                            <span>Выбрать и загрузить .json файл</span>
+                            <input 
+                              type="file" 
+                              accept=".json" 
+                              className="hidden" 
+                              onChange={handleFileImport} 
+                            />
+                          </label>
+                        </div>
+
+                        {/* Способ Б (Буфер) */}
+                        <div className="bg-indigo-50/40 p-3 rounded-xl border border-indigo-100/50">
+                          <span className="text-xs text-slate-600 block font-normal mb-1.5">
+                            Способ Б: Если нажали <kbd className="bg-slate-100 border border-slate-200 px-1 py-0.5 rounded text-[10px] font-mono text-slate-800">CTRL+C</kbd> на файле или скопировали текстовое содержимое:
+                          </span>
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePasteConsole();
+                            }}
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-xs active:scale-95"
+                          >
+                            <FileJson className="w-4 h-4 text-indigo-100 shrink-0" />
+                            <span>Интегрировать из буфера</span>
+                          </button>
+                        </div>
+
+                        <div className="text-[11px] text-slate-500 font-normal leading-relaxed border-t border-slate-100 pt-2 mt-1">
+                          <strong className="text-indigo-700 font-semibold">Примечание:</strong> При копировании самого файла в проводнике Windows через Ctrl+C, некоторые браузеры блокируют чтение файла из буфера. В таком случае просто используйте <strong className="text-indigo-700 font-semibold">Способ А</strong>!
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSmartStep === 6 && (
+                  <div className="bg-white/95 p-5 rounded-2xl border border-indigo-100/60 transition-all flex flex-col justify-between shadow-xs max-w-2xl mx-auto">
+                    <div>
+                      <div className="text-xl md:text-2xl font-black text-indigo-700 mb-2 leading-none">6 этап. Построение графика</div>
+                      <p className="text-xs md:text-sm text-slate-600 font-normal leading-relaxed">
+                        Запустите рендер расчетного интерактивного лепесткового графика:
+                      </p>
+
+                      {/* Premium, high-contrast dynamic vector illustration of the TRUSEK-6 Lily flower */}
+                      <div className="my-4 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100/60 flex flex-col items-center justify-center relative overflow-hidden group/stage-lily shadow-inner">
+                        {/* Scaled MiniLily widget */}
+                        <div className="w-48 h-48 flex items-center justify-center transition-transform duration-500 hover:scale-110 select-none">
+                          <MiniLily subfactors={results.subfactors} className="w-full h-full block drop-shadow-2xl select-none" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveTab('result');
+                          showToast('🌸 Расчет индекса SSI и рендер лилии завершен!', 'success');
+                        }}
+                        className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 border border-amber-300 px-4 py-3 rounded-xl text-xs font-black tracking-wide shadow-md transition-all duration-250 hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1.5"
+                      >
+                        <span>🌸 Построить лилию SSI</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* NAVIGATION CONTROLS & UTILITY PRESETS */}
-        <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-4 mb-6 print:hidden">
-          
-          {/* Main Module Tabs (Sleek Progressive Workflow) */}
-          <div className="bg-slate-200/85 backdrop-blur-md p-1.5 rounded-2xl flex gap-1 border border-slate-300/40 overflow-x-auto scrollbar-none shadow-inner max-w-full">
+        {/* STEP-BY-STEP STUDENT ROADMAP & NAVIGATION (Блоки калькулятора) */}
+        <div className="mb-6 print:hidden">
+          <div className="bg-gradient-to-r from-slate-100 to-indigo-50/50 p-4 rounded-2xl border border-slate-200/60 mb-4 shadow-xs">
+            <h4 className="text-xs font-black uppercase tracking-widest text-indigo-800 flex items-center gap-1.5 mb-3">
+              <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-ping" />
+              <span>🧭 ТРАЕКТОРИЯ СТУДЕНТА: ОЦЕНИТЕ СТАРТАП ЗА 5 ШАГОВ</span>
+            </h4>
             
-            {/* STEP 1: AI AGENT */}
-            <button
-              onClick={() => setActiveTab('agent')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 shrink-0 relative ${
-                activeTab === 'agent' 
-                  ? 'bg-purple-600 text-white font-extrabold shadow-md ring-2 ring-purple-300' 
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-white/40'
-              }`}
-              title="Начните здесь! Искусственный Интеллект заполнит анкету по вашему описанию проекта"
-            >
-              <Bot className="w-4.5 h-4.5 text-current shrink-0" />
-              <span className="flex items-center gap-1.5">
-                <span className="opacity-75 font-mono text-[10px] bg-purple-900/30 text-white px-1.5 py-0.5 rounded-md">1</span>
-                <span>🤖 ИИ Агент (Старт)</span>
-              </span>
-              <span className="absolute -top-1 -right-0.5 block h-2.5 w-2.5 rounded-full bg-purple-500 ring-2 ring-slate-100 animate-pulse" />
-            </button>
-
-            {/* STEP 2: MANUAL SURVEY */}
-            <button
-              onClick={() => setActiveTab('anketa')}
-              title="От авторов калькулятора: Калькулятор не собирает ваши персональные и иные данные, согласно 152-ФЗ РФ, не является ЦОД (центром обработки данных). Калькулятор не имеет сервера хранения данных, является автономно работающим ПО. После нажатия кнопки &quot;Очистить&quot; все введенные данные навсегда удаляются. Но если нажать кнопку &quot;Экспортировать JSON анкету&quot;, то вы сохраняете у себя на компьютере (гаджете) анкету текущих значений индекса SSI вашего стартапа."
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 group shrink-0 relative ${
-                activeTab === 'anketa' 
-                  ? 'bg-white text-slate-900 shadow-md border border-slate-200 ring-1 ring-slate-100' 
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-white/40'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <span className="opacity-75 font-mono text-[10px] bg-slate-300 text-slate-800 px-1.5 py-0.5 rounded-md">2</span>
-                <span>📝 Ручной ввод</span>
-              </span>
-              <Info className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-            </button>
-
-            {/* STEP 3: EXPERT REGIME */}
-            <button
-              onClick={() => setActiveTab('expert')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 shrink-0 ${
-                activeTab === 'expert' 
-                  ? 'bg-slate-800 text-white font-extrabold shadow-md' 
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-white/40'
-              }`}
-              title="Настройка весов и экспертных оценок"
-            >
-              <span className="flex items-center gap-1.5">
-                <span className="opacity-75 font-mono text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded-md">3</span>
-                <span>🔬 Режим эксперта</span>
-              </span>
-            </button>
-
-            {/* STEP 4: RESULTS */}
-            <button
-              onClick={() => setActiveTab('result')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 shrink-0 relative ${
-                activeTab === 'result' 
-                  ? 'bg-emerald-650 text-white shadow-md ring-2 ring-emerald-300' 
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-white/40'
-              }`}
-              title="Красивый интерактивный цветок Лилии SSI и аналитика рынка"
-            >
-              <span className="flex items-center gap-1.5">
-                <span className="opacity-75 font-mono text-[10px] bg-emerald-900/30 text-white px-1.5 py-0.5 rounded-md">4</span>
-                <span>🌸 Результат & Лилия</span>
-              </span>
-              <span className="absolute -top-1 -right-0.5 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-100" />
-            </button>
-
-            {/* STEP 5: COMPARE */}
-            <button
-              onClick={() => setActiveTab('compare')}
-              className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-2 shrink-0 relative ${
-                activeTab === 'compare' 
-                  ? 'bg-amber-500 text-slate-950 font-extrabold shadow-md' 
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-white/40'
-              }`}
-              title="Сравните ваш проект с другими или с гипотетическим сценарием"
-            >
-              <Scale className="w-3.5 h-3.5 text-current shrink-0 animate-pulse" />
-              <span className="flex items-center gap-1.5">
-                <span className="opacity-75 font-mono text-[10px] bg-amber-700/30 text-amber-950 px-1.5 py-0.5 rounded-md">5</span>
-                <span>⚖️ Сравнение анкет</span>
-              </span>
-            </button>
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+              {[
+                {
+                  id: 'agent',
+                  stepNum: 1,
+                  title: 'Шаг 1: ИИ Агент (Старт)',
+                  desc: 'Сгенерируйте данные ИИ или загрузите демо',
+                  badge: 'Старт',
+                  color: 'hover:border-purple-300 hover:bg-purple-50/40 text-purple-950',
+                  activeColor: 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white border-purple-500 ring-4 ring-purple-100'
+                },
+                {
+                  id: 'anketa',
+                  stepNum: 2,
+                  title: 'Шаг 2: Ввод метрик',
+                  desc: 'Укажите название и настройте 12 показателей',
+                  badge: 'Анкета показателей',
+                  color: 'hover:border-blue-300 hover:bg-blue-50/40 text-blue-950',
+                  activeColor: 'bg-gradient-to-br from-indigo-600 to-blue-700 text-white border-indigo-500 ring-4 ring-indigo-100'
+                },
+                {
+                  id: 'expert',
+                  stepNum: 3,
+                  title: 'Шаг 3: Режим эксперта',
+                  desc: 'Настройте весовые доли TRUSEK-6',
+                  badge: 'Веса формулы',
+                  color: 'hover:border-slate-400 hover:bg-slate-100/60 text-slate-900',
+                  activeColor: 'bg-gradient-to-br from-slate-800 to-slate-900 text-white border-slate-700 ring-4 ring-slate-200'
+                },
+                {
+                  id: 'result',
+                  stepNum: 4,
+                  title: 'Шаг 4: Лилия & SSI',
+                  desc: 'Посмотрите цветок устойчивости и вердикт',
+                  badge: 'Оценка и График',
+                  color: 'hover:border-emerald-300 hover:bg-emerald-50/40 text-emerald-950',
+                  activeColor: 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-500 ring-4 ring-emerald-100'
+                },
+                {
+                  id: 'compare',
+                  stepNum: 5,
+                  title: 'Шаг 5: Сравнение',
+                  desc: 'Сравните ваш проект с другим стартапом',
+                  badge: 'Баттл проектов',
+                  color: 'hover:border-amber-400 hover:bg-amber-50/40 text-amber-950',
+                  activeColor: 'bg-gradient-to-br from-amber-500 to-orange-500 text-slate-950 font-black border-amber-400 ring-4 ring-amber-100'
+                }
+              ].map((block) => {
+                const isActive = activeTab === block.id;
+                return (
+                  <button
+                    key={block.id}
+                    onClick={() => {
+                      setActiveTab(block.id as any);
+                    }}
+                    className={`group flex flex-col justify-between text-left p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer shadow-xs relative overflow-hidden ${
+                      isActive 
+                        ? block.activeColor + ' shadow-md' 
+                        : 'bg-white border-slate-200/80 text-slate-800'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex justify-between items-center w-full mb-1.5">
+                        <span className={`text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md ${
+                          isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'
+                        }`}>
+                          {block.badge}
+                        </span>
+                        <span className={`font-mono text-xs font-black h-5 w-5 rounded-full flex items-center justify-center ${
+                          isActive ? 'bg-white text-slate-900' : 'bg-slate-100 text-slate-400'
+                        }`}>
+                          {block.stepNum}
+                        </span>
+                      </div>
+                      <h3 className="font-display font-bold text-xs md:text-[13px] leading-tight">
+                        {block.title}
+                      </h3>
+                      <p className={`text-[10px] mt-1 leading-snug font-normal ${
+                        isActive ? 'text-white/80' : 'text-slate-500'
+                      }`}>
+                        {block.desc}
+                      </p>
+                    </div>
+                    <div className="mt-3.5 flex items-center gap-1 text-[10px] font-bold">
+                      <span className={isActive ? 'text-white' : 'text-indigo-600 group-hover:underline'}>
+                        {isActive ? '👉 Вы работаете здесь' : 'Перейти к блоку →'}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Quick preset buttons */}
-          <div className="flex flex-wrap items-center gap-2 justify-end shrink-0">
-            <button
-              type="button"
-              onClick={handleValidateData}
-              className={`px-3.5 py-2.5 text-xs border rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm ${
-                validationWarnings.length > 0 && showValidationResults
-                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300'
-                  : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600'
-              }`}
-              title="Проверить введенные данные анкеты стартапа на логические ошибки"
-            >
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-              <span>ПРОВЕРИТЬ данные</span>
-              {validationWarnings.length > 0 && (
-                <span className="bg-red-650 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-full">
-                  {validationWarnings.length}
-                </span>
-              )}
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/50">
+            <span className="text-[11px] text-slate-500 font-semibold pl-1">
+              🛠️ Быстрые команды управления:
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleValidateData}
+                className={`px-3.5 py-2 text-xs border rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                  validationWarnings.length > 0 && showValidationResults
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300'
+                    : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600'
+                }`}
+                title="Проверить введенные данные анкеты стартапа на логические ошибки"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>ПРОВЕРИТЬ данные</span>
+                {validationWarnings.length > 0 && (
+                  <span className="bg-red-650 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-full">
+                    {validationWarnings.length}
+                  </span>
+                )}
+              </button>
 
-            <button
-              type="button"
-              onClick={loadPresetDemo}
-              className="px-3.5 py-2.5 text-xs bg-slate-100 border border-slate-200 rounded-xl hover:bg-slate-200 text-slate-700 font-semibold transition-all flex items-center gap-1.5 shadow-sm"
-              title="Загрузить полностью заготовленные демонстрационные данные"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-              <span>Загрузить демостартап</span>
-            </button>
-            
-            <button
-              type="button"
-              onClick={resetForm}
-              className="px-3.5 py-2.5 text-xs bg-slate-100 border border-slate-200 rounded-xl hover:bg-rose-50 text-slate-600 hover:text-rose-700 font-semibold transition-all flex items-center gap-1.5 shadow-sm"
-              title="Сбросить все показатели анкеты"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-500" />
-              <span>Очистить</span>
-            </button>
+              <button
+                type="button"
+                onClick={loadPresetDemo}
+                className="px-3.5 py-2 text-xs bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                title="Загрузить полностью заготовленные демонстрационные данные"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-500 animate-spin-slow" />
+                <span>Загрузить демостартап</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-3.5 py-2 text-xs bg-white border border-slate-200 rounded-xl hover:bg-rose-50 hover:border-rose-200 text-slate-600 hover:text-rose-700 font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                title="Сбросить все показатели анкеты"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-slate-400" />
+                <span>Очистить</span>
+              </button>
+            </div>
           </div>
-
         </div>
 
         {/* AUTHOR NOTE BANNER (PRINT HIDDEN) */}
@@ -955,6 +1148,166 @@ export default function App() {
 
         {/* CONTAINER CARD FOR VIEWS */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-md p-6 md:p-8">
+          
+          {/* Dynamic Active Startup Banner (Глазами смотрящего) */}
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 mb-6 border border-indigo-500/20 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5 print:bg-none print:text-black print:border-slate-300 print:p-0 print:mb-4">
+            <div className="absolute right-0 top-0 w-80 h-80 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
+            <div className="flex items-center gap-3.5 z-10">
+              <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-400/25 flex items-center justify-center text-indigo-300 shrink-0 shadow-inner print:hidden">
+                {activeTab === 'agent' && <Bot className="w-5 h-5 text-purple-350 animate-pulse" />}
+                {activeTab === 'anketa' && <Info className="w-5 h-5 text-indigo-350" />}
+                {activeTab === 'expert' && <Sparkles className="w-5 h-5 text-yellow-350" />}
+                {activeTab === 'result' && <span className="text-lg">🌸</span>}
+                {activeTab === 'compare' && <Scale className="w-5 h-5 text-amber-300" />}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider print:border-slate-400 print:text-black print:bg-none">
+                    {blockNames[activeTab] || 'Калькулятор'}
+                  </span>
+                  {data.name === 'Умный Сенсорный Сад' ? (
+                    <span className="text-[10px] bg-amber-500/20 border border-amber-400/30 text-amber-300 font-bold px-2 py-0.5 rounded-full print:border-slate-400 print:text-black print:bg-none">
+                      🌱 Активен демо-стартап СКФУ
+                    </span>
+                  ) : data.name ? (
+                    <span className="text-[10px] bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-bold px-2 py-0.5 rounded-full print:border-slate-400 print:text-black print:bg-none">
+                      🚀 Пользовательский проект
+                    </span>
+                  ) : (
+                    <span className="text-[10px] bg-rose-500/20 border border-rose-400/30 text-rose-300 font-bold px-2 py-0.5 rounded-full animate-pulse print:hidden">
+                      ⚠️ Ожидание названия проекта
+                    </span>
+                  )}
+                </div>
+                <h2 className="font-display font-black text-base md:text-lg text-white mt-1 leading-tight flex items-center gap-2 print:text-black">
+                  <span>Проект:</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-indigo-250 to-emerald-200 underline decoration-indigo-400 decoration-wavy decoration-1 underline-offset-4 print:text-black print:no-underline">
+                    «{data.name || 'Безымянный стартап'}»
+                  </span>
+                </h2>
+                <p className="text-slate-350 text-xs mt-1 print:text-slate-700">
+                  👤 Разработчик: <strong className="text-white font-semibold print:text-black">{data.author || 'Студент СКФУ'}</strong>
+                  {data.expert ? (
+                    <> | 🔬 Ментор-наставник: <strong className="text-white font-semibold print:text-black">{data.expert}</strong></>
+                  ) : null}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-3 rounded-xl self-start md:self-auto shrink-0 z-10 backdrop-blur-md print:bg-none print:border-slate-300 print:text-black">
+              <div className="text-center">
+                <div className="text-[9px] uppercase tracking-widest text-slate-400 font-bold print:text-slate-650">Индекс SSI</div>
+                <div className="text-2xl font-black font-mono text-emerald-400 leading-none mt-1 print:text-black">
+                  {results.finalSsi.toFixed(2)}
+                </div>
+              </div>
+              <div className="h-8 w-px bg-white/10 print:bg-slate-300" />
+              <div className="text-left">
+                <div className="text-[9px] uppercase tracking-widest text-slate-400 font-bold print:text-slate-650">Устойчивость</div>
+                <div className="text-xs font-black text-slate-100 mt-1 leading-tight max-w-[155px] truncate print:text-black" title={results.interpretation.split('—')[0]}>
+                  {results.interpretation.split('—')[0]}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 🎓 Interactive Student Guides for each Active Step */}
+          <div className="mb-6 print:hidden">
+            {activeTab === 'agent' && (
+              <div className="bg-purple-50/75 border border-purple-100 rounded-2xl p-4 text-xs md:text-sm text-purple-950 leading-relaxed font-sans relative shadow-inner">
+                <div className="flex gap-3 items-start">
+                  <span className="text-xl shrink-0 mt-0.5">🎓</span>
+                  <div>
+                    <strong className="text-purple-900 block font-bold mb-1">Гид по Блоку 1 (Старт): Какую кнопку нажать первой?</strong>
+                    <p className="font-normal text-purple-950">
+                      Это ваша стартовая площадка. Чтобы калькулятор заработал, проекту нужны исходные цифры. У вас есть три простых пути:
+                    </p>
+                    <ul className="list-disc pl-5 mt-2 space-y-1 text-purple-900/90 font-normal">
+                      <li><strong className="text-purple-950 font-bold">Путь А (Для быстрого старта ⚡):</strong> Нажмите белую кнопку <strong className="text-purple-950 font-bold">«Загрузить демостартап»</strong> на панели быстрого управления чуть выше. Калькулятор мгновенно наполнится готовыми рыночными данными проекта «Умный Сенсорный Сад»!</li>
+                      <li><strong className="text-purple-950 font-bold">Путь Б (Ваш собственный проект 🤖):</strong> Опишите вашу бизнес-идею в поле ввода слева (выберите отрасль и укажите суть стартапа) и нажмите фиолетовую кнопку <strong className="text-purple-950 font-bold">«Сгенерировать показатели ИИ»</strong>. Наш ИИ-ассистент подберет реалистичные рыночные данные!</li>
+                      <li><strong className="text-purple-950 font-bold">Путь В (Ручной ввод 📝):</strong> Если у вас уже есть готовые цифры, сразу переходите в <strong className="text-purple-950 font-bold">«Шаг 2 (Ввод метрик)»</strong> для их ручной детальной настройки.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'anketa' && (
+              <div className="bg-blue-50/75 border border-blue-100 rounded-2xl p-4 text-xs md:text-sm text-blue-950 leading-relaxed font-sans relative shadow-inner">
+                <div className="flex gap-3 items-start">
+                  <span className="text-xl shrink-0 mt-0.5">🎓</span>
+                  <div>
+                    <strong className="text-blue-900 block font-bold mb-1">Гид по Блоку 2: Ручная регулировка метрик TRUSEK-6</strong>
+                    <p className="font-normal text-blue-950">
+                      В этом блоке вы задаете 12 ключевых метрик вашего проекта и определяете объем целевого рынка:
+                    </p>
+                    <ul className="list-disc pl-5 mt-2 space-y-1 text-blue-900/90 font-normal">
+                      <li><strong className="text-blue-950 font-bold">Шаг 1 (Имя проекта):</strong> Во вкладке <strong className="text-blue-950 font-bold">«Профиль проекта»</strong> ниже введите название вашего стартапа, ФИО автора-студента и ФИО ментора, чтобы все отчеты и графики персонализировались под вас.</li>
+                      <li><strong className="text-blue-950 font-bold">Шаг 2 (Интерактивные ползунки):</strong> Настройте 6 ключевых факторов устойчивости (утилитарность, окупаемость, удержание и др.). Читайте понятные подсказки с примерами под каждым параметром.</li>
+                      <li><strong className="text-blue-950 font-bold">Шаг 3 (Проверка качества данных):</strong> Нажмите кнопку <strong className="text-blue-950 font-bold">«ПРОВЕРИТЬ данные»</strong> на панели быстрого управления. Наш встроенный алгоритм проверит ваши цифры на экономическую логику и выведет подсказки.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'expert' && (
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs md:text-sm text-slate-800 leading-relaxed font-sans relative shadow-inner">
+                <div className="flex gap-3 items-start">
+                  <span className="text-xl shrink-0 mt-0.5">🎓</span>
+                  <div>
+                    <strong className="text-slate-950 block font-bold mb-1">Гид по Блоку 3: Экспертная калибровка весов факторов</strong>
+                    <p className="font-normal text-slate-700">
+                      Этот инструмент предназначен для глубокого научно-исследовательского анализа и тонкой настройки калькулятора:
+                    </p>
+                    <ul className="list-disc pl-5 mt-2 space-y-1 text-slate-650 font-normal">
+                      <li>Каждый из 6 факторов TRUSEK-6 вносит свой вклад в итоговый индекс SSI. По умолчанию установлены научно доказанные весовые значения.</li>
+                      <li>Если для специфики вашего стартапа (например, вирусная соцсеть) виральность намного важнее утилитарности, вы можете скорректировать их вес вручную.</li>
+                      <li><strong className="text-slate-900 font-bold">Главное условие:</strong> Сумма всех 6 долей должна равняться строго <strong className="text-indigo-600 font-bold">100%</strong>. Интерактивный счетчик внизу экрана поможет не ошибиться с балансом!</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'result' && (
+              <div className="bg-emerald-50/75 border border-emerald-100 rounded-2xl p-4 text-xs md:text-sm text-emerald-950 leading-relaxed font-sans relative shadow-inner">
+                <div className="flex gap-3 items-start">
+                  <span className="text-xl shrink-0 mt-0.5">🎓</span>
+                  <div>
+                    <strong className="text-emerald-900 block font-bold mb-1">Гид по Блоку 4: Цветок устойчивости (Лилия SSI) и Аналитика</strong>
+                    <p className="font-normal text-emerald-950">
+                      Ваш стартап полностью рассчитан! Изучите полученные результаты для защиты проекта:
+                    </p>
+                    <ul className="list-disc pl-5 mt-2 space-y-1 text-emerald-900/90 font-normal">
+                      <li><strong className="text-emerald-950 font-bold">Индекс SSI (в центре Лилии):</strong> Итоговая оценка устойчивости. Идеально — 10. Показывает, насколько ваш стартап защищен от провала.</li>
+                      <li><strong className="text-emerald-950 font-bold">Лепестки Лилии:</strong> Каждый лепесток отображает один из факторов. Узкие и короткие лепестки — это «слабые места» вашего бизнеса. Используйте кнопки <strong className="text-emerald-950 font-bold">«Слабые факторы»</strong> для их подсветки и получите рекомендации по исправлению.</li>
+                      <li><strong className="text-emerald-950 font-bold">Экспорт для диплома:</strong> Внизу страницы доступны кнопки <strong className="text-emerald-950 font-bold">«Печать текущего варианта...»</strong> и <strong className="text-emerald-950 font-bold">«Скачать академический отчет (Word *.docx)»</strong>. Отчет Word оформлен строго по стандартам ГОСТ (1.5 интервал, абзацный отступ 1.25 см, выравнивание по ширине, таблицы слева, рисунки по центру) и содержит готовую лепестковую диаграмму (Лилия SSI) и текстовые выводы!</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'compare' && (
+              <div className="bg-amber-50/75 border border-amber-100 rounded-2xl p-4 text-xs md:text-sm text-amber-950 leading-relaxed font-sans relative shadow-inner">
+                <div className="flex gap-3 items-start">
+                  <span className="text-xl shrink-0 mt-0.5">🎓</span>
+                  <div>
+                    <strong className="text-amber-900 block font-bold mb-1">Гид по Блоку 5: Инвестиционный баттл стартапов side-by-side</strong>
+                    <p className="font-normal text-amber-950">
+                      Здесь вы можете наглядно сравнить сильные и слабые стороны двух разных проектов или вариантов развития одного бизнеса:
+                    </p>
+                    <ul className="list-disc pl-5 mt-2 space-y-1 text-amber-900/90 font-normal">
+                      <li><strong className="text-amber-950 font-bold">Как загрузить Стартап А:</strong> Вернитесь на Шаг 2, настройте ваши цифры и нажмите кнопку <strong className="text-amber-950 font-bold">«Зафиксировать текущий проект как Стартап А»</strong> ниже.</li>
+                      <li><strong className="text-amber-950 font-bold">Как загрузить Стартап Б:</strong> Измените показатели в калькуляторе (например, загрузите демо-проект или введите другие цифры) и нажмите кнопку <strong className="text-amber-950 font-bold">«Зафиксировать как Стартап Б»</strong>.</li>
+                      <li><strong className="text-amber-950 font-bold">Интерактивная аналитика:</strong> Наша система сравнит 12 подфакторов проектов и автоматически выведет цветного победителя в каждом раунде!</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           
           {/* 🛡️ ДИАГНОСТИЧЕСКАЯ ПАНЕЛЬ ПРОВЕРКИ ДАННЫХ */}
           <AnimatePresence>
@@ -1975,37 +2328,37 @@ export default function App() {
               </div>
 
               {/* MARKET EXP MOD */}
-              <div className="p-6 bg-slate-900 text-slate-100 rounded-3xl mt-6">
-                <h4 className="font-bold font-display text-base text-amber-400 mb-4 flex items-center gap-1.5">
+              <div className="p-6 bg-amber-50/50 text-slate-900 rounded-3xl mt-6 border border-amber-100 shadow-xs">
+                <h4 className="font-bold font-display text-base text-amber-800 mb-4 flex items-center gap-1.5">
                   <span>Рыночная емкость (Модификатор MEI)</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">TAM (млн руб)</span>
+                    <span className="text-[10px] text-slate-500">TAM (млн руб)</span>
                     <input 
                       type="number" value={data.tam} onChange={e => handleNumberInput('tam', e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg py-1.5 px-3 text-sm text-yellow-100 font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-sm text-slate-800 font-mono shadow-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">SAM (млн руб)</span>
+                    <span className="text-[10px] text-slate-500">SAM (млн руб)</span>
                     <input 
                       type="number" value={data.sam} onChange={e => handleNumberInput('sam', e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg py-1.5 px-3 text-sm text-yellow-100 font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-sm text-slate-800 font-mono shadow-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">SOM (млн руб)</span>
+                    <span className="text-[10px] text-slate-500">SOM (млн руб)</span>
                     <input 
                       type="number" value={data.som} onChange={e => handleNumberInput('som', e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg py-1.5 px-3 text-sm text-yellow-100 font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-sm text-slate-800 font-mono shadow-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">TAV (Порог автономии)</span>
+                    <span className="text-[10px] text-slate-500">TAV (Порог автономии)</span>
                     <input 
                       type="number" value={data.tav} onChange={e => handleNumberInput('tav', e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg py-1.5 px-3 text-sm text-yellow-100 font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-sm text-slate-800 font-mono shadow-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                     />
                   </div>
                 </div>
@@ -2043,73 +2396,80 @@ export default function App() {
             <div className="space-y-8 print:space-y-6">
 
               {/* CRITICAL RENDER RESULTS CARD */}
-              <div id="pdf-results-header" className="relative text-white rounded-3xl p-6 md:p-8 overflow-hidden shadow-lg border border-slate-800" 
-                   style={{ background: `linear-gradient(135deg, ${results.color} 0%, #0f172a 100%)` }}>
-                
-                {/* Visual decoration inside result report banner */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+              {(() => {
+                const pastelColors = getPastelBackground(results.finalSsi);
+                return (
+                  <div 
+                    id="pdf-results-header" 
+                    className={`relative ${pastelColors.text} rounded-3xl p-6 md:p-8 overflow-hidden shadow-xs border ${pastelColors.border}`} 
+                    style={{ background: pastelColors.bg }}
+                  >
+                    {/* Visual decoration inside result report banner */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/40 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="relative z-10 flex flex-col md:flex-row items-center md:justify-between gap-6">
-                  
-                  <div className="text-center md:text-left">
-                    <span className="bg-white/15 backdrop-blur-md text-[10px] font-bold tracking-widest uppercase py-1 px-3 rounded-full text-indigo-100">
-                      Прогноз самодостаточности бизнес идеи стартапа на основе модели SSI
-                    </span>
-                    <h2 className="font-display font-black text-3xl md:text-4xl mt-3 tracking-tight">
-                      {data.name || 'Проект без названия'}
-                    </h2>
-                    <div className="text-sm font-medium text-slate-350 mt-2 space-y-0.5">
-                      <p>👥 Автор разработки: <strong className="text-white font-medium">{data.author || 'Не указан'}</strong></p>
-                      {data.expert && <p>🎓 Эксперт-наставник: <strong className="text-indigo-200 font-medium">{data.expert}</strong></p>}
+                    <div className="relative z-10 flex flex-col md:flex-row items-center md:justify-between gap-6">
+                      
+                      <div className="text-center md:text-left">
+                        <span className={`${pastelColors.badgeBg} ${pastelColors.badgeText} text-[10px] font-bold tracking-widest uppercase py-1 px-3 rounded-full border border-current/10`}>
+                          Прогноз самодостаточности бизнес идеи стартапа на основе модели SSI
+                        </span>
+                        <h2 className="font-display font-black text-3xl md:text-4xl mt-3 tracking-tight text-slate-900">
+                          {data.name || 'Проект без названия'}
+                        </h2>
+                        <div className="text-sm font-medium text-slate-600 mt-2 space-y-0.5">
+                          <p>👥 Автор разработки: <strong className="text-slate-900 font-semibold">{data.author || 'Не указан'}</strong></p>
+                          {data.expert && <p>🎓 Эксперт-наставник: <strong className="text-slate-900 font-semibold">{data.expert}</strong></p>}
+                        </div>
+                        <p className="text-xs md:text-sm text-slate-700 mt-4 leading-relaxed max-w-2xl font-light">
+                          {results.interpretation}
+                        </p>
+                      </div>
+
+                      <div className={`flex flex-col items-center shrink-0 ${pastelColors.badgeBg} border ${pastelColors.border} px-6 py-5 rounded-2xl w-full md:w-56 text-center shadow-inner`}>
+                        <span className={`text-[10px] tracking-widest uppercase ${pastelColors.badgeText} font-bold whitespace-nowrap`}>Финальный Индекс SSI</span>
+                        <span className={`font-display font-extrabold text-6xl ${pastelColors.badgeText} my-1.5 leading-none`}>
+                          {results.finalSsi.toFixed(2)}
+                        </span>
+                        <span className={`text-[11px] ${pastelColors.badgeText} opacity-80 font-medium`}>
+                          из 10.0 возможных
+                        </span>
+                      </div>
+
                     </div>
-                    <p className="text-xs md:text-sm text-slate-200 mt-4 leading-relaxed max-w-2xl font-light">
-                      {results.interpretation}
-                    </p>
-                  </div>
 
-                  <div className="flex flex-col items-center shrink-0 bg-white/10 backdrop-blur-md px-6 py-5 rounded-2xl border border-white/15 w-full md:w-56 text-center shadow-inner">
-                    <span className="text-[10px] tracking-widest uppercase text-slate-300 font-bold whitespace-nowrap">Финальный Индекс SSI</span>
-                    <span className="font-display font-extrabold text-6xl text-white my-1.5 leading-none">
-                      {results.finalSsi.toFixed(2)}
-                    </span>
-                    <span className="text-[11px] text-indigo-200/90 font-medium">
-                      из 10.0 возможных
-                    </span>
-                  </div>
-
-                </div>
-
-                {/* HORIZONTAL SCALE BAR VISUALIZER */}
-                <div className="mt-6 border-t border-white/10 pt-6">
-                  <div className="relative flex justify-between text-xs text-slate-200 font-bold mb-3 px-1">
-                    <span>0.0 (Критический)</span>
-                    <span>3.5</span>
-                    <span>5.0</span>
-                    <span>6.5</span>
-                    <span>7.5</span>
-                    <span>8.5</span>
-                    <span>10.0 (Образцовый)</span>
-                  </div>
-                  
-                  {/* Visual slider track enlarged strictly by 3 times (from h-2.5 to h-7.5 / 30px) */}
-                  <div className="h-[30px] bg-white/20 rounded-full overflow-hidden relative shadow-inner border border-white/10">
-                    
-                    {/* The colored background representing scale milestones */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 opacity-95" />
-                    
-                    {/* The white dot cursor/slider handle enlarged 3 times (from w-4 h-4 to w-12 h-12) with score value inside! */}
-                    <div 
-                      className="absolute top-1/2 -translate-y-1/2 w-12 h-12 bg-white border-[3px] border-slate-900 rounded-full shadow-2xl transition-all duration-1000 ease-out flex items-center justify-center cursor-pointer select-none"
-                      style={{ left: `${Math.min(94, Math.max(3, results.finalSsi * 10))}%`, transform: 'translate(-50%, -50%)' }}
-                    >
-                      <span className="text-slate-950 font-mono font-black text-xs">
-                        {results.finalSsi.toFixed(1)}
-                      </span>
+                    {/* HORIZONTAL SCALE BAR VISUALIZER */}
+                    <div className="mt-6 border-t border-slate-200/60 pt-6">
+                      <div className="relative flex justify-between text-xs text-slate-600 font-bold mb-3 px-1">
+                        <span>0.0 (Критический)</span>
+                        <span>3.5</span>
+                        <span>5.0</span>
+                        <span>6.5</span>
+                        <span>7.5</span>
+                        <span>8.5</span>
+                        <span>10.0 (Образцовый)</span>
+                      </div>
+                      
+                      {/* Visual slider track enlarged strictly by 3 times (from h-2.5 to h-7.5 / 30px) */}
+                      <div className="h-[30px] bg-slate-200/80 rounded-full overflow-hidden relative shadow-inner border border-slate-300/40">
+                        
+                        {/* The colored background representing scale milestones */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 opacity-95" />
+                        
+                        {/* The white dot cursor/slider handle enlarged 3 times (from w-4 h-4 to w-12 h-12) with score value inside! */}
+                        <div 
+                          className="absolute top-1/2 -translate-y-1/2 w-12 h-12 bg-white border-[3px] border-slate-900 rounded-full shadow-2xl transition-all duration-1000 ease-out flex items-center justify-center cursor-pointer select-none"
+                          style={{ left: `${Math.min(94, Math.max(3, results.finalSsi * 10))}%`, transform: 'translate(-50%, -50%)' }}
+                        >
+                          <span className="text-slate-950 font-mono font-black text-xs">
+                            {results.finalSsi.toFixed(1)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-              </div>
+                  </div>
+                );
+              })()}
 
               {/* LILY FLOWER SVG GRAPHICS & INTRO */}
               <div className="space-y-8">
@@ -2230,78 +2590,78 @@ export default function App() {
               </div>
 
               {/* MARKET MODIFIER MEI STATS PANEL */}
-              <div className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 relative overflow-hidden border border-slate-850">
-                <div className="absolute -left-6 -bottom-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="bg-[#f0f8ec] text-slate-800 rounded-3xl p-6 md:p-8 relative overflow-hidden border border-[#d6e9ce] shadow-xs">
+                <div className="absolute -left-6 -bottom-6 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
                 
                 <div className="relative z-10">
                   <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-                    <h3 className="font-display font-semibold uppercase tracking-wider text-amber-400 text-xs sm:text-sm">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
+                    <h3 className="font-display font-semibold uppercase tracking-wider text-emerald-800 text-xs sm:text-sm">
                       Рыночный модификатор MEI (Market Efficiency Index)
                     </h3>
                   </div>
 
-                  <p className="text-xs text-slate-300 mt-2 font-light leading-relaxed max-w-4xl">
-                    Рыночный модификатор калибрует базовый индекс <strong className="text-indigo-300">SSI</strong> на основе масштаба доступного сегмента и реалистичности планов по взятию точки безубыточности. Если соотношение планируемой выручки (<strong className="text-amber-200">SOM</strong>) к порогу автономии операционных расходов (<strong className="text-emerald-200 font-mono">TAV</strong>) меньше единицы — коэффициент опускается до <strong className="text-orange-400 font-mono">0.3</strong>, ослабляя общую оценку стартапа.
+                  <p className="text-xs text-slate-600 mt-2 font-normal leading-relaxed max-w-4xl">
+                    Рыночный модификатор калибрует базовый индекс <strong className="text-indigo-750 font-semibold">SSI</strong> на основе масштаба доступного сегмента и реалистичности планов по взятию точки безубыточности. Если соотношение планируемой выручки (<strong className="text-amber-700 font-semibold">SOM</strong>) к порогу автономии операционных расходов (<strong className="text-emerald-700 font-mono font-semibold">TAV</strong>) меньше единицы — коэффициент опускается до <strong className="text-orange-600 font-mono font-semibold">0.3</strong>, ослабляя общую оценку стартапа.
                   </p>
 
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-                    <div className="bg-white/5 border border-white/10 p-3 rounded-2xl text-center flex flex-col justify-between min-h-[115px]">
+                    <div className="bg-white/80 border border-[#d6e9ce]/60 p-3 rounded-2xl text-center flex flex-col justify-between min-h-[115px] shadow-2xs">
                       <div>
-                        <span className="text-[10px] text-slate-400 block font-bold tracking-wide uppercase">TAM</span>
-                        <span className="font-mono text-base font-extrabold mt-1 block">
+                        <span className="text-[10px] text-slate-500 block font-bold tracking-wide uppercase">TAM</span>
+                        <span className="font-mono text-base font-extrabold mt-1 block text-slate-900">
                           {data.tam ? `${data.tam} млн` : '—'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-slate-400 mt-2 block leading-snug">
+                      <span className="text-[9px] text-slate-500 mt-2 block leading-snug">
                         Общий объем рынка (весь потенциальный спрос)
                       </span>
                     </div>
 
-                    <div className="bg-white/5 border border-white/10 p-3 rounded-2xl text-center flex flex-col justify-between min-h-[115px]">
+                    <div className="bg-white/80 border border-[#d6e9ce]/60 p-3 rounded-2xl text-center flex flex-col justify-between min-h-[115px] shadow-2xs">
                       <div>
-                        <span className="text-[10px] text-slate-400 block font-bold tracking-wide uppercase">SAM</span>
-                        <span className="font-mono text-base font-extrabold mt-1 block">
+                        <span className="text-[10px] text-slate-500 block font-bold tracking-wide uppercase">SAM</span>
+                        <span className="font-mono text-base font-extrabold mt-1 block text-slate-900">
                           {data.sam ? `${data.sam} млн` : '—'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-slate-400 mt-2 block leading-snug">
+                      <span className="text-[9px] text-slate-500 mt-2 block leading-snug">
                         Доступный сегмент рынка (целевая аудитория)
                       </span>
                     </div>
 
-                    <div className="bg-white/5 border border-white/10 p-3 rounded-2xl text-center flex flex-col justify-between min-h-[115px]">
+                    <div className="bg-white/80 border border-[#d6e9ce]/60 p-3 rounded-2xl text-center flex flex-col justify-between min-h-[115px] shadow-2xs">
                       <div>
-                        <span className="text-[10px] text-slate-400 block font-bold tracking-wide uppercase font-semibold text-amber-400">SOM</span>
-                        <span className="font-mono text-base font-extrabold mt-1 block text-amber-300">
+                        <span className="text-[10px] text-amber-800 block font-bold tracking-wide uppercase font-semibold">SOM</span>
+                        <span className="font-mono text-base font-extrabold mt-1 block text-amber-700">
                           {data.som ? `${data.som} млн` : '—'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-amber-400/80 mt-2 block leading-snug">
+                      <span className="text-[9px] text-amber-850 mt-2 block leading-snug">
                         Реальный план продаж стартапа за 3 года
                       </span>
                     </div>
 
-                    <div className="bg-white/5 border border-white/10 p-3 rounded-2xl text-center flex flex-col justify-between min-h-[115px]">
+                    <div className="bg-white/80 border border-[#d6e9ce]/60 p-3 rounded-2xl text-center flex flex-col justify-between min-h-[115px] shadow-2xs">
                       <div>
-                        <span className="text-[10px] text-slate-400 block font-bold tracking-wide uppercase font-semibold text-emerald-400">TAV (Порог)</span>
-                        <span className="font-mono text-base font-extrabold mt-1 block text-emerald-300">
+                        <span className="text-[10px] text-emerald-800 block font-bold tracking-wide uppercase font-semibold">TAV (Порог)</span>
+                        <span className="font-mono text-base font-extrabold mt-1 block text-emerald-700">
                           {data.tav ? `${data.tav} млн` : '—'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-emerald-400/80 mt-2 block leading-snug">
+                      <span className="text-[9px] text-emerald-800 mt-2 block leading-snug">
                         Порог безубыточности и финансовой автономии
                       </span>
                     </div>
 
-                    <div className="bg-indigo-950/60 border border-indigo-500/30 col-span-2 md:col-span-1 p-3 rounded-2xl text-center group flex flex-col justify-between min-h-[115px]">
+                    <div className="bg-indigo-50/80 border border-indigo-200/60 col-span-2 md:col-span-1 p-3 rounded-2xl text-center group flex flex-col justify-between min-h-[115px] shadow-2xs">
                       <div>
-                        <span className="text-[10px] text-indigo-300 block font-bold tracking-wide uppercase">MEI Коэф.</span>
-                        <span className="font-mono text-lg font-black mt-1 block text-indigo-200">
+                        <span className="text-[10px] text-indigo-700 block font-bold tracking-wide uppercase">MEI Коэф.</span>
+                        <span className="font-mono text-lg font-black mt-1 block text-indigo-800">
                           × {results.mei.toFixed(2)}
                         </span>
                       </div>
-                      <span className="text-[9px] text-indigo-300/90 mt-2 block leading-snug font-medium">
+                      <span className="text-[9px] text-indigo-800 mt-2 block leading-snug font-medium">
                         Индекс рыночной эффективности (отношение SOM к TAV)
                       </span>
                     </div>
@@ -2511,10 +2871,20 @@ export default function App() {
               {/* REPORT PRINT & ACTION TOOLS */}
               <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-6 print:hidden">
                 
+                <a
+                  href={window.location.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 border border-sky-100 shadow-xs cursor-pointer"
+                >
+                  <ExternalLink className="w-4 h-4 text-sky-500" />
+                  <span>Открыть стартап в окне G-браузера</span>
+                </a>
+
                 <button
                   type="button"
                   onClick={handlePrint}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Printer className="w-4 h-4 text-slate-400" />
                   <span>Печать текущего варианта стартапа</span>
@@ -2522,11 +2892,12 @@ export default function App() {
 
                 <button
                   type="button"
-                  onClick={handleDownloadPdf}
-                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer border border-indigo-100 shadow-xs"
+                  onClick={handleExportDocx}
+                  className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Скачать профессиональный научно-практический отчет по ГОСТ в формате Microsoft Word (1.5 интервала, отступы 1.25 см, выравнивание по ширине, таблицы слева, рисунки по центру)"
                 >
-                  <Download className="w-4 h-4 text-indigo-500" />
-                  <span>Скачать PDF-отчет</span>
+                  <FileText className="w-4 h-4 text-emerald-600" />
+                  <span>📑 Скачать академический отчет (Word *.docx)</span>
                 </button>
 
                 <button
@@ -2880,8 +3251,6 @@ export default function App() {
                         </tbody>
                       </table>
                     </div>
-
-                    {/* MARKET STATS ROW COMPARISON */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100/80">
                         <h4 className="font-extrabold text-[10px] uppercase tracking-widest text-indigo-700 mb-2">Финансы и объемы Стартапа А</h4>
@@ -3286,8 +3655,8 @@ export default function App() {
                     animate={{ opacity: 1, y: 0 }} 
                     className="relative min-h-[380px] p-1 flex items-center justify-center"
                   >
-                    {/* Background content "70% hidden like in fog" (opacity-30 + blur) */}
-                    <div className="opacity-30 blur-[2.5px] select-none pointer-events-none space-y-4 text-xs text-slate-700 font-normal leading-relaxed w-full">
+                    {/* Clean view of list 5 without blur or opacity overlay */}
+                    <div className="space-y-4 text-xs text-slate-700 font-normal leading-relaxed w-full">
                       <div className="space-y-2.5">
                         <h4 className="font-bold text-slate-900 text-sm border-l-2 border-amber-500 pl-2">Шаг 1 — Нормализация каждого подфактора</h4>
                         <p>
@@ -3359,22 +3728,6 @@ export default function App() {
                         <code>Уровень 3 → 2: x_ij_норм = f(x_ij_raw, benchmarks_j)</code> <br />
                         <code>Уровень 2 → 2: F_i = (x_i1_норм + x_i2_норм) / 2</code> <br />
                         <code>Уровень 2 → 1: SSI = Σ (β_i · F_i), где совокупная сумма весов Σ β_i = 1.0</code>
-                      </div>
-                    </div>
-
-                    {/* Highly readable watermark overlay */}
-                    <div className="absolute inset-x-0 inset-y-0 flex items-center justify-center p-4 bg-slate-100/10 rounded-2xl">
-                      <div className="bg-slate-900/95 hover:bg-slate-900 text-white rounded-2xl border border-amber-400/35 p-6 max-w-lg text-center shadow-2xl backdrop-blur-sm transition-all duration-300">
-                        <div className="w-11 h-11 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3.5 border border-amber-500/20">
-                          <Mail className="w-5 h-5 text-amber-300" />
-                        </div>
-                        <h4 className="text-[10px] uppercase tracking-widest font-black text-amber-300 mb-2">Обращение авторов научной методики</h4>
-                        <p className="font-display font-medium text-xs md:text-sm text-slate-100 leading-relaxed">
-                          Авторы будут признательны если вы пришлете на почту <a href="mailto:indexSSI@mail.ru" className="text-amber-300 hover:text-amber-200 underline font-mono font-bold">indexSSI@mail.ru</a> - скриншот из <a href="https://elibrary.ru/" target="_blank" rel="noopener noreferrer" className="text-amber-300 hover:underline font-bold">elibrary.ru</a> о цитировании ВАМИ нашей любой статьи в своих научных публикациях — мы сразу же вышлем вам методику расчета на ваш email
-                        </p>
-                        <div className="mt-4 pt-3 border-t border-white/5 text-[10px] text-slate-400 font-light leading-snug">
-                          Данный лист методологии временно скрыт. Ваша поддержка в признании академических публикаций авторов позволяет развивать этот алгоритм!
-                        </div>
                       </div>
                     </div>
                   </motion.div>

@@ -293,34 +293,34 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden mt-8">
+    <div className="bg-gradient-to-br from-indigo-50/70 via-purple-50/70 to-slate-50 border border-indigo-100 text-slate-800 rounded-3xl p-6 md:p-8 relative overflow-hidden mt-8">
       {/* Glow background decoration */}
       <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header section */}
-      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-5 mb-6">
+      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-indigo-100/60 pb-5 mb-6">
         <div>
-          <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-wider">
-            <Bot className="w-4 h-4 animate-bounce" />
+          <div className="flex items-center gap-2 text-indigo-700 font-bold text-xs uppercase tracking-wider">
+            <Bot className="w-4 h-4" />
             <span>Педагогический тренажер-верификатор</span>
           </div>
-          <h3 className="font-display font-black text-white text-xl md:text-2xl mt-1 tracking-tight">
+          <h3 className="font-display font-black text-slate-900 text-xl md:text-2xl mt-1 tracking-tight">
             Интерактивный валидатор реалистичности объема продаж
           </h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs text-slate-650 mt-1 max-w-2xl leading-relaxed">
             Большинство стартаперов заведомо преувеличивают плановый сбыт. Ткните пальцем в реальность: новая фирма неизвестна рынку, рекламный бюджет ограничен, а продажи распределяются неравномерно по дням.
           </p>
         </div>
 
         {/* Realism Score Badge */}
-        <div className="flex items-center gap-3 bg-slate-950/50 border border-slate-800 px-4 py-3 rounded-2xl shrink-0">
+        <div className="flex items-center gap-3 bg-white border border-indigo-100 px-4 py-3 rounded-2xl shrink-0 shadow-sm">
           <div className="text-right">
-            <span className="text-[10px] text-slate-400 block font-bold uppercase">Индекс Реалистичности</span>
+            <span className="text-[10px] text-slate-550 block font-bold uppercase">Индекс Реалистичности</span>
             <span className="text-xs text-slate-500 font-mono">Sales Realism Index</span>
           </div>
           <div className="font-mono text-3xl font-black flex items-baseline gap-0.5" 
-               style={{ color: realismScore > 75 ? '#10b981' : realismScore > 45 ? '#f59e0b' : '#f43f5e' }}>
+               style={{ color: realismScore > 75 ? '#047857' : realismScore > 45 ? '#d97706' : '#be123c' }}>
             <span>{realismScore}</span>
             <span className="text-sm opacity-60">%</span>
           </div>
@@ -332,21 +332,21 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
         
         {/* Sliders and fields (Left side - 5 cols) */}
         <div className="lg:col-span-5 space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="flex items-center justify-between border-b border-indigo-150 pb-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-indigo-600" />
               <span>Параметры сбыта</span>
             </h4>
             
             {/* Input Mode Toggle */}
-            <div className="flex gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <div className="flex gap-1 bg-slate-200/60 p-1 rounded-lg border border-slate-300/40">
               <button
                 type="button"
                 onClick={() => setInputMode('daily')}
                 className={`px-2 py-1 text-[10px] font-bold rounded transition-all ${
                   inputMode === 'daily'
                     ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 В день
@@ -357,7 +357,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                 className={`px-2 py-1 text-[10px] font-bold rounded transition-all ${
                   inputMode === 'annual'
                     ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 В год
@@ -366,22 +366,22 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
           </div>
 
           {/* TWO-WAY SSI SYNC TOGGLE */}
-          <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-850 flex items-center justify-between">
+          <div className="bg-white p-3 rounded-xl border border-indigo-100 flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-2">
-              <div className={`p-1.5 rounded-lg ${autoSync ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
-                {autoSync ? <Link2 className="w-4 h-4 animate-pulse" /> : <Link2Off className="w-4 h-4" />}
+              <div className={`p-1.5 rounded-lg ${autoSync ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' : 'bg-slate-100 text-slate-500'}`}>
+                {autoSync ? <Link2 className="w-4 h-4" /> : <Link2Off className="w-4 h-4" />}
               </div>
               <div>
-                <span className="text-xs font-bold text-slate-200 block">Связь с Лилией Факторов и SSI</span>
-                <span className="text-[10px] text-slate-400 block">Изменения на лету меняют главный лепесток R и SOM</span>
+                <span className="text-xs font-bold text-slate-800 block">Связь с Лилией Факторов и SSI</span>
+                <span className="text-[10px] text-slate-550 block">Изменения на лету меняют главный лепесток R и SOM</span>
               </div>
             </div>
             <button
               onClick={() => setAutoSync(!autoSync)}
               className={`px-3 py-1 text-[10px] font-bold rounded-lg border transition-all ${
                 autoSync 
-                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-950/30' 
-                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-xs' 
+                  : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
               }`}
             >
               {autoSync ? 'АКТИВНА' : 'ПЕСОЧНИЦА'}
@@ -390,7 +390,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
 
           {/* Unit selection */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-400 block">Единица измерения продаж</label>
+            <label className="text-xs font-bold text-slate-550 block">Единица измерения продаж</label>
             <div className="flex flex-wrap gap-1.5">
               {(['шт.', 'ед.', 'кг', 'м²', 'тн', 'л', 'услуг'] as MeasurementUnit[]).map((u) => (
                 <button
@@ -399,7 +399,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                   className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
                     unit === u
                       ? 'bg-indigo-600 border-indigo-500 text-white shadow'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   {u}
@@ -411,10 +411,10 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
           {/* DYNAMIC SCALE WITH MASSIVE WIGGLE ROOM TO THE LEFT */}
           {inputMode === 'daily' ? (
             /* DAILY SALES INPUT (Min starting at 0.1 for very small startups) */
-            <div className="space-y-1.5 bg-slate-950/30 p-4 rounded-xl border border-slate-850">
+            <div className="space-y-1.5 bg-white/60 p-4 rounded-xl border border-indigo-100/20 shadow-xs">
               <div className="flex justify-between items-center text-xs">
                 <div>
-                  <span className="font-semibold text-slate-300 block">Средний сбыт в день (план)</span>
+                  <span className="font-semibold text-slate-800 block">Средний сбыт в день (план)</span>
                   <span className="text-[10px] text-slate-500">Запас хода влево открыт полностью!</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -425,7 +425,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                     max="1000"
                     value={dailyAverage}
                     onChange={(e) => handleDailyAverageChange(Math.max(0, Number(e.target.value)))}
-                    className="w-20 bg-slate-900 border border-slate-750 rounded text-right py-0.5 px-2 text-xs font-mono font-bold text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-20 bg-white border border-slate-200 rounded text-right py-0.5 px-2 text-xs font-mono font-bold text-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                   <span className="text-[10px] text-slate-500 font-mono">{unit}/день</span>
                 </div>
@@ -437,7 +437,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                 step={getDailyStep()}
                 value={dailyAverage}
                 onChange={(e) => handleDailyAverageChange(Number(e.target.value))}
-                className="w-full accent-indigo-500 h-1.5 bg-slate-950 rounded-lg cursor-ew-resize mt-2"
+                className="w-full accent-indigo-500 h-1.5 bg-slate-200 rounded-lg cursor-ew-resize mt-2"
               />
               <div className="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
                 <span>0.1 (Малый бизнес)</span>
@@ -445,17 +445,17 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                 <span>75</span>
                 <span>150+ {unit}</span>
               </div>
-              <div className="text-[10px] text-indigo-400 bg-indigo-950/20 px-2.5 py-1.5 rounded-lg border border-indigo-500/10 mt-2 flex justify-between">
+              <div className="text-[10px] text-indigo-700 bg-indigo-50/50 px-2.5 py-1.5 rounded-lg border border-indigo-100/30 mt-2 flex justify-between">
                 <span>Экстраполяция в годовой объем:</span>
                 <strong className="font-mono">{(dailyAverage * 365).toLocaleString(undefined, {maximumFractionDigits: 0})} {unit}/год</strong>
               </div>
             </div>
           ) : (
             /* ANNUAL SALES INPUT (Highly precise low scale) */
-            <div className="space-y-1.5 bg-slate-950/30 p-4 rounded-xl border border-slate-850">
+            <div className="space-y-1.5 bg-white/60 p-4 rounded-xl border border-indigo-100/20 shadow-xs">
               <div className="flex justify-between items-center text-xs">
                 <div>
-                  <span className="font-semibold text-slate-300 block">Плановый годовой объем продаж</span>
+                  <span className="font-semibold text-slate-800 block">Плановый годовой объем продаж</span>
                   <span className="text-[10px] text-slate-500">Доступен ввод любого малого числа</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -465,7 +465,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                     max="500000"
                     value={statedAnnualVolume}
                     onChange={(e) => handleAnnualVolumeChange(Math.max(1, Number(e.target.value)))}
-                    className="w-24 bg-slate-900 border border-slate-750 rounded text-right py-0.5 px-2 text-xs font-mono font-bold text-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-24 bg-white border border-slate-200 rounded text-right py-0.5 px-2 text-xs font-mono font-bold text-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                   <span className="text-[10px] text-slate-500 font-mono">{unit}</span>
                 </div>
@@ -477,7 +477,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                 step={getAnnualStep()}
                 value={statedAnnualVolume}
                 onChange={(e) => handleAnnualVolumeChange(Number(e.target.value))}
-                className="w-full accent-indigo-500 h-1.5 bg-slate-950 rounded-lg cursor-ew-resize mt-2"
+                className="w-full accent-indigo-500 h-1.5 bg-slate-200 rounded-lg cursor-ew-resize mt-2"
               />
               <div className="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
                 <span>1 {unit}</span>
@@ -485,7 +485,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                 <span>5 000</span>
                 <span>20 000+</span>
               </div>
-              <div className="text-[10px] text-indigo-400 bg-indigo-950/20 px-2.5 py-1.5 rounded-lg border border-indigo-500/10 mt-2 flex justify-between">
+              <div className="text-[10px] text-indigo-700 bg-indigo-50/50 px-2.5 py-1.5 rounded-lg border border-indigo-100/30 mt-2 flex justify-between">
                 <span>Рассчитанный сбыт в сутки:</span>
                 <strong className="font-mono">{(statedAnnualVolume / 365).toFixed(1)} {unit}/день</strong>
               </div>
@@ -493,11 +493,11 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
           )}
 
           {/* TWO-WAY PRICE PAIRING: OUR PRICE AND COMPETITOR PRICE */}
-          <div className="space-y-4 bg-slate-950/20 p-4 rounded-xl border border-slate-850">
+          <div className="space-y-4 bg-white/50 p-4 rounded-xl border border-indigo-100/20 shadow-xs">
             {/* Our Price */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-slate-300">Наша средняя цена за 1 {unit}</span>
+                <span className="font-semibold text-slate-800">Наша средняя цена за 1 {unit}</span>
                 <div className="flex items-center gap-1">
                   <input
                     type="number"
@@ -505,7 +505,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                     max="500000"
                     value={pricePerUnit}
                     onChange={(e) => setPricePerUnit(Math.max(1, Number(e.target.value)))}
-                    className="w-20 bg-slate-900 border border-slate-800 rounded py-0.5 px-1.5 text-xs text-right text-emerald-400 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-20 bg-white border border-slate-200 rounded py-0.5 px-1.5 text-xs text-right text-emerald-700 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                   <span className="text-[10px] text-slate-500 font-mono">руб.</span>
                 </div>
@@ -517,14 +517,14 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                 step={pricePerUnit < 200 ? 5 : 50}
                 value={pricePerUnit}
                 onChange={(e) => setPricePerUnit(Number(e.target.value))}
-                className="w-full accent-emerald-500 h-1.5 bg-slate-950 rounded-lg cursor-ew-resize"
+                className="w-full accent-emerald-500 h-1.5 bg-slate-200 rounded-lg cursor-ew-resize"
               />
             </div>
 
             {/* Competitor Price */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-slate-300">Средняя цена главного конкурента</span>
+                <span className="font-semibold text-slate-800">Средняя цена главного конкурента</span>
                 <div className="flex items-center gap-1">
                   <input
                     type="number"
@@ -532,7 +532,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                     max="500000"
                     value={competitorPrice}
                     onChange={(e) => setCompetitorPrice(Math.max(1, Number(e.target.value)))}
-                    className="w-20 bg-slate-900 border border-slate-800 rounded py-0.5 px-1.5 text-xs text-right text-rose-400 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    className="w-20 bg-white border border-slate-200 rounded py-0.5 px-1.5 text-xs text-right text-rose-700 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                   <span className="text-[10px] text-slate-500 font-mono">руб.</span>
                 </div>
@@ -544,11 +544,11 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                 step={competitorPrice < 200 ? 5 : 50}
                 value={competitorPrice}
                 onChange={(e) => setCompetitorPrice(Number(e.target.value))}
-                className="w-full accent-rose-500 h-1.5 bg-slate-950 rounded-lg cursor-ew-resize"
+                className="w-full accent-rose-500 h-1.5 bg-slate-200 rounded-lg cursor-ew-resize"
               />
-              <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+              <div className="flex justify-between text-[10px] text-slate-600 mt-1 font-mono">
                 <span>Пропорция (Цена Наша / Конкурент):</span>
-                <strong className={pricePerUnit / competitorPrice > 1 ? 'text-rose-400' : 'text-emerald-400'}>
+                <strong className={pricePerUnit / competitorPrice > 1 ? 'text-rose-700' : 'text-emerald-700'}>
                   {(pricePerUnit / competitorPrice).toFixed(2)}x
                 </strong>
               </div>
@@ -558,7 +558,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
           {/* Marketing Budget */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-semibold text-slate-300">Годовой рекламный бюджет</span>
+              <span className="font-semibold text-slate-800">Годовой рекламный бюджет</span>
               <div className="flex items-center gap-1">
                 <input
                   type="number"
@@ -566,7 +566,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                   max="100000"
                   value={marketingBudget}
                   onChange={(e) => setMarketingBudget(Math.max(0, Number(e.target.value)))}
-                  className="w-20 bg-slate-900 border border-slate-800 rounded py-0.5 px-1.5 text-xs text-right text-amber-400 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-20 bg-white border border-slate-200 rounded py-0.5 px-1.5 text-xs text-right text-amber-700 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
                 <span className="text-[10px] text-slate-500 font-mono">тыс. р.</span>
               </div>
@@ -578,44 +578,44 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
               step="50"
               value={marketingBudget}
               onChange={(e) => setMarketingBudget(Number(e.target.value))}
-              className="w-full accent-amber-500 h-1.5 bg-slate-950 rounded-lg cursor-ew-resize"
+              className="w-full accent-amber-500 h-1.5 bg-slate-200 rounded-lg cursor-ew-resize"
             />
           </div>
 
           {/* Site Traffic & Conversion */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1 bg-slate-950/40 p-3 rounded-xl border border-slate-850">
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Посетителей сайта / год</span>
+            <div className="space-y-1 bg-white/50 p-3 rounded-xl border border-indigo-100/20 shadow-xs">
+              <span className="text-[10px] text-slate-550 font-bold block uppercase">Посетителей сайта / год</span>
               <input
                 type="number"
                 value={siteTraffic}
                 onChange={(e) => setSiteTraffic(Math.max(10, Number(e.target.value)))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg py-1 px-2.5 text-xs text-white font-mono mt-1"
+                className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2.5 text-xs text-slate-800 font-mono mt-1"
               />
             </div>
-            <div className="space-y-1 bg-slate-950/40 p-3 rounded-xl border border-slate-850">
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Конверсия воронки (%)</span>
+            <div className="space-y-1 bg-white/50 p-3 rounded-xl border border-indigo-100/20 shadow-xs">
+              <span className="text-[10px] text-slate-550 font-bold block uppercase">Конверсия воронки (%)</span>
               <input
                 type="number"
                 step="0.1"
                 value={funnelConversion}
                 onChange={(e) => setFunnelConversion(Math.max(0.1, Number(e.target.value)))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg py-1 px-2.5 text-xs text-white font-mono mt-1"
+                className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2.5 text-xs text-slate-800 font-mono mt-1"
               />
             </div>
           </div>
 
           {/* Trust awareness checkbox */}
-          <div className="bg-indigo-950/20 border border-indigo-500/10 p-3.5 rounded-xl flex items-center justify-between gap-3">
+          <div className="bg-indigo-50/50 border border-indigo-100/60 p-3.5 rounded-xl flex items-center justify-between gap-3 shadow-xs">
             <div>
-              <span className="text-xs font-bold text-indigo-300 block">Новая неизвестная компания?</span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">Включает жесткий временной лаг доверия в первые 3 месяца</span>
+              <span className="text-xs font-bold text-indigo-900 block">Новая неизвестная компания?</span>
+              <span className="text-[10px] text-slate-550 block mt-0.5">Включает жесткий временной лаг доверия в первые 3 месяца</span>
             </div>
             <input
               type="checkbox"
               checked={isNewBrand}
               onChange={(e) => setIsNewBrand(e.target.checked)}
-              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-700 bg-slate-800 cursor-pointer"
+              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 bg-white cursor-pointer"
             />
           </div>
 
@@ -625,20 +625,20 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
         <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
           
           {/* SVG D3-like Monthly Chart */}
-          <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-850 flex-1 flex flex-col justify-between">
-            <div className="flex items-center justify-between gap-2 border-b border-slate-900 pb-2 mb-2">
-              <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-between shadow-xs">
+            <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-2">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Разгон продаж по месяцам ({unit})</span>
               </span>
               <div className="flex items-center gap-3 text-[9px] font-mono">
                 <span className="flex items-center gap-1">
                   <span className="w-2.5 h-0.5 bg-rose-500 inline-block" />
-                  <span className="text-rose-400 font-semibold">План</span>
+                  <span className="text-rose-700 font-semibold">План</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-0.5 bg-emerald-400 inline-block" />
-                  <span className="text-emerald-400 font-semibold">AI-Реалистичный</span>
+                  <span className="w-2.5 h-0.5 bg-emerald-500 inline-block" />
+                  <span className="text-emerald-700 font-semibold">AI-Реалистичный</span>
                 </span>
               </div>
             </div>
@@ -656,7 +656,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                       y1={yVal}
                       x2={padding.left + plotW}
                       y2={yVal}
-                      stroke="#1e293b"
+                      stroke="#e2e8f0"
                       strokeWidth="1"
                       strokeDasharray="4,4"
                     />
@@ -672,132 +672,108 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                       key={idx}
                       x={padding.left - 8}
                       y={yVal + 3}
-                      fill="#64748b"
+                      fill="#475569"
                       fontSize="8"
                       fontFamily="monospace"
                       textAnchor="end"
                     >
-                      {amt >= 1000 ? `${(amt / 1000).toFixed(1)}k` : amt}
+                      {amt}
                     </text>
                   );
                 })}
 
-                {/* X-axis Month Labels */}
+                {/* Paths */}
+                <path
+                  d={studentPath}
+                  fill="none"
+                  stroke="#ef4444"
+                  strokeWidth="2.5"
+                />
+                <path
+                  d={aiPath}
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="2.5"
+                />
+
+                {/* X-axis labels */}
                 {monthlyForecast.map((d) => (
                   <text
                     key={d.month}
                     x={getX(d.month)}
-                    y={padding.top + plotH + 12}
-                    fill="#64748b"
-                    fontSize="8"
+                    y={svgHeight - padding.bottom + 15}
+                    fill="#475569"
+                    fontSize="9"
                     fontFamily="monospace"
                     textAnchor="middle"
                   >
                     м{d.month}
                   </text>
                 ))}
-
-                {/* Plot Paths */}
-                <path
-                  d={studentPath}
-                  fill="none"
-                  stroke="#f43f5e"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  opacity="0.8"
-                />
-                
-                <path
-                  d={aiPath}
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  className="animate-pulse"
-                />
-
-                {/* Render Nodes for Year/Month Endpoints */}
-                {monthlyForecast.filter(d => d.month === 1 || d.month === 12).map((d) => (
-                  <g key={d.month}>
-                    <circle cx={getX(d.month)} cy={getY(d.student)} r="4" fill="#f43f5e" stroke="#0f172a" strokeWidth="1.5" />
-                    <circle cx={getX(d.month)} cy={getY(d.ai)} r="5" fill="#10b981" stroke="#0f172a" strokeWidth="1.5" />
-                  </g>
-                ))}
               </svg>
             </div>
 
             {/* Calculations recap bar */}
-            <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-900 text-center font-mono text-[9px]">
-              <div className="bg-slate-900/40 p-1.5 rounded border border-slate-900">
+            <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-200 text-center font-mono text-[9px]">
+              <div className="bg-slate-50 border border-slate-200 p-1.5 rounded">
                 <span className="text-slate-500 block text-[7px] uppercase">Плановый годовой оборот</span>
-                <span className="font-extrabold text-slate-200">{calculatedStatedRevenue.toFixed(2)} млн руб</span>
+                <span className="font-extrabold text-slate-800">{calculatedStatedRevenue.toFixed(2)} млн руб</span>
               </div>
-              <div className="bg-slate-900/40 p-1.5 rounded border border-slate-900">
-                <span className="text-slate-500 block text-[7px] uppercase">Стоимость лида CAC</span>
-                <span className="font-extrabold text-slate-200">{impliedCac.toFixed(0)} руб</span>
+              <div className="bg-slate-50 border border-slate-200 p-1.5 rounded">
+                <span className="text-slate-500 block text-[7px] uppercase">Заявленный CAC</span>
+                <span className="font-extrabold text-slate-800">{impliedCac.toFixed(0)} руб (Реальный: {realisticCacLimit.toFixed(0)} руб)</span>
               </div>
-              <div className="bg-indigo-950/20 p-1.5 rounded border border-indigo-500/10">
-                <span className="text-indigo-400 block text-[7px] uppercase">Реалистичный CAC лимит</span>
-                <span className="font-extrabold text-indigo-300">~ {realisticCacLimit.toFixed(0)} руб</span>
+              <div className="bg-slate-50 border border-slate-200 p-1.5 rounded">
+                <span className="text-slate-500 block text-[7px] uppercase">Реалистичный лимит объема</span>
+                <span className="font-extrabold text-slate-800">{capacityLimit.toLocaleString()} {unit}</span>
               </div>
             </div>
           </div>
 
           {/* Verdict Box */}
-          <div className={`p-4 rounded-2xl border flex flex-col justify-between ${verdict.color}`}>
-            <div className="flex items-start gap-2.5">
-              <div className="p-1.5 bg-slate-900/50 rounded-lg border border-white/5 shrink-0 mt-0.5">
-                {realismScore >= 80 ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                ) : realismScore >= 50 ? (
-                  <AlertTriangle className="w-4 h-4 text-amber-400" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 text-rose-400 animate-pulse" />
-                )}
-              </div>
-              <div>
-                <h5 className="font-display font-black text-xs text-white tracking-wide">{verdict.title}</h5>
-                <p className="text-[11px] text-slate-300 mt-1 leading-relaxed font-light">{verdict.desc}</p>
-              </div>
+          <div className={`p-5 rounded-2xl border ${verdict.color} flex flex-col justify-between space-y-4 shadow-sm`}>
+            <div>
+              <h4 className="font-display font-black text-sm uppercase tracking-wider flex items-center gap-2">
+                <span>{verdict.title}</span>
+              </h4>
+              <p className={`text-xs ${verdict.textColor} leading-relaxed mt-2`}>
+                {verdict.desc}
+              </p>
             </div>
-            
-            <div className="mt-3 pt-2.5 border-t border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-[10px]">
-              <span className={`font-semibold ${verdict.textColor}`}>{verdict.action}</span>
-              <span className="text-[9px] text-slate-400 font-mono bg-slate-900/30 px-1.5 py-0.5 rounded border border-white/5">
-                Завышение в: <strong>{overestimationFactor.toFixed(1)}x</strong>
-              </span>
+            <div className="bg-white/40 p-3 rounded-xl border border-white/20 text-xs text-slate-800">
+              <span className="font-bold block text-slate-900">Рекомендация по защите:</span>
+              <span className="mt-1 block leading-normal">{verdict.action}</span>
             </div>
           </div>
 
         </div>
-
       </div>
 
       {/* NEW SECTION: EDUCATIONAL DAILY SALES SIMULATOR */}
       {/* Specifically answers: "может в ручную в день ввести , но каждый отличается от другого дня??? подумай" */}
-      <div className="mt-8 border-t border-slate-800 pt-6 relative z-10">
+      <div className="mt-8 border-t border-indigo-100/60 pt-6 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
           <div>
-            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
+            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               <span>Микромоделирование сбытовой реальности</span>
             </span>
-            <h4 className="font-display font-extrabold text-white text-base mt-1">
+            <h4 className="font-display font-extrabold text-slate-900 text-base mt-1">
               Почему планировать «вручную каждый день» не имеет смысла?
             </h4>
-            <p className="text-xs text-slate-400 mt-0.5 max-w-3xl leading-relaxed">
+            <p className="text-xs text-slate-650 mt-0.5 max-w-3xl leading-relaxed">
               В реальности продажи никогда не идут ровной нитью. Спрос хаотичен, зависит от будней/выходных, имеет пустые дни (Zero-Sales days) и случайные пики. Наш симулятор генерирует случайное распределение вашего плана на 30 дней, чтобы вы увидели нестыковку с реальностью.
             </p>
           </div>
 
           {/* Demand Profile selector */}
           <div className="flex flex-wrap gap-2 shrink-0">
-            <div className="bg-slate-950 p-1.5 rounded-xl border border-slate-800 flex items-center gap-1">
-              <span className="text-[10px] text-slate-500 font-bold px-1.5 uppercase">Колебания:</span>
+            <div className="bg-slate-200/60 p-1.5 rounded-xl border border-slate-300/40 flex items-center gap-1">
+              <span className="text-[10px] text-slate-600 font-bold px-1.5 uppercase">Колебания:</span>
               <select
                 value={demandProfile}
                 onChange={(e) => setDemandProfile(e.target.value as DemandProfile)}
-                className="bg-slate-900 text-xs text-white font-bold rounded px-2 py-1 outline-none border border-slate-800 focus:border-indigo-500 cursor-pointer"
+                className="bg-white text-xs text-slate-800 font-bold rounded px-2 py-1 outline-none border border-slate-200 cursor-pointer"
               >
                 <option value="flat">Flat (Равномерный с шумом)</option>
                 <option value="weekend">Retail (Пик по выходным)</option>
@@ -810,13 +786,13 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
 
         {/* Daily Control Sliders */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex items-center justify-between gap-4">
+          <div className="bg-white/60 p-4 rounded-xl border border-indigo-100/60 flex items-center justify-between gap-4 shadow-xs">
             <div className="flex-1">
-              <span className="text-xs font-bold text-slate-300 block">Процент дней абсолютно БЕЗ продаж</span>
+              <span className="text-xs font-bold text-slate-800 block">Процент дней абсолютно БЕЗ продаж</span>
               <span className="text-[10px] text-slate-500 mt-0.5 block">Для нового бренда в первые месяцы норма: 50% - 80% сухих дней!</span>
             </div>
             <div className="w-40 shrink-0 space-y-1">
-              <div className="flex justify-between font-mono text-xs font-black text-indigo-400">
+              <div className="flex justify-between font-mono text-xs font-black text-indigo-700">
                 <span>{zeroDaysPercent}%</span>
                 <span className="text-[9px] text-slate-500">дней с 0 шт.</span>
               </div>
@@ -827,19 +803,19 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                 step="5"
                 value={zeroDaysPercent}
                 onChange={(e) => setZeroDaysPercent(Number(e.target.value))}
-                className="w-full accent-indigo-500 h-1 bg-slate-800 rounded-lg cursor-ew-resize"
+                className="w-full accent-indigo-500 h-1 bg-slate-200 rounded-lg cursor-ew-resize"
               />
             </div>
           </div>
 
-          <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex items-center justify-between gap-4">
+          <div className="bg-white/60 p-4 rounded-xl border border-indigo-100/60 flex items-center justify-between gap-4 shadow-xs">
             <div className="flex-1">
-              <span className="text-xs font-bold text-slate-300 block">Результат за типичный месяц</span>
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Реальный накопленный итог с учетом пустых дней и спадов:</span>
+              <span className="text-xs font-bold text-slate-800 block">Результат за типичный месяц</span>
+              <span className="text-[10px] text-slate-550 mt-0.5 block">Реальный накопленный итог с учетом пустых дней и спадов:</span>
             </div>
             <div className="text-right shrink-0">
-              <span className="text-[10px] text-slate-500 block uppercase font-mono">Сумма за 30 дней:</span>
-              <span className="font-mono text-2xl font-black text-emerald-400">
+              <span className="text-[10px] text-slate-550 block uppercase font-mono">Сумма за 30 дней:</span>
+              <span className="font-mono text-2xl font-black text-emerald-700">
                 {totalSimulatedMonthSales.toLocaleString()} {unit}
               </span>
             </div>
@@ -847,10 +823,10 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
         </div>
 
         {/* Calendar Bar Grid representing the 30 simulated days */}
-        <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-850">
-          <div className="flex items-center justify-between mb-3 text-xs text-slate-400 border-b border-slate-900 pb-2">
+        <div className="bg-white/80 p-5 rounded-2xl border border-indigo-100/80 shadow-xs">
+          <div className="flex items-center justify-between mb-3 text-xs text-slate-600 border-b border-indigo-100/60 pb-2">
             <span className="flex items-center gap-1.5 font-bold">
-              <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <Activity className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
               <span>Календарный профиль продаж (30 дней реальной работы):</span>
             </span>
             <span className="text-[10px] font-mono text-slate-500">
@@ -867,19 +843,19 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
               return (
                 <div key={d.day} className="group relative flex flex-col items-center h-full cursor-help">
                   {/* Tooltip on hover */}
-                  <div className="pointer-events-none opacity-0 group-hover:opacity-100 absolute bottom-full mb-1.5 bg-slate-950 text-white border border-slate-800 text-[10px] py-1 px-2 rounded-lg font-mono whitespace-nowrap z-30 transition-all shadow-xl">
+                  <div className="pointer-events-none opacity-0 group-hover:opacity-100 absolute bottom-full mb-1.5 bg-slate-900 text-white border border-slate-700 text-[10px] py-1 px-2 rounded-lg font-mono whitespace-nowrap z-30 transition-all shadow-xl">
                     <div className="font-bold">День {d.day} ({d.dayOfWeek})</div>
                     <div className="text-indigo-400">Сбыт: {d.value} {unit}</div>
-                    <div className="text-[9px] text-slate-500">Оборот: {(d.value * pricePerUnit).toLocaleString()} руб.</div>
+                    <div className="text-[9px] text-slate-300">Оборот: {(d.value * pricePerUnit).toLocaleString()} руб.</div>
                   </div>
 
                   {/* The bar element */}
-                  <div className="w-full h-full flex items-end bg-slate-900/60 rounded">
+                  <div className="w-full h-full flex items-end bg-slate-100 rounded">
                     <div 
                       style={{ height: `${pct}%` }}
                       className={`w-full rounded-t transition-all duration-300 ${
                         isZero 
-                          ? 'bg-slate-800/20 border-b border-rose-500/30' 
+                          ? 'bg-rose-100/40 border-b border-rose-500/30' 
                           : d.isWeekend 
                             ? 'bg-indigo-500 hover:bg-indigo-400' 
                             : 'bg-emerald-500 hover:bg-emerald-400'
@@ -888,7 +864,7 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
                   </div>
 
                   {/* Day label */}
-                  <span className={`text-[8px] font-mono mt-1 text-center scale-90 ${d.isWeekend ? 'text-indigo-400 font-bold' : 'text-slate-600'}`}>
+                  <span className={`text-[8px] font-mono mt-1 text-center scale-90 ${d.isWeekend ? 'text-indigo-600 font-bold' : 'text-slate-500'}`}>
                     д{d.day}
                   </span>
                 </div>
@@ -897,9 +873,9 @@ export function SalesRealismValidator({ data, setData, resultsColor = '#6366f1' 
           </div>
 
           {/* Micro-learning footnote */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 pt-4 border-t border-slate-900 text-[11px] leading-relaxed text-slate-400">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 pt-4 border-t border-indigo-100/60 text-[11px] leading-relaxed text-slate-600">
             <div className="flex gap-2 items-start">
-              <span className="text-indigo-400 text-lg">💡</span>
+              <span className="text-indigo-600 text-lg">💡</span>
               <p>
                 <strong>Неравномерность:</strong> Видите, как некоторые дни уходят «в небо», а другие пустуют? Потребительское поведение никогда не бывает плоским. Заводя годовой план, студент предполагает стабильность, которой не существует.
               </p>

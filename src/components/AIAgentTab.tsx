@@ -1268,38 +1268,38 @@ export function AIAgentTab({ onApplyData, showToast }: AIAgentTabProps) {
             </div>
 
             {/* AUTO-CALCULATED RESULTS CARD */}
-            <div className="bg-gradient-to-br from-slate-900 to-indigo-950 p-5 md:p-6 rounded-3xl text-white shadow-md relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-              <h4 className="font-display font-extrabold text-sm text-amber-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                <TrendingUp className="w-4 h-4 text-amber-400 shrink-0" />
+            <div className="bg-gradient-to-br from-indigo-50/90 via-purple-50/80 to-indigo-50/90 p-5 md:p-6 rounded-3xl text-slate-900 border border-indigo-100/60 shadow-xs relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
+              <h4 className="font-display font-extrabold text-sm text-indigo-900 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-indigo-700 shrink-0" />
                 <span>📊 Сводный расчет юнит-экономики и CAPEX</span>
               </h4>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center border-b border-white/10 pb-4 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center border-b border-indigo-100/50 pb-4 mb-4">
                 <div>
-                  <span className="block text-[10px] text-indigo-200 font-light uppercase tracking-wide">Итого CAPEX</span>
-                  <span className="block font-mono font-black text-lg text-white mt-1">{capexSum.toLocaleString()} тыс. ₽</span>
+                  <span className="block text-[10px] text-slate-500 font-bold uppercase tracking-wide">Итого CAPEX</span>
+                  <span className="block font-mono font-black text-lg text-slate-900 mt-1">{capexSum.toLocaleString()} тыс. ₽</span>
                 </div>
                 <div>
-                  <span className="block text-[10px] text-indigo-200 font-light uppercase tracking-wide">Маржинальность</span>
-                  <span className={`block font-mono font-black text-lg mt-1 ${marginPercentage >= 50 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  <span className="block text-[10px] text-slate-500 font-bold uppercase tracking-wide">Маржинальность</span>
+                  <span className={`block font-mono font-black text-lg mt-1 ${marginPercentage >= 50 ? 'text-emerald-700' : 'text-amber-700'}`}>
                     {marginPercentage} %
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[10px] text-indigo-200 font-light uppercase tracking-wide">Месячный OPEX</span>
-                  <span className="block font-mono font-black text-lg text-white mt-1">{monthlyOpex.toLocaleString()} тыс. ₽</span>
+                  <span className="block text-[10px] text-slate-500 font-bold uppercase tracking-wide">Месячный OPEX</span>
+                  <span className="block font-mono font-black text-lg text-slate-900 mt-1">{monthlyOpex.toLocaleString()} тыс. ₽</span>
                 </div>
                 <div>
-                  <span className="block text-[10px] text-indigo-200 font-light uppercase tracking-wide">Себестоимость ед.</span>
-                  <span className="block font-mono font-black text-lg text-amber-300 mt-1">{finalCostPrice.toLocaleString()} ₽</span>
+                  <span className="block text-[10px] text-slate-500 font-bold uppercase tracking-wide">Себестоимость ед.</span>
+                  <span className="block font-mono font-black text-lg text-indigo-800 mt-1">{finalCostPrice.toLocaleString()} ₽</span>
                 </div>
               </div>
 
               {/* Education helper formulas */}
-              <div className="space-y-1.5 text-xs text-indigo-100/90 font-light leading-relaxed bg-white/5 p-3 rounded-2xl">
+              <div className="space-y-1.5 text-xs text-slate-700 font-normal leading-relaxed bg-white/60 p-3.5 rounded-2xl border border-indigo-100/30">
                 <div>
-                  <strong className="text-amber-300">Логика вычислений:</strong>
+                  <strong className="text-indigo-900">Логика вычислений:</strong>
                 </div>
                 {bizType === 'saas' && (
                   <p className="text-[11px]">
@@ -1427,7 +1427,7 @@ export function AIAgentTab({ onApplyData, showToast }: AIAgentTabProps) {
             {/* Raw JSON Code output box */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Сгенерированный файл анкеты JSON:</label>
-              <div className="bg-slate-900 rounded-2xl p-4 font-mono text-[11px] text-slate-200 relative overflow-x-auto max-h-52 leading-relaxed">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 font-mono text-[11px] text-slate-800 relative overflow-x-auto max-h-52 leading-relaxed">
                 <pre>{JSON.stringify(startupData, null, 2)}</pre>
               </div>
             </div>

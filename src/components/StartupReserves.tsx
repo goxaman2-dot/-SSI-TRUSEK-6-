@@ -436,26 +436,26 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
   };
 
   return (
-    <div id="startup-reserves-block" className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 border border-slate-800 shadow-xl space-y-6">
+    <div id="startup-reserves-block" className="bg-gradient-to-br from-indigo-50/70 via-purple-50/75 to-slate-50 border border-indigo-100 text-slate-800 rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
       
       {/* Header section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-indigo-100/60 pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <TrendingUp className="w-5 h-5 animate-bounce" />
+            <span className="p-2 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm">
+              <TrendingUp className="w-5 h-5" />
             </span>
-            <h3 className="font-display font-black text-white text-lg md:text-2xl tracking-tight">
+            <h3 className="font-display font-black text-slate-900 text-lg md:text-2xl tracking-tight">
               Возможные резервы стартапа от АИ Агента
             </h3>
           </div>
-          <p className="text-xs text-slate-400 mt-1.5 max-w-3xl font-normal leading-relaxed">
+          <p className="text-xs text-slate-650 mt-1.5 max-w-3xl font-normal leading-relaxed">
             Симуляционная модель бережливого стартапа. Интерактивная <strong>«Лилия резервов»</strong> отображает исходную формулу индекса SSI и её динамическое расширение за счёт применения резервов. Выберите стратегию и изучите компенсирующие мероприятия.
           </p>
         </div>
 
         {isDemoMode && (
-          <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl text-[10px] font-bold shrink-0">
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-50 border border-amber-200 text-amber-850 rounded-xl text-[10px] font-bold shrink-0">
             <AlertCircle className="w-3.5 h-3.5" />
             <span>Демо-режим: укажите SOM в анкете</span>
           </div>
@@ -465,8 +465,8 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
       {/* STRATEGY PRESETS GRID WITH FORMULA AND ACTIONS */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-display font-bold text-xs text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Zap className="w-4 h-4 text-amber-400" />
+          <h4 className="font-display font-bold text-xs text-slate-650 uppercase tracking-wider flex items-center gap-1.5">
+            <Zap className="w-4 h-4 text-amber-700" />
             <span>Выберите стратегию оптимизации:</span>
           </h4>
           <span className="text-[10px] text-slate-500 italic">Нажмите на кнопку, чтобы применить готовый сценарий</span>
@@ -480,25 +480,25 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
             onClick={() => setStrategy('minimal')}
             className={`text-left p-4 rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between h-full ${
               strategy === 'minimal'
-                ? 'bg-emerald-950/40 border-emerald-500/60 ring-2 ring-emerald-500/30'
-                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 hover:bg-slate-950/75'
+                ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-500/20 shadow-xs'
+                : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-xs'
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-extrabold text-emerald-400 flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block animate-pulse" />
+                <span className="text-xs font-extrabold text-emerald-800 flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" />
                   <span>Минимальные риски</span>
                 </span>
-                <span className="text-[9px] font-mono bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded">Легко</span>
+                <span className="text-[9px] font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">Легко</span>
               </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
+              <p className="text-[11px] text-slate-700 leading-relaxed">
                 <strong>Формула расчета:</strong> COGS -5%, CAC -10%, OPEX -5%, LTV +5%. Акцент на базовой экономии без изменения внутренних процессов.
               </p>
             </div>
             
-            <div className="mt-4 pt-3 border-t border-slate-800/80 text-[10px] text-slate-400">
-              <strong className="text-slate-200 block text-[9px] uppercase tracking-wider mb-1">🛡️ Мероприятия (без ухудшения):</strong>
+            <div className="mt-4 pt-3 border-t border-slate-200 text-[10px] text-slate-600">
+              <strong className="text-slate-800 block text-[9px] uppercase tracking-wider mb-1">🛡️ Мероприятия (без ухудшения):</strong>
               Согласование оптовых скидок; запуск реферальных программ (K1); перевод мелкого софта на бесплатные лимиты.
             </div>
           </button>
@@ -509,25 +509,25 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
             onClick={() => setStrategy('optimum')}
             className={`text-left p-4 rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between h-full ${
               strategy === 'optimum'
-                ? 'bg-purple-950/40 border-purple-500/60 ring-2 ring-purple-500/30'
-                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 hover:bg-slate-950/75'
+                ? 'bg-purple-50 border-purple-300 ring-2 ring-purple-500/20 shadow-xs'
+                : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-xs'
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-extrabold text-purple-400 flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500 block animate-pulse" />
+                <span className="text-xs font-extrabold text-purple-800 flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500 block" />
                   <span>Оптимум (Рекомендуется)</span>
                 </span>
-                <span className="text-[9px] font-mono bg-purple-900/40 text-purple-300 px-1.5 py-0.5 rounded">Средне</span>
+                <span className="text-[9px] font-mono bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">Средне</span>
               </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
+              <p className="text-[11px] text-slate-700 leading-relaxed">
                 <strong>Формула расчета:</strong> COGS -15%, CAC -20%, OPEX -12%, LTV +12%. Сбалансированная интеграция лучших практик автоматизации.
               </p>
             </div>
             
-            <div className="mt-4 pt-3 border-t border-slate-800/80 text-[10px] text-slate-400">
-              <strong className="text-slate-200 block text-[9px] uppercase tracking-wider mb-1">🛡️ Мероприятия (без ухудшения):</strong>
+            <div className="mt-4 pt-3 border-t border-slate-200 text-[10px] text-slate-600">
+              <strong className="text-slate-800 block text-[9px] uppercase tracking-wider mb-1">🛡️ Мероприятия (без ухудшения):</strong>
               Оптимизация деталей по ТРИЗ; Lookalike реклама; интеграция CRM для ОП; расширение гарантии для увеличения цены.
             </div>
           </button>
@@ -538,25 +538,25 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
             onClick={() => setStrategy('maximum')}
             className={`text-left p-4 rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between h-full ${
               strategy === 'maximum'
-                ? 'bg-rose-950/40 border-rose-500/60 ring-2 ring-rose-500/30'
-                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 hover:bg-slate-950/75'
+                ? 'bg-rose-50 border-rose-300 ring-2 ring-rose-500/20 shadow-xs'
+                : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-xs'
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-extrabold text-rose-400 flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 block animate-pulse" />
+                <span className="text-xs font-extrabold text-rose-800 flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 block" />
                   <span>Максимум (Глубокий реинжиниринг)</span>
                 </span>
-                <span className="text-[9px] font-mono bg-rose-900/40 text-rose-300 px-1.5 py-0.5 rounded">Трудно</span>
+                <span className="text-[9px] font-mono bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded">Трудно</span>
               </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
+              <p className="text-[11px] text-slate-700 leading-relaxed">
                 <strong>Формула расчета:</strong> COGS -35%, CAC -40%, OPEX -25%, LTV +20%. Полная трансформация юнит-экономики и УТП.
               </p>
             </div>
             
-            <div className="mt-4 pt-3 border-t border-slate-800/80 text-[10px] text-slate-400">
-              <strong className="text-slate-200 block text-[9px] uppercase tracking-wider mb-1">🛡️ Мероприятия (без ухудшения):</strong>
+            <div className="mt-4 pt-3 border-t border-slate-200 text-[10px] text-slate-600">
+              <strong className="text-slate-800 block text-[9px] uppercase tracking-wider mb-1">🛡️ Мероприятия (без ухудшения):</strong>
               Перенос на контрактный завод (OEM); переход на CPA (партнерские продажи); удаленный бэк-офис; смена модели на SaaS.
             </div>
           </button>
@@ -568,19 +568,19 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch pt-2">
         
         {/* Sliders Control Panel (Combined Block Part 1) */}
-        <div className="lg:col-span-3 bg-slate-950/50 rounded-2xl p-5 border border-slate-800 flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-3 bg-white rounded-2xl p-5 border border-indigo-100 shadow-xs flex flex-col justify-between space-y-4">
           <div className="space-y-4">
-            <h4 className="font-display font-bold text-xs text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Settings2 className="w-4 h-4" />
+            <h4 className="font-display font-bold text-xs text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+              <Settings2 className="w-4 h-4 text-indigo-700" />
               <span>Тонкая ручная регулировка</span>
             </h4>
 
             <div className="space-y-3.5 text-xs">
               {/* Slider 1: COGS */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center text-slate-300">
+                <div className="flex justify-between items-center text-slate-700">
                   <span className="font-medium">Оптимизация COGS</span>
-                  <span className="font-mono font-bold text-rose-400">{cogsOptim}%</span>
+                  <span className="font-mono font-bold text-rose-700">{cogsOptim}%</span>
                 </div>
                 <input 
                   type="range" 
@@ -588,15 +588,15 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   max="40" 
                   value={cogsOptim} 
                   onChange={e => handleSliderChange('cogs', parseInt(e.target.value) || 0)}
-                  className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-500"
                 />
               </div>
 
               {/* Slider 2: CAC */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center text-slate-300">
+                <div className="flex justify-between items-center text-slate-700">
                   <span className="font-medium">Снижение CAC</span>
-                  <span className="font-mono font-bold text-amber-400">{cacOptim}%</span>
+                  <span className="font-mono font-bold text-amber-700">{cacOptim}%</span>
                 </div>
                 <input 
                   type="range" 
@@ -604,15 +604,15 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   max="50" 
                   value={cacOptim} 
                   onChange={e => handleSliderChange('cac', parseInt(e.target.value) || 0)}
-                  className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
                 />
               </div>
 
               {/* Slider 3: OPEX */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center text-slate-300">
+                <div className="flex justify-between items-center text-slate-700">
                   <span className="font-medium">Административный OPEX</span>
-                  <span className="font-mono font-bold text-blue-400">{opexOptim}%</span>
+                  <span className="font-mono font-bold text-indigo-700">{opexOptim}%</span>
                 </div>
                 <input 
                   type="range" 
@@ -620,15 +620,15 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   max="30" 
                   value={opexOptim} 
                   onChange={e => handleSliderChange('opex', parseInt(e.target.value) || 0)}
-                  className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                 />
               </div>
 
               {/* Slider 4: Price Premium */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center text-slate-300">
+                <div className="flex justify-between items-center text-slate-700">
                   <span className="font-medium">Рост ценности LTV</span>
-                  <span className="font-mono font-bold text-emerald-400">{pricePremium}%</span>
+                  <span className="font-mono font-bold text-emerald-700">{pricePremium}%</span>
                 </div>
                 <input 
                   type="range" 
@@ -636,14 +636,14 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   max="25" 
                   value={pricePremium} 
                   onChange={e => handleSliderChange('ltv', parseInt(e.target.value) || 0)}
-                  className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex gap-2 items-start text-[10px] text-slate-400 leading-snug">
-            <HelpCircle className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2 items-start text-[10px] text-slate-650 leading-snug">
+            <HelpCircle className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
             <span className="italic">
               Базовый объем рассчитывается от вашего целевого рынка <strong>SOM ({activeRevenue} млн ₽)</strong>. Если вы хотите применить более агрессивную тактику, переведите ручки вправо.
             </span>
@@ -651,8 +651,8 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
         </div>
 
         {/* RECREATED MAGNIFICENT 6-PETAL LILY OF THE INDEX (Combined Block Part 2) */}
-        <div className="lg:col-span-3 bg-slate-950/30 border border-slate-800 rounded-2xl p-5 flex flex-col items-center justify-center relative overflow-hidden">
-          <span className="absolute top-3 left-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <div className="lg:col-span-3 bg-white border border-indigo-100 rounded-2xl p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-xs">
+          <span className="absolute top-3 left-3 text-[10px] font-bold text-slate-550 uppercase tracking-widest">
             Лилия индекса SSI
           </span>
 
@@ -786,38 +786,38 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
           </div>
 
           {/* Mini Legend for student clarity */}
-          <div className="mt-2 text-[9px] text-slate-400 space-y-1 w-full bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60 leading-normal">
+          <div className="mt-2 text-[9px] text-slate-650 space-y-1 w-full bg-slate-50 p-2.5 rounded-xl border border-slate-200 leading-normal">
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-0.5 border-t-2 border-dashed border-indigo-400 block" />
+              <span className="w-2.5 h-0.5 border-t-2 border-dashed border-indigo-500 block" />
               <span>Пунктир — Ваш текущий профиль</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2 rounded-sm bg-indigo-500/30 border border-indigo-400 block" />
+              <span className="w-2.5 h-2 rounded-sm bg-indigo-100 border border-indigo-400 block" />
               <span>Сплошной — Оптимальный профиль</span>
             </div>
           </div>
         </div>
 
         {/* LTV/CAC VIABILITY DYNAMICS CHART (Combined Block Part 3) */}
-        <div className="lg:col-span-3 bg-slate-950/30 border border-slate-800 rounded-2xl p-5 flex flex-col items-center justify-between relative overflow-hidden">
-          <span className="absolute top-3 left-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <div className="lg:col-span-3 bg-white border border-indigo-100 rounded-2xl p-5 flex flex-col items-center justify-between relative overflow-hidden shadow-xs">
+          <span className="absolute top-3 left-3 text-[10px] font-bold text-slate-550 uppercase tracking-widest">
             Динамика LTV/CAC & Жизнь
           </span>
 
           <div className="w-full mt-6 space-y-3">
             {/* Real-time Indicator */}
-            <div className="flex justify-between items-center bg-slate-900/40 p-2 rounded-xl border border-slate-800/50">
-              <span className="text-[10px] text-slate-400 font-sans">Отношение LTV/CAC:</span>
+            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <span className="text-[10px] text-slate-600 font-sans">Отношение LTV/CAC:</span>
               <span className={`font-mono text-xs font-black px-2 py-0.5 rounded ${
-                currentLtvCacRatio >= 3.0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                currentLtvCacRatio >= 1.5 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                currentLtvCacRatio >= 3.0 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
+                currentLtvCacRatio >= 1.5 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
               }`}>
                 {currentLtvCacRatio.toFixed(2)}x
               </span>
             </div>
 
             {/* Custom SVG Line Chart */}
-            <div className="w-full h-[150px] flex items-center justify-center relative bg-slate-950/20 rounded-xl border border-slate-900/60 p-1">
+            <div className="w-full h-[150px] flex items-center justify-center relative bg-slate-50 rounded-xl border border-slate-200 p-1">
               <svg 
                 viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
                 className="w-full h-full select-none overflow-visible"
@@ -845,7 +845,7 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                         y1={y} 
                         x2={chartWidth - chartPadding.right} 
                         y2={y} 
-                        stroke="#1e293b" 
+                        stroke="#e2e8f0" 
                         strokeWidth="0.75" 
                         strokeDasharray={val === 1.5 || val === 3.0 ? "none" : "2,2"}
                       />
@@ -873,7 +873,7 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                         y1={chartPadding.top} 
                         x2={x} 
                         y2={chartHeight - chartPadding.bottom} 
-                        stroke="#1e293b" 
+                        stroke="#e2e8f0" 
                         strokeWidth="0.5" 
                       />
                       <text 
@@ -916,8 +916,8 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
           </div>
 
           {/* Educational Legend */}
-          <div className="mt-2 text-[8px] text-slate-400 space-y-0.5 w-full bg-slate-950/45 p-2 rounded-xl border border-slate-800/60 leading-normal">
-            <span className="font-bold text-slate-300 block mb-0.5">🎓 Жизнеспособность:</span>
+          <div className="mt-2 text-[8px] text-slate-650 space-y-0.5 w-full bg-slate-50 p-2 rounded-xl border border-slate-200 leading-normal">
+            <span className="font-bold text-slate-800 block mb-0.5">🎓 Жизнеспособность:</span>
             <div className="flex items-start gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-0.5" />
               <span><strong>&gt; 3.0x (Зеленая зона)</strong> — Бизнес-модель устойчива.</span>
@@ -930,82 +930,82 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
         </div>
 
         {/* RESERVES INDICATORS & ACTIONS MATRIX (Combined Block Part 4) */}
-        <div className="lg:col-span-3 bg-slate-950/50 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-3 bg-white border border-indigo-100 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-xs">
           
           <div className="space-y-4">
-            <h4 className="font-display font-bold text-xs text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+            <h4 className="font-display font-bold text-xs text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-indigo-700" />
               <span>Показатели резервов</span>
             </h4>
 
             {/* STUDENT EXPLANATION NOTE ON SIGNS (+/-) */}
-            <div className="bg-purple-950/30 border border-purple-500/20 rounded-xl p-3 text-[10px] text-slate-300 leading-normal">
-              <span className="font-bold text-amber-300 block mb-1">💡 Как понимать знаки для студентов:</span>
+            <div className="bg-purple-50/55 border border-purple-100 rounded-xl p-3 text-[10px] text-slate-700 leading-normal">
+              <span className="font-bold text-amber-900 block mb-1">💡 Как понимать знаки для студентов:</span>
               <ul className="list-disc pl-4 space-y-1">
-                <li>Знак <span className="font-bold text-rose-400 font-mono">-</span> означает <strong>сокращение (экономию)</strong> расходов.</li>
-                <li>Знак <span className="font-bold text-emerald-400 font-mono">+</span> означает <strong>дополнительный заработок</strong> благодаря LTV.</li>
+                <li>Знак <span className="font-bold text-rose-700 font-mono">-</span> означает <strong>сокращение (экономию)</strong> расходов.</li>
+                <li>Знак <span className="font-bold text-emerald-700 font-mono">+</span> означает <strong>дополнительный заработок</strong> благодаря LTV.</li>
               </ul>
             </div>
 
             {/* LARGE INDICATORS GRID */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-900/80 rounded-2xl p-3 border border-slate-800 text-center">
-                <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Эффект</span>
-                <span className="block text-lg md:text-xl font-black text-amber-400 font-mono tracking-tight">
+              <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200 text-center shadow-xs">
+                <span className="block text-[8px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Эффект</span>
+                <span className="block text-lg md:text-xl font-black text-amber-700 font-mono tracking-tight">
                   +{totalReservesReleased.toFixed(1)}M
                 </span>
-                <span className="block text-[9px] text-slate-400 mt-0.5">млн ₽ в год к марже</span>
+                <span className="block text-[9px] text-slate-550 mt-0.5">млн ₽ в год к марже</span>
               </div>
 
-              <div className="bg-slate-900/80 rounded-2xl p-3 border border-slate-800 text-center">
-                <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Рентабельность</span>
-                <span className="block text-lg md:text-xl font-black text-emerald-400 font-mono tracking-tight">
+              <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200 text-center shadow-xs">
+                <span className="block text-[8px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Рентабельность</span>
+                <span className="block text-lg md:text-xl font-black text-emerald-700 font-mono tracking-tight">
                   +{currentProfitabilityIncrease.toFixed(1)}%
                 </span>
-                <span className="block text-[9px] text-emerald-500 font-bold mt-0.5">прирост маржи</span>
+                <span className="block text-[9px] text-emerald-700 font-bold mt-0.5">прирост маржи</span>
               </div>
             </div>
 
             {/* BREAKDOWN LIST WITH STUDENT EXPLANATIONS */}
             <div className="space-y-3 text-xs font-mono">
               {/* COGS Item */}
-              <div className="border-b border-slate-800/60 pb-1.5">
+              <div className="border-b border-slate-200 pb-1.5">
                 <div className="flex justify-between items-center py-0.5">
-                  <span className="text-slate-400 flex items-center gap-1.5">
+                  <span className="text-slate-600 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    <span className="font-bold text-slate-300">Сберегли COGS:</span>
+                    <span className="font-bold text-slate-700">Сберегли COGS:</span>
                   </span>
-                  <span className="font-bold text-slate-200">-{cogsSaved.toFixed(1)} млн ₽</span>
+                  <span className="font-bold text-slate-800">-{cogsSaved.toFixed(1)} млн ₽</span>
                 </div>
-                <p className="text-[9px] text-slate-400 font-sans leading-relaxed mt-1 bg-slate-900/45 p-1.5 rounded-lg border border-slate-800/50">
+                <p className="text-[9px] text-slate-650 font-sans leading-relaxed mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
                   <strong>COGS:</strong> Прямые расходы на облака/производство. Оптимизируется по ТРИЗ.
                 </p>
               </div>
 
               {/* CAC Item */}
-              <div className="border-b border-slate-800/60 pb-1.5">
+              <div className="border-b border-slate-200 pb-1.5">
                 <div className="flex justify-between items-center py-0.5">
-                  <span className="text-slate-400 flex items-center gap-1.5">
+                  <span className="text-slate-600 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span className="font-bold text-slate-300">Сберегли CAC:</span>
+                    <span className="font-bold text-slate-700">Сберегли CAC:</span>
                   </span>
-                  <span className="font-bold text-slate-200">-{cacSaved.toFixed(1)} млн ₽</span>
+                  <span className="font-bold text-slate-800">-{cacSaved.toFixed(1)} млн ₽</span>
                 </div>
-                <p className="text-[9px] text-slate-400 font-sans leading-relaxed mt-1 bg-slate-900/45 p-1.5 rounded-lg border border-slate-800/50">
+                <p className="text-[9px] text-slate-650 font-sans leading-relaxed mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
                   <strong>CAC:</strong> Затраты на получение 1 клиента. Снижается ростом конверсий.
                 </p>
               </div>
 
               {/* OPEX Item */}
-              <div className="border-b border-slate-800/60 pb-1.5">
+              <div className="border-b border-slate-200 pb-1.5">
                 <div className="flex justify-between items-center py-0.5">
-                  <span className="text-slate-400 flex items-center gap-1.5">
+                  <span className="text-slate-600 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span className="font-bold text-slate-300">Сберегли OPEX:</span>
+                    <span className="font-bold text-slate-700">Сберегли OPEX:</span>
                   </span>
-                  <span className="font-bold text-slate-200">-{opexSaved.toFixed(1)} млн ₽</span>
+                  <span className="font-bold text-slate-800">-{opexSaved.toFixed(1)} млн ₽</span>
                 </div>
-                <p className="text-[9px] text-slate-400 font-sans leading-relaxed mt-1 bg-slate-900/45 p-1.5 rounded-lg border border-slate-800/50">
+                <p className="text-[9px] text-slate-650 font-sans leading-relaxed mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
                   <strong>OPEX:</strong> Постоянные опер. затраты. Оптимизируется ИИ-ассистентами.
                 </p>
               </div>
@@ -1013,23 +1013,23 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
               {/* LTV Item */}
               <div className="pb-0.5">
                 <div className="flex justify-between items-center py-0.5">
-                  <span className="text-slate-400 flex items-center gap-1.5">
+                  <span className="text-slate-600 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="font-bold text-slate-300">Получили от LTV:</span>
+                    <span className="font-bold text-slate-700">Получили от LTV:</span>
                   </span>
-                  <span className="font-bold text-slate-200">+{premiumAdded.toFixed(1)} млн ₽</span>
+                  <span className="font-bold text-slate-800">+{premiumAdded.toFixed(1)} млн ₽</span>
                 </div>
-                <p className="text-[9px] text-slate-400 font-sans leading-relaxed mt-1 bg-slate-900/45 p-1.5 rounded-lg border border-slate-800/50">
+                <p className="text-[9px] text-slate-650 font-sans leading-relaxed mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
                   <strong>LTV / Прайс-премиум:</strong> Ценность клиента за все время жизни.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-purple-950/30 border border-purple-500/20 rounded-xl p-2.5 flex gap-2 items-start mt-2">
-            <ShieldAlert className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
-            <div className="text-[9px] leading-relaxed">
-              <strong className="text-purple-300 block">Важное предупреждение:</strong>
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-2.5 flex gap-2 items-start mt-2 shadow-xs">
+            <ShieldAlert className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
+            <div className="text-[9px] leading-relaxed text-slate-700">
+              <strong className="text-purple-900 block">Важное предупреждение:</strong>
               За созданием каждого резерва должны строго следовать компенсирующие мероприятия. Это исключит падение качества.
             </div>
           </div>
@@ -1039,15 +1039,15 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
       </div>
 
       {/* 📊 INVESTMENT & FINANCIAL ANALYSIS SECTION */}
-      <div className="border-t border-slate-800/80 pt-6 mt-8 space-y-6">
+      <div className="border-t border-indigo-100/60 pt-6 mt-8 space-y-6">
         <div>
-          <h3 className="font-display font-black text-white text-lg md:text-xl tracking-tight flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <h3 className="font-display font-black text-slate-900 text-lg md:text-xl tracking-tight flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-xs">
               <TrendingUp className="w-4 h-4" />
             </span>
             <span>Инвестиционный и финансовый анализ жизнеспособности</span>
           </h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+          <p className="text-xs text-slate-650 mt-1 max-w-3xl">
             Динамический прогноз ключевых финансовых показателей стартапа на горизонте 5 лет. Сравнение базового сценария и оптимизированного (с учетом высвобожденных резервов).
           </p>
         </div>
@@ -1056,20 +1056,20 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           
           {/* Card 1: NPV Chart */}
-          <div className="bg-slate-950/40 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div className="bg-white border border-indigo-100 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
             <div>
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h5 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Расчет NPV проекта</h5>
-                  <span className="text-[9px] text-indigo-400">Чистый дисконтированный доход</span>
+                  <h5 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Расчет NPV проекта</h5>
+                  <span className="text-[9px] text-indigo-700">Чистый дисконтированный доход</span>
                 </div>
-                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                  financialsOptimized[5].npv >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                  financialsOptimized[5].npv >= 0 ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'
                 }`}>
                   NPV Yr5: {financialsOptimized[5].npv.toFixed(1)}M
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 leading-normal mb-3">
+              <p className="text-[10px] text-slate-650 leading-normal mb-3">
                 Сравнивает дисконтированные денежные потоки при ставке WACC <strong>{(wacc * 100).toFixed(1)}%</strong>. 
                 Точка пересечения с нулем — срок окупаемости.
               </p>
@@ -1087,12 +1087,12 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                 {/* Gridlines */}
                 {[0, 1, 2, 3, 4, 5].map(yr => (
                   <line 
-                    key={yr}
+                     key={yr}
                     x1={getNpvX(yr)} 
                     y1={npvPadding.top} 
                     x2={getNpvX(yr)} 
                     y2={180 - npvPadding.bottom} 
-                    stroke="#1e293b" 
+                    stroke="#e2e8f0" 
                     strokeWidth="0.5" 
                   />
                 ))}
@@ -1158,7 +1158,7 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                 )}
 
                 {/* Baseline line */}
-                <path d={npvBaseD} fill="none" stroke="#475569" strokeWidth="1.5" strokeDasharray="3,3" />
+                <path d={npvBaseD} fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="3,3" />
 
                 {/* Optimized line */}
                 <path d={npvOptimD} fill="none" stroke="#818cf8" strokeWidth="2.5" />
@@ -1168,31 +1168,31 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
               </svg>
             </div>
 
-            <div className="flex gap-4 items-center mt-2 text-[9px] text-slate-400 bg-slate-900/40 p-2 rounded-xl border border-slate-800/50 justify-between">
+            <div className="flex gap-4 items-center mt-2 text-[9px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200 justify-between shadow-xs">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-0.5 border-t-2 border-dashed border-slate-600 block" />
+                <span className="w-2.5 h-0.5 border-t-2 border-dashed border-slate-400 block" />
                 <span>Базовый NPV: <strong>{financialsBaseline[5].npv.toFixed(1)}M ₽</strong></span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-0.5 border-t bg-indigo-400 block" />
-                <span>Опт. NPV: <strong className="text-indigo-400">{financialsOptimized[5].npv.toFixed(1)}M ₽</strong></span>
+                <span className="w-2.5 h-0.5 border-t bg-indigo-500 block" />
+                <span>Опт. NPV: <strong className="text-indigo-700">{financialsOptimized[5].npv.toFixed(1)}M ₽</strong></span>
               </div>
             </div>
           </div>
 
           {/* Card 2: Break-Even Chart */}
-          <div className="bg-slate-950/40 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div className="bg-white border border-indigo-100 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
             <div>
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h5 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Точка безубыточности (BEP)</h5>
-                  <span className="text-[9px] text-amber-400">Порог рентабельности по выручке</span>
+                  <h5 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Точка безубыточности (BEP)</h5>
+                  <span className="text-[9px] text-amber-700">Порог рентабельности по выручке</span>
                 </div>
-                <span className="text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded">
                   BEP: {bepOptimized.bep.toFixed(1)}M ₽
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 leading-normal mb-3">
+              <p className="text-[10px] text-slate-650 leading-normal mb-3">
                 Пересечение линии выручки (Y=X) и полных затрат (Fixed + Variable). 
                 Оптимизация снизила порог безубыточности на <strong>{Math.max(0, bepBaseline.bep - bepOptimized.bep).toFixed(1)}M ₽</strong>.
               </p>
@@ -1218,7 +1218,7 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   y1={getBepY(bepOptimized.fc)} 
                   x2={getBepX(activeRevenue * 1.5)} 
                   y2={getBepY(bepOptimized.fc)} 
-                  stroke="#475569" 
+                  stroke="#cbd5e1" 
                   strokeWidth="1" 
                   strokeDasharray="2,2" 
                   opacity="0.6"
@@ -1336,32 +1336,32 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
             </div>
 
             {/* Explanatory zone badges */}
-            <div className="flex gap-4 items-center mt-2 text-[9px] text-slate-400 bg-slate-900/40 p-2 rounded-xl border border-slate-800/50 justify-between">
+            <div className="flex gap-4 items-center mt-2 text-[9px] text-slate-650 bg-slate-50 p-2 rounded-xl border border-slate-200 justify-between shadow-xs">
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded bg-rose-500/20 border border-rose-500/50 block" />
+                <span className="w-2 h-2 rounded bg-rose-50 border border-rose-200 block" />
                 <span>Зона убытков</span>
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded bg-emerald-500/20 border border-emerald-500/50 block" />
+                <span className="w-2 h-2 rounded bg-emerald-50 border border-emerald-200 block" />
                 <span>Зона прибыли</span>
               </span>
-              <span className="text-slate-500 italic">Марж. доход: <strong>{(bepOptimized.cmr * 100).toFixed(0)}%</strong></span>
+              <span className="text-slate-550 italic">Марж. доход: <strong>{(bepOptimized.cmr * 100).toFixed(0)}%</strong></span>
             </div>
           </div>
 
           {/* Card 3: Profit and Profitability Chart */}
-          <div className="bg-slate-950/40 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div className="bg-white border border-indigo-100 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
             <div>
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h5 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Прибыль и Рентабельность</h5>
-                  <span className="text-[9px] text-emerald-400">Чистая прибыль (млн ₽) и маржа (%)</span>
+                  <h5 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Прибыль и Рентабельность</h5>
+                  <span className="text-[9px] text-emerald-800">Чистая прибыль (млн ₽) и маржа (%)</span>
                 </div>
-                <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded">
                   Margin Yr5: {financialsOptimized[5].margin.toFixed(0)}%
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 leading-normal mb-3">
+              <p className="text-[10px] text-slate-650 leading-normal mb-3">
                 Столбцы — чистая прибыль по годам (базовая vs оптимизированная). 
                 Линия — рентабельность по чистой прибыли оптимизированного сценария.
               </p>
@@ -1375,7 +1375,7 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   y1={getProfY(0)} 
                   x2={340 - profPadding.right} 
                   y2={getProfY(0)} 
-                  stroke="#334155" 
+                  stroke="#cbd5e1" 
                   strokeWidth="1" 
                 />
 
@@ -1452,7 +1452,7 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                         y={yBase} 
                         width="7" 
                         height={Math.max(1, hBase)} 
-                        fill="#334155" 
+                        fill="#cbd5e1" 
                         rx="1" 
                         opacity="0.8"
                       />
@@ -1494,9 +1494,9 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
               </svg>
             </div>
 
-            <div className="flex gap-4 items-center mt-2 text-[9px] text-slate-400 bg-slate-900/40 p-2 rounded-xl border border-slate-800/50 justify-between">
+            <div className="flex gap-4 items-center mt-2 text-[9px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200 justify-between shadow-xs">
               <div className="flex items-center gap-1">
-                <span className="w-2.5 h-2 rounded bg-slate-700 block" />
+                <span className="w-2.5 h-2 rounded bg-slate-350 block" />
                 <span>Баз. прибыль</span>
               </div>
               <div className="flex items-center gap-1">
@@ -1504,8 +1504,8 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                 <span>Опт. прибыль</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="w-2 h-0.5 bg-emerald-400 block" />
-                <span className="text-emerald-400 font-bold">Рентабельность %</span>
+                <span className="w-2.5 h-0.5 bg-emerald-500 block" />
+                <span className="text-emerald-700 font-bold">Рентабельность %</span>
               </div>
             </div>
           </div>
@@ -1513,18 +1513,18 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
         </div>
 
         {/* Investment Performance & Efficiency Table */}
-        <div className="bg-slate-950/40 border border-slate-800 rounded-2xl p-5 overflow-hidden">
+        <div className="bg-white border border-indigo-100 rounded-2xl p-5 shadow-xs overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
-              <h4 className="font-display font-bold text-xs text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-indigo-400" />
+              <h4 className="font-display font-bold text-xs text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-indigo-700" />
                 <span>Сводная таблица инвестиционных и финансовых показателей</span>
               </h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">
+              <p className="text-[11px] text-slate-650 mt-0.5">
                 Сравнение ключевых финансовых коэффициентов базовой бизнес-модели и оптимизированной с использованием резервов.
               </p>
             </div>
-            <div className="text-[10px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-2 py-1 rounded-lg font-mono">
+            <div className="text-[10px] bg-indigo-50 border border-indigo-100 text-indigo-800 px-2 py-1 rounded-lg font-mono shadow-xs">
               Ставка дисконтирования (WACC): <strong>{(wacc * 100).toFixed(1)}%</strong>
             </div>
           </div>
@@ -1532,28 +1532,28 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                <tr className="border-b border-indigo-100 text-[10px] text-slate-600 font-bold uppercase tracking-wider">
                   <th className="py-2.5 px-3">Финансовый показатель / Коэффициент</th>
-                  <th className="py-2.5 px-3 text-center bg-slate-900/30">Базовый вариант</th>
-                  <th className="py-2.5 px-3 text-center bg-indigo-950/20 text-indigo-300 font-extrabold">Оптимизированный</th>
+                  <th className="py-2.5 px-3 text-center bg-slate-50">Базовый вариант</th>
+                  <th className="py-2.5 px-3 text-center bg-indigo-50/55 text-indigo-900 font-extrabold">Оптимизированный</th>
                   <th className="py-2.5 px-3 text-right">Эффект / Прирост</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-indigo-100/50 font-mono">
                 
                 {/* IRR Row */}
-                <tr className="hover:bg-slate-900/20 transition-colors">
-                  <td className="py-3 px-3 font-sans text-slate-300">
-                    <strong className="block text-slate-200">Внутренняя норма доходности (IRR)</strong>
-                    <span className="text-[10px] text-slate-400 block font-normal">Экономический предел ставки WACC. Чем выше IRR относительно WACC, тем безопаснее проект.</span>
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-3 px-3 font-sans text-slate-800">
+                    <strong className="block text-slate-900">Внутренняя норма доходности (IRR)</strong>
+                    <span className="text-[10px] text-slate-500 block font-normal">Экономический предел ставки WACC. Чем выше IRR относительно WACC, тем безопаснее проект.</span>
                   </td>
-                  <td className="py-3 px-3 text-center bg-slate-900/30 text-slate-400">
+                  <td className="py-3 px-3 text-center bg-slate-50 text-slate-600">
                     {irrBaseline <= -0.99 ? '—' : `${(irrBaseline * 100).toFixed(1)}%`}
                   </td>
-                  <td className="py-3 px-3 text-center bg-indigo-950/20 font-black text-indigo-400">
+                  <td className="py-3 px-3 text-center bg-indigo-50/55 font-black text-indigo-700">
                     {irrOptimized <= -0.99 ? '—' : `${(irrOptimized * 100).toFixed(1)}%`}
                   </td>
-                  <td className="py-3 px-3 text-right text-emerald-400 font-bold">
+                  <td className="py-3 px-3 text-right text-emerald-700 font-bold">
                     {irrBaseline > -0.99 && irrOptimized > -0.99 ? (
                       <span>↑ +{(irrOptimized * 100 - irrBaseline * 100).toFixed(1)}%</span>
                     ) : 'Существенный'}
@@ -1561,52 +1561,52 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                 </tr>
 
                 {/* ROA Row */}
-                <tr className="hover:bg-slate-900/20 transition-colors">
-                  <td className="py-3 px-3 font-sans text-slate-300">
-                    <strong className="block text-slate-200">Рентабельность активов (ROA, Год 3)</strong>
-                    <span className="text-[10px] text-slate-400 block font-normal">Эффективность использования совокупного капитала (активов) компании.</span>
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-3 px-3 font-sans text-slate-800">
+                    <strong className="block text-slate-900">Рентабельность активов (ROA, Год 3)</strong>
+                    <span className="text-[10px] text-slate-500 block font-normal">Эффективность использования совокупного капитала (активов) компании.</span>
                   </td>
-                  <td className="py-3 px-3 text-center bg-slate-900/30 text-slate-400">
+                  <td className="py-3 px-3 text-center bg-slate-50 text-slate-600">
                     {roaBaseline.toFixed(1)}%
                   </td>
-                  <td className="py-3 px-3 text-center bg-indigo-950/20 font-bold text-indigo-300">
+                  <td className="py-3 px-3 text-center bg-indigo-50/55 font-bold text-indigo-700">
                     {roaOptimized.toFixed(1)}%
                   </td>
-                  <td className="py-3 px-3 text-right text-emerald-400 font-bold">
+                  <td className="py-3 px-3 text-right text-emerald-700 font-bold">
                     ↑ +{(roaOptimized - roaBaseline).toFixed(1)}%
                   </td>
                 </tr>
 
                 {/* ROE Row */}
-                <tr className="hover:bg-slate-900/20 transition-colors">
-                  <td className="py-3 px-3 font-sans text-slate-300">
-                    <strong className="block text-slate-200">Рентабельность собственного капитала (ROE, Год 3)</strong>
-                    <span className="text-[10px] text-slate-400 block font-normal">Эффективность отдачи на вложенные учредителями (инвесторами) средства.</span>
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-3 px-3 font-sans text-slate-800">
+                    <strong className="block text-slate-900">Рентабельность собственного капитала (ROE, Год 3)</strong>
+                    <span className="text-[10px] text-slate-500 block font-normal">Эффективность отдачи на вложенные учредителями (инвесторами) средства.</span>
                   </td>
-                  <td className="py-3 px-3 text-center bg-slate-900/30 text-slate-400">
+                  <td className="py-3 px-3 text-center bg-slate-50 text-slate-600">
                     {roeBaseline.toFixed(1)}%
                   </td>
-                  <td className="py-3 px-3 text-center bg-indigo-950/20 font-bold text-indigo-300">
+                  <td className="py-3 px-3 text-center bg-indigo-50/55 font-bold text-indigo-700">
                     {roeOptimized.toFixed(1)}%
                   </td>
-                  <td className="py-3 px-3 text-right text-emerald-400 font-bold">
+                  <td className="py-3 px-3 text-right text-emerald-700 font-bold">
                     ↑ +{(roeOptimized - roeBaseline).toFixed(1)}%
                   </td>
                 </tr>
 
                 {/* Payback Period Row */}
-                <tr className="hover:bg-slate-900/20 transition-colors">
-                  <td className="py-3 px-3 font-sans text-slate-300">
-                    <strong className="block text-slate-200">Дисконтированный срок окупаемости (DPP)</strong>
-                    <span className="text-[10px] text-slate-400 block font-normal">Время, необходимое для покрытия первоначальных вложений с учетом фактора дисконтирования.</span>
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-3 px-3 font-sans text-slate-800">
+                    <strong className="block text-slate-900">Дисконтированный срок окупаемости (DPP)</strong>
+                    <span className="text-[10px] text-slate-500 block font-normal">Время, необходимое для покрытия первоначальных вложений с учетом фактора дисконтирования.</span>
                   </td>
-                  <td className="py-3 px-3 text-center bg-slate-900/30 text-slate-400">
+                  <td className="py-3 px-3 text-center bg-slate-50 text-slate-600">
                     {paybackBaseline > 5 ? 'более 5 лет' : `${paybackBaseline.toFixed(1)} лет`}
                   </td>
-                  <td className="py-3 px-3 text-center bg-indigo-950/20 font-bold text-indigo-300">
+                  <td className="py-3 px-3 text-center bg-indigo-50/55 font-bold text-indigo-700">
                     {paybackOptimized > 5 ? 'более 5 лет' : `${paybackOptimized.toFixed(1)} лет`}
                   </td>
-                  <td className="py-3 px-3 text-right text-emerald-400 font-bold">
+                  <td className="py-3 px-3 text-right text-emerald-700 font-bold">
                     {paybackBaseline > paybackOptimized ? (
                       <span>↓ -{(paybackBaseline - paybackOptimized).toFixed(1)} лет</span>
                     ) : 'Без изм.'}
@@ -1614,18 +1614,18 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                 </tr>
 
                 {/* PI Row */}
-                <tr className="hover:bg-slate-900/20 transition-colors">
-                  <td className="py-3 px-3 font-sans text-slate-300">
-                    <strong className="block text-slate-200">Индекс доходности (Profitability Index - PI)</strong>
-                    <span className="text-[10px] text-slate-400 block font-normal">Отношение дисконтированных выгод к затратам. Если PI &gt; 1, проект выгоден.</span>
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-3 px-3 font-sans text-slate-800">
+                    <strong className="block text-slate-900">Индекс доходности (Profitability Index - PI)</strong>
+                    <span className="text-[10px] text-slate-500 block font-normal">Отношение дисконтированных выгод к затратам. Если PI &gt; 1, проект выгоден.</span>
                   </td>
-                  <td className="py-3 px-3 text-center bg-slate-900/30 text-slate-400">
+                  <td className="py-3 px-3 text-center bg-slate-50 text-slate-600">
                     {piBaseline.toFixed(2)}x
                   </td>
-                  <td className="py-3 px-3 text-center bg-indigo-950/20 font-bold text-indigo-300">
+                  <td className="py-3 px-3 text-center bg-indigo-50/55 font-bold text-indigo-700">
                     {piOptimized.toFixed(2)}x
                   </td>
-                  <td className="py-3 px-3 text-right text-emerald-400 font-bold">
+                  <td className="py-3 px-3 text-right text-emerald-700 font-bold">
                     ↑ +{(piOptimized - piBaseline).toFixed(2)}x
                   </td>
                 </tr>
