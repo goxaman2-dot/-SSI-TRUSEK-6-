@@ -49,6 +49,9 @@ import { MarketCompareChart } from './components/MarketCompareChart';
 import { StartupReserves } from './components/StartupReserves';
 import { SalesRealismValidator } from './components/SalesRealismValidator';
 import { AuthPortal } from './components/AuthPortal';
+import { Sidebar } from './components/Sidebar';
+import { ApplicationsView } from './components/ApplicationsView';
+import { MiniLily } from './components/MiniLily';
 
 function getPastelBackground(ssi: number): { bg: string, text: string, border: string, badgeBg: string, badgeText: string } {
   if (ssi >= 8.5) {
@@ -111,6 +114,8 @@ export default function App() {
       return null;
     }
   });
+  
+  const [currentView, setCurrentView] = useState('applications');
 
   const [data, setData] = useState<StartupData>(() => {
     try {
@@ -680,95 +685,110 @@ export default function App() {
     compare: 'БЛОК 5: ⚖️ Сравнение анкет'
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+        <AuthPortal 
+          onAuthSuccess={(u) => {
+            setUser(u);
+            localStorage.setItem('ssi_user_auth', JSON.stringify(u));
+          }} 
+          showToast={showToast} 
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased pb-20 selection:bg-indigo-500 selection:text-white">
-      
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {notification && (
-          <motion.div 
-            initial={{ opacity: 0, y: -50, x: '-50%' }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-4 rounded-xl shadow-xl border text-sm font-semibold transition-all ${
-              notification.type === 'success' 
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                : notification.type === 'error'
-                ? 'bg-rose-50 text-rose-800 border-rose-200'
-                : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-            }`}
-          >
-            <span className="text-base">
-              {notification.type === 'success' ? '⚡' : notification.type === 'error' ? '💥' : 'ℹ️'}
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+      {/* Full Width Top Banner representing the user's uploaded image similar to RSF site */}
+      <div className="w-full h-48 md:h-64 lg:h-[340px] shrink-0 bg-slate-200 relative overflow-hidden flex-none z-10">
+        <div className="absolute inset-0 bg-indigo-900/10 flex items-center justify-center">
+            <span className="text-sm font-medium text-indigo-800 bg-white/70 px-4 py-2 rounded-lg backdrop-blur-sm shadow-sm border border-indigo-100">
+              {/* Note for the user since I can't read the chat attachment directly into code */}
+              Ваше фото Технопарка СКФУ (перетащите изображение в папку public как technopark_bg.jpg)
             </span>
-            <span>{notification.message}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* GLOBAL BACKGROUND ELEMENTS (HIDDEN IN PRINT) */}
-      <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-indigo-900/10 via-transparent to-transparent pointer-events-none print:hidden -z-10" />
-
-      {/* HEADER SECTION */}
-      <header className="container max-w-6xl mx-auto pt-8 px-4 print:pt-4">
-        <div className="bg-gradient-to-r from-indigo-50/90 via-purple-50/80 to-violet-50/90 text-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-indigo-100/80 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-          
-          {/* Decorative background vectors */}
-          <div className="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-indigo-200/20 blur-3xl pointer-events-none" />
-          <div className="absolute -left-10 -top-10 w-44 h-44 rounded-full bg-violet-200/20 blur-3xl pointer-events-none" />
-
-          {/* Left badge fallback / logo placeholder */}
-          <div className="flex-shrink-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-md px-5 py-4 rounded-2xl border border-indigo-100/60 w-36 h-24 select-none z-10 mx-auto md:mx-0 shadow-xs">
-            <span className="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-indigo-700 via-purple-800 to-indigo-800 bg-clip-text text-transparent">
-              СКФУ
-            </span>
-            <span className="text-[9px] font-bold tracking-widest text-indigo-700 mt-1 uppercase text-center leading-tight">
-              Технопарк
-            </span>
-          </div>
-
-          <div className="flex-1 text-center flex flex-col items-center z-10 w-full px-2">
-            <button
-              onClick={() => setIsAuthorsOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200/80 border border-indigo-200/60 text-xs font-bold rounded-full mb-3 tracking-wide transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-xs group"
-              title="Нажмите, чтобы увидеть информацию об авторах методологии и публикации"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse group-hover:rotate-12 transition-transform duration-300" />
-              <span>TRUSEK-6 FRAMEWORK — Просмотр методологии калькулятора</span>
-              <Info className="w-3 h-3 text-indigo-600 opacity-80 group-hover:opacity-100" />
-            </button>
-            <h1 className="font-display font-black text-2xl md:text-3xl tracking-tight leading-snug text-center text-slate-900">
-              Калькулятор индекса SSI <br />
-              самодостаточности бизнес-идеи
-            </h1>
-            <p className="text-slate-600 text-sm mt-2 font-normal max-w-2xl text-center">
-              Инструмент прединвестиционной экспресс-оценки самодостаточности технологических стартапов. Разработка для Технопарка Северо-Кавказского федерального университета.
-            </p>
-            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-slate-500 text-xs mt-3.5 italic border-t border-indigo-100/50 pt-3 w-full">
-              <button
-                onClick={() => setIsAuthorsOpen(true)}
-                className="hover:text-indigo-700 transition-colors flex items-center gap-1 cursor-pointer group/author py-0.5"
-                title="Подробнее об авторах проекта и научной публикации"
-              >
-                <span>Авторы методологии: <strong className="text-slate-700 group-hover/author:text-indigo-900 transition-colors font-semibold">Мандрица И.В., Мандрица О.В.</strong></span>
-                <Info className="w-3.5 h-3.5 text-indigo-600 opacity-65 group-hover/author:opacity-100 transition-opacity shrink-0" />
-              </button>
-              <span className="hidden md:inline text-indigo-200">•</span>
-              <span>Версия калькулятора: <strong className="text-indigo-700 font-mono font-bold">v2.0 (2026)</strong></span>
-            </div>
-          </div>
-
-          {/* Right badge - Beautiful Lily mirroring the Technopark logo */}
-          <div className="flex-shrink-0 flex items-center justify-center bg-white/70 backdrop-blur-md p-1.5 rounded-2xl border border-indigo-100/60 w-36 h-24 select-none z-10 mx-auto md:mx-0 shadow-xs">
-            <MiniLily subfactors={results.subfactors} />
-          </div>
         </div>
-      </header>
+        <img 
+          src="https://www.ncfu.ru/export/sites/SKFU/science/technopark/image/tekhnopark.jpg" 
+          alt="Технопарк СКФУ" 
+          className="w-full h-full object-cover relative z-10"
+          onError={(e) => {
+            // Fallback to local image if NCFU site blocks hotlinking
+            const target = e.target as HTMLImageElement;
+            if (target.src !== '/technopark_bg.jpg') {
+              target.src = '/technopark_bg.jpg';
+            } else {
+              target.style.opacity = '0';
+            }
+          }}
+          onLoad={(e) => {
+            (e.target as HTMLImageElement).style.opacity = '1';
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent pointer-events-none z-20"></div>
+        <div className="absolute bottom-6 md:bottom-10 left-6 md:left-12 z-30">
+           <h1 className="text-3xl md:text-5xl font-black text-white drop-shadow-md tracking-tight">Технопарк СКФУ</h1>
+           <p className="text-indigo-100 md:text-lg font-medium mt-1 md:mt-2 opacity-90 drop-shadow-sm">Лаборатория прединвестиционной экспресс-оценки</p>
+        </div>
+      </div>
+
+      {/* Main Layout Area below the banner */}
+      <div className="flex-1 flex min-h-0 relative">
+        <Sidebar 
+          activeTab={currentView} 
+          setActiveTab={setCurrentView} 
+          calcTab={activeTab}
+          setCalcTab={setActiveTab as any}
+          onOpenMethodology={() => setIsAuthorsOpen(true)}
+          onLogout={() => {
+            setUser(null);
+            localStorage.removeItem('ssi_user_auth');
+          }}
+          user={user}
+          subfactors={results.subfactors}
+        />
+        
+        <main className="flex-1 flex flex-col min-w-0 overflow-y-auto relative pb-20">
+          {/* Toast Notification */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div 
+              initial={{ opacity: 0, y: -50, x: '-50%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-4 rounded-xl shadow-xl border text-sm font-semibold transition-all ${
+                notification.type === 'success' 
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                  : notification.type === 'error'
+                  ? 'bg-rose-50 text-rose-800 border-rose-200'
+                  : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+              }`}
+            >
+              <span className="text-base">
+                {notification.type === 'success' ? '⚡' : notification.type === 'error' ? '💥' : 'ℹ️'}
+              </span>
+              <span>{notification.message}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {currentView === 'applications' && (
+          <ApplicationsView onNewApplication={() => setCurrentView('calculator')} />
+        )}
+
+        {currentView === 'calculator' && (
+          <>
+            {/* GLOBAL BACKGROUND ELEMENTS (HIDDEN IN PRINT) */}
+            <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-indigo-900/10 via-transparent to-transparent pointer-events-none print:hidden -z-10" />
+
+
+
 
       <main className="container max-w-6xl mx-auto px-4 mt-6">
 
         {/* SMART PASTE HINT BAR (HIDDEN IN PRINT) */}
-        <section className="print:hidden mb-6">
+        <section id="smart-autofill" className="print:hidden mb-6">
           <div 
             className="group relative bg-gradient-to-br from-indigo-50/90 via-purple-50/80 to-slate-100/95 text-slate-900 p-5 md:p-6 rounded-2xl shadow-xs border border-indigo-100/60 transition-all duration-300 overflow-hidden"
           >
@@ -998,7 +1018,7 @@ export default function App() {
         </section>
 
         {/* STEP-BY-STEP STUDENT ROADMAP & NAVIGATION (Блоки калькулятора) */}
-        <div className="mb-6 print:hidden">
+        <div id="calc-tabs" className="mb-6 print:hidden">
           <div className="bg-gradient-to-r from-slate-100 to-indigo-50/50 p-4 rounded-2xl border border-slate-200/60 mb-4 shadow-xs">
             <h4 className="text-xs font-black uppercase tracking-widest text-indigo-800 flex items-center gap-1.5 mb-3">
               <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-ping" />
@@ -4088,6 +4108,10 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+          </>
+        )}
+      </main>
+      </div>
     </div>
   );
 }
@@ -4124,123 +4148,7 @@ function Tooltip({ text }: TooltipProps) {
   );
 }
 
-// ========================================================
-// UTILITY: DETAILED LILY SWEEP FLOWER GEOMETRY RENDERING  
-// ========================================================
-function MiniLily({ subfactors, className = "w-[84px] h-[84px] md:w-[94px] md:h-[94px] block drop-shadow-2xl select-none" }: { subfactors: Subfactors; className?: string }) {
-  const cx = 50;
-  const cy = 50;
-  const maxRadius = 38;
-  const factorKeys: (keyof Subfactors)[] = ['T', 'U', 'R', 'S', 'E', 'K'];
-  
-  const factorColors: Record<keyof Subfactors, string> = {
-    T: '#a855f7', // purple
-    U: '#3b82f6', // blue
-    R: '#ec4899', // pink
-    S: '#06b6d4', // cyan
-    E: '#f43f5e', // rose
-    K: '#10b981'  // emerald
-  };
 
-  return (
-    <svg viewBox="0 0 100 100" className={className}>
-      <defs>
-        {factorKeys.map(key => (
-          <linearGradient key={`mini-grad-${key}`} id={`mini-grad-${key}`} x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.15} />
-            <stop offset="85%" stopColor={factorColors[key]} stopOpacity={0.88} />
-            <stop offset="100%" stopColor={factorColors[key]} stopOpacity={0.98} />
-          </linearGradient>
-        ))}
-      </defs>
-
-      {/* Shaggy Golden Stamens / Тычинки, делающие лилию лохматой */}
-      {factorKeys.map((_, index) => {
-        const midAngle = index * 60 - 60; // Gaps centered between petals
-        const offsets = [-13, 0, 13]; // 3 delicate golden stems in each gap
-        
-        return offsets.map((offset, oIdx) => {
-          const angleRad = ((midAngle + offset) * Math.PI) / 180;
-          const stamenLen = 16 + (oIdx % 2 === 0 ? 6 : 9);
-          
-          const xTip = cx + Math.cos(angleRad) * stamenLen;
-          const yTip = cy + Math.sin(angleRad) * stamenLen;
-          
-          const bendAngleRad = ((midAngle + offset * 0.55) * Math.PI) / 180;
-          const xControl = cx + Math.cos(bendAngleRad) * stamenLen * 0.55;
-          const yControl = cy + Math.sin(bendAngleRad) * stamenLen * 0.55;
-          
-          return (
-            <g key={`mini-stamen-${index}-${oIdx}`}>
-              <path
-                d={`M ${cx} ${cy} Q ${xControl} ${yControl} ${xTip} ${yTip}`}
-                fill="none"
-                stroke="#fbbf24"
-                strokeWidth="0.75"
-                opacity="0.9"
-              />
-              <circle
-                cx={xTip}
-                cy={yTip}
-                r="1.2"
-                fill="#d97706"
-                stroke="#fef08a"
-                strokeWidth="0.4"
-              />
-            </g>
-          );
-        });
-      })}
-
-      {/* Petals */}
-      {factorKeys.map((key, index) => {
-        const angleDeg = index * 60 - 90;
-        const angleRad = (angleDeg * Math.PI) / 180;
-        const leftWingRad = (angleDeg - 25) * Math.PI / 180;
-        const rightWingRad = (angleDeg + 25) * Math.PI / 180;
-
-        const valueScore = subfactors[key];
-        // Mini logarithmic petal projection
-        const pRadius = 10 + (maxRadius - 10) * (Math.log2(1 + valueScore) / Math.log2(11));
-
-        const xTip = cx + Math.cos(angleRad) * pRadius;
-        const yTip = cy + Math.sin(angleRad) * pRadius;
-
-        const xControlLeft = cx + Math.cos(leftWingRad) * pRadius * 0.75;
-        const yControlLeft = cy + Math.sin(leftWingRad) * pRadius * 0.75;
-
-        const xControlRight = cx + Math.cos(rightWingRad) * pRadius * 0.75;
-        const yControlRight = cy + Math.sin(rightWingRad) * pRadius * 0.75;
-
-        return (
-          <g key={key}>
-            <path
-              d={`M ${cx} ${cy} C ${xControlLeft} ${yControlLeft}, ${xTip} ${yTip}, ${xTip} ${yTip} C ${xTip} ${yTip}, ${xControlRight} ${yControlRight}, ${cx} ${cy} Z`}
-              fill={`url(#mini-grad-${key})`}
-              stroke={factorColors[key]}
-              strokeWidth="0.9"
-              strokeLinecap="round"
-            />
-            {/* White/light central rib for realistic lily petal feel */}
-            <path
-              d={`M ${cx + Math.cos(angleRad) * 6} ${cy + Math.sin(angleRad) * 6} Q ${cx + Math.cos(angleRad) * pRadius * 0.55} ${cy + Math.sin(angleRad) * pRadius * 0.55} ${xTip - Math.cos(angleRad) * 1.5} ${yTip - Math.sin(angleRad) * 1.5}`}
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="0.5"
-              opacity="0.65"
-            />
-          </g>
-        );
-      })}
-
-      {/* Inner small core representing the SSI index label */}
-      <circle cx={cx} cy={cy} r="8.5" fill="#ffffff" stroke="#6366f1" strokeWidth="1.5" />
-      <text x={cx} y={cy + 2} textAnchor="middle" fontSize="6.2" fontWeight="950" fill="#4f46e5" className="font-sans">
-        SSI
-      </text>
-    </svg>
-  );
-}
 
 interface LilyProps {
   subfactors: Subfactors;
