@@ -16,7 +16,8 @@ import {
   FileEdit,
   Microscope,
   Flower2,
-  Rocket
+  Rocket,
+  CheckCircle
 } from 'lucide-react';
 import { MiniLily } from './MiniLily';
 import { Subfactors } from '../utils';
@@ -26,73 +27,60 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   calcTab: string;
   setCalcTab: (tab: 'anketa' | 'expert' | 'result' | 'compare' | 'agent') => void;
-  onOpenMethodology: () => void;
+  onOpenConsent: () => void;
   onLogout: () => void;
   user: { name: string; email: string; phone: string };
   subfactors: Subfactors;
+  consentAccepted: boolean;
 }
 
-export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenMethodology, onLogout, user, subfactors }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenConsent, onLogout, user, subfactors, consentAccepted }: SidebarProps) {
   const [isCalcExpanded, setIsCalcExpanded] = useState(true);
 
   const menuSections = [
     {
-      title: 'ОСНОВНОЕ',
+      title: 'КАБИНЕТЫ ПРОЕКТОВ',
       items: [
-        { id: 'dashboard', label: 'Сводная панель', icon: LayoutDashboard, color: 'text-rose-500' },
-        { id: 'applications', label: 'Мои заявки', icon: FolderOpen, color: 'text-amber-500' },
-        { 
-          id: 'calculator', 
-          label: 'Расчёт SSI', 
-          icon: Calculator, 
-          color: 'text-indigo-500',
-          hasSubItems: true
-        },
+        { id: 'dashboard', label: 'Рабочий стол студента', icon: LayoutDashboard, color: 'text-emerald-600' },
+        { id: 'supervisor', label: 'Научный руководитель', icon: FileEdit, color: 'text-blue-600' },
+        { id: 'applications', label: 'База заявок', icon: FolderOpen, color: 'text-amber-500' },
       ]
     },
     {
-      title: 'АНАЛИТИКА',
+      title: 'ОЦЕНКА SSI (РАСЧЕТ)',
       items: [
-        { id: 'compare', label: 'Сравнение идей', icon: Scale, color: 'text-orange-400' },
-        { id: 'reports', label: 'Отчёты', icon: FileText, color: 'text-slate-400' },
+        { id: 'calculator', label: 'Запуск оценки', icon: Calculator, color: 'text-indigo-500' },
+        { id: 'agent', label: 'ИИ-консультант', icon: Bot, color: 'text-purple-500' },
+        { id: 'expert', label: 'Режим экспертизы', icon: Microscope, color: 'text-rose-500' },
+        { id: 'result', label: 'Итоговый индекс', icon: Flower2, color: 'text-pink-500' },
+        { id: 'compare', label: 'Сравнение проектов', icon: Scale, color: 'text-orange-400' },
       ]
     },
     {
-      title: 'НАСТРОЙКИ',
+      title: 'ТЕХНОПАРК СКФУ',
       items: [
-        { id: 'profile', label: 'Профиль', icon: Settings, color: 'text-purple-500' },
+        { id: 'park_status', label: 'Статусы (Экспертиза)', icon: LayoutDashboard, color: 'text-indigo-600' },
+        { id: 'park_stats', label: 'Сводка и KPI', icon: FileText, color: 'text-slate-500' },
+      ]
+    },
+    {
+      title: 'СИСТЕМА',
+      items: [
+        { id: 'profile', label: 'Настройки', icon: Settings, color: 'text-slate-400' },
       ]
     }
   ];
 
-  const calcSubItems = [
-    { id: 'intro', label: 'Калькулятор индекса', icon: Calculator },
-    { id: 'autofill', label: 'Умное автозаполнение', icon: Rocket },
-    { id: 'agent', label: 'БЛОК 1: ИИ Агент', icon: Bot },
-    { id: 'anketa', label: 'БЛОК 2: Аутлайн', icon: FileEdit },
-    { id: 'expert', label: 'БЛОК 3: Режим эксперта', icon: Microscope },
-    { id: 'result', label: 'БЛОК 4: Результат', icon: Flower2 },
-    { id: 'compare', label: 'БЛОК 5: Сравнение', icon: Scale },
-    { id: 'methodology', label: 'Методология', icon: BookOpen },
-  ];
-
-  const handleCalcSubItemClick = (subId: string) => {
-    if (subId === 'methodology') {
-      onOpenMethodology();
-      return;
-    }
+  const handleMenuClick = (item: any) => {
     
-    setActiveTab('calculator');
-    
-    if (subId === 'intro') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (subId === 'autofill') {
-      const el = document.getElementById('smart-autofill');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    } else if (['agent', 'anketa', 'expert', 'result', 'compare'].includes(subId)) {
-      setCalcTab(subId as 'anketa' | 'expert' | 'result' | 'compare' | 'agent');
+    // Map flattened items back to the correct states for App.tsx
+    if (['agent', 'anketa', 'expert', 'result', 'compare'].includes(item.id)) {
+      setActiveTab('calculator');
+      setCalcTab(item.id as 'anketa' | 'expert' | 'result' | 'compare' | 'agent');
       const el = document.getElementById('calc-tabs');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      setActiveTab(item.id);
     }
   };
 
@@ -100,12 +88,17 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenMe
     <aside className="w-64 bg-white border-r border-slate-200 h-[100vh] flex flex-col sticky top-0 shrink-0 hidden md:flex">
       {/* Logo Area */}
       <div className="flex flex-col px-5 py-4 border-b border-slate-100 shrink-0 bg-slate-50/50">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center">
-            <div className="bg-emerald-600 text-white rounded pr-2 pl-1.5 py-1 text-xs font-black tracking-wider flex items-center gap-1 shadow-sm mr-2">
-              <span>SSI</span>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex flex-col">
+            <div className="flex items-center">
+              <div className="bg-emerald-600 text-white rounded pr-2 pl-1.5 py-1 text-xs font-black tracking-wider flex items-center gap-1 shadow-sm mr-2">
+                <span>SSI</span>
+              </div>
+              <span className="font-extrabold text-slate-800 text-sm tracking-tight">Navigator</span>
             </div>
-            <span className="font-extrabold text-slate-800 text-sm tracking-tight">Navigator</span>
+            <span className="text-[10px] font-bold text-indigo-600 mt-1 uppercase tracking-wider">
+              стартапов v.2.0 2026
+            </span>
           </div>
           <div className="flex-shrink-0 flex items-center justify-center bg-white p-0.5 rounded-lg border border-indigo-100/60 w-10 h-10 select-none shadow-xs">
             <MiniLily subfactors={subfactors} className="w-[32px] h-[32px] drop-shadow-sm" />
@@ -117,21 +110,9 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenMe
         </p>
         <div className="text-[9px] text-slate-400 font-medium mb-1.5 leading-relaxed">
           Выполнено по техзаданию:
-          <strong className="text-slate-600 block mt-0.5">Кузьменко В.В.</strong>
-        </div>
-        <div 
-          onClick={onOpenMethodology}
-          className="text-[9px] text-slate-400 font-medium cursor-pointer hover:text-indigo-600 transition-colors mb-1.5 leading-relaxed"
-          title="Подробнее об авторах проекта и научной публикации"
-        >
-          Методическое обеспечение:
-          <strong className="text-slate-600 block mt-0.5">Мандрица И.В.</strong>
-          <strong className="text-slate-600 block">Мандрица О.В.</strong>
-        </div>
-        <div className="text-[9px] text-slate-400 font-medium leading-relaxed mt-2">
-          Технические специалисты лаборатории:
-          <strong className="text-slate-600 block mt-0.5">Смакуев Р.А.</strong>
-          <strong className="text-slate-600 block">Ткаченко М.М.</strong>
+          <strong className="text-slate-600 block mt-0.5">Кузьменко В.В., Мандрица И.В.</strong>
+          Техн. специалисты:
+          <strong className="text-slate-600 block mt-0.5">Ренат, Максим</strong>
         </div>
       </div>
 
@@ -145,61 +126,25 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenMe
             <div className="space-y-1">
               {section.items.map(item => {
                 const Icon = item.icon;
-                const isActive = activeTab === item.id;
+                const isActive = activeTab === item.id || 
+                  (activeTab === 'calculator' && calcTab === item.id) || 
+                  (item.id === 'calculator' && activeTab === 'calculator' && !['agent', 'expert', 'result', 'compare'].includes(calcTab));
                 
                 return (
-                  <div key={item.id}>
-                    <button
-                      onClick={() => {
-                        if (item.hasSubItems) {
-                          setIsCalcExpanded(!isCalcExpanded);
-                          setActiveTab(item.id);
-                        } else {
-                          setActiveTab(item.id);
-                        }
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                        isActive 
-                          ? 'bg-emerald-50/80 text-emerald-900 font-semibold' 
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-600' : item.color}`} />
-                        {item.label}
-                      </div>
-                      {item.hasSubItems && (
-                        isCalcExpanded ? <ChevronDown className="w-3.5 h-3.5 opacity-50" /> : <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                      )}
-                    </button>
-                    
-                    {/* Render Sub-items for Calculator */}
-                    {item.hasSubItems && isCalcExpanded && (
-                      <div className="ml-5 mt-1 border-l border-slate-200 pl-2 space-y-1 py-1">
-                        {calcSubItems.map((subItem) => {
-                          const SubIcon = subItem.icon;
-                          const isSubActive = activeTab === 'calculator' && 
-                            (calcTab === subItem.id || 
-                             (subItem.id === 'intro' && !['agent', 'anketa', 'expert', 'result', 'compare'].includes(calcTab)));
-                             
-                          return (
-                            <button
-                              key={subItem.id}
-                              onClick={() => handleCalcSubItemClick(subItem.id)}
-                              className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${
-                                isSubActive && ['agent', 'anketa', 'expert', 'result', 'compare'].includes(subItem.id)
-                                  ? 'bg-indigo-50/80 text-indigo-700 font-semibold'
-                                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                              }`}
-                            >
-                              <SubIcon className={`w-3.5 h-3.5 ${isSubActive && ['agent', 'anketa', 'expert', 'result', 'compare'].includes(subItem.id) ? 'text-indigo-600' : 'opacity-60'}`} />
-                              {subItem.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    key={item.id}
+                    onClick={() => handleMenuClick(item)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      isActive 
+                        ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-sm border border-indigo-100/50' 
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : item.color}`} />
+                      {item.label}
+                    </div>
+                  </button>
                 );
               })}
             </div>
@@ -218,6 +163,24 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenMe
             <div className="text-[10px] text-slate-500 truncate">{user.email}</div>
           </div>
         </div>
+        
+        {consentAccepted ? (
+          <div className="mb-3 p-2 bg-emerald-50/80 border border-emerald-100 rounded-lg text-center flex flex-col items-center justify-center gap-0.5">
+            <div className="flex items-center gap-1">
+              <CheckCircle className="w-3 h-3 text-emerald-600" />
+              <span className="text-[10px] font-bold text-emerald-700 tracking-wide">ПДн получено</span>
+            </div>
+            <span className="text-[9px] text-emerald-600/80 block leading-tight">Согласие принято</span>
+          </div>
+        ) : (
+          <div 
+            onClick={onOpenConsent}
+            className="mb-3 cursor-pointer p-2 bg-indigo-50/80 border border-indigo-100 rounded-lg text-center hover:bg-indigo-100/80 transition-colors"
+          >
+            <span className="text-[10px] font-bold text-indigo-700 tracking-wide uppercase">Принять оферту</span>
+            <span className="text-[9px] text-indigo-600/80 block mt-0.5 leading-tight">Согласие на обработку ПДн</span>
+          </div>
+        )}
         
         <button 
           onClick={onLogout}

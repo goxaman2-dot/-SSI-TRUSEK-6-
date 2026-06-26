@@ -27,7 +27,9 @@ import {
   ArrowLeftRight,
   Bot,
   ExternalLink,
-  FileText
+  FileText,
+  Microscope,
+  Rocket
 } from 'lucide-react';
 import { StartupData, Subfactors, CalculationResult, DataWarning } from './types';
 import { 
@@ -115,7 +117,7 @@ export default function App() {
     }
   });
   
-  const [currentView, setCurrentView] = useState('applications');
+  const [currentView, setCurrentView] = useState('dashboard');
 
   const [data, setData] = useState<StartupData>(() => {
     try {
@@ -180,8 +182,14 @@ export default function App() {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [copiedText, setCopiedText] = useState(false);
   const [highlightMode, setHighlightMode] = useState<'weak' | 'strong' | 'none'>('none');
-  const [isAuthorsOpen, setIsAuthorsOpen] = useState(false);
-  const [authorsActiveTab, setAuthorsActiveTab] = useState<number>(1);
+  const [isConsentOpen, setIsConsentOpen] = useState(false);
+  const [hasAcceptedConsent, setHasAcceptedConsent] = useState(() => {
+    try {
+      return localStorage.getItem('ssi_consent_accepted') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [showValidationResults, setShowValidationResults] = useState(false);
 
   // Save changes to localStorage
@@ -727,10 +735,25 @@ export default function App() {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent pointer-events-none z-20"></div>
-        <div className="absolute bottom-6 md:bottom-10 left-6 md:left-12 z-30">
+        <div className="absolute top-6 md:top-10 left-6 md:left-12 z-30">
            <h1 className="text-3xl md:text-5xl font-black text-white drop-shadow-md tracking-tight">Технопарк СКФУ</h1>
-           <p className="text-indigo-100 md:text-lg font-medium mt-1 md:mt-2 opacity-90 drop-shadow-sm">Лаборатория прединвестиционной экспресс-оценки</p>
+           <p className="text-indigo-100 md:text-lg font-medium mt-1 md:mt-2 opacity-90 drop-shadow-sm">Лаборатория прединвестиционной экспресс-оценки стартапов</p>
         </div>
+        
+        {user && (
+          <div className="absolute top-6 right-6 md:top-10 md:right-12 z-30 bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-3 flex items-center gap-4 shadow-xl">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-inner">
+              {user.name.charAt(0)}
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-white font-bold text-sm leading-tight">{user.name}</p>
+              <p className="text-indigo-200 text-xs mt-0.5 font-medium flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                В сети
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Layout Area below the banner */}
@@ -740,13 +763,14 @@ export default function App() {
           setActiveTab={setCurrentView} 
           calcTab={activeTab}
           setCalcTab={setActiveTab as any}
-          onOpenMethodology={() => setIsAuthorsOpen(true)}
+          onOpenConsent={() => setIsConsentOpen(true)}
           onLogout={() => {
             setUser(null);
             localStorage.removeItem('ssi_user_auth');
           }}
           user={user}
           subfactors={results.subfactors}
+          consentAccepted={hasAcceptedConsent}
         />
         
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto relative pb-20">
@@ -777,6 +801,147 @@ export default function App() {
           <ApplicationsView onNewApplication={() => setCurrentView('calculator')} />
         )}
 
+        {currentView === 'dashboard' && (
+          <div className="container max-w-6xl mx-auto px-4 mt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">Рабочий стол студента</h2>
+              <div className="flex items-center gap-2">
+                <div className="px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-700 text-sm font-semibold flex items-center gap-2">
+                  <Rocket className="w-4 h-4" />
+                  Проект: {data?.name || "Без названия"}
+                </div>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Вы уверены, что хотите очистить текущий проект?')) {
+                      setData(EMPTY_STARTUP_DATA);
+                      setNotification({ message: 'Рабочий стол очищен', type: 'success' });
+                    }
+                  }}
+                  className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 hover:bg-rose-100 text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer"
+                  title="Очистить рабочий стол"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Очистить</span>
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Активные проекты</h3>
+                <p className="text-4xl font-black text-indigo-600">2</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">На доработке</h3>
+                <p className="text-4xl font-black text-amber-500">1</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Средний индекс SSI</h3>
+                <p className="text-4xl font-black text-emerald-600">76%</p>
+              </div>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
+              <p className="text-slate-500">Здесь будет отображаться детальная информация о ходе работы над вашими стартапами, рекомендации ИИ и комментарии научного руководителя.</p>
+              <button onClick={() => setCurrentView('calculator')} className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition-colors">Начать новую оценку</button>
+            </div>
+          </div>
+        )}
+
+        {currentView === 'supervisor' && (
+          <div className="container max-w-6xl mx-auto px-4 mt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">Кабинет научного руководителя</h2>
+              <div className="flex items-center gap-2">
+                <div className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-sm font-semibold flex items-center gap-2">
+                  <Rocket className="w-4 h-4" />
+                  Проверяемый проект: {data?.name || "Без названия"}
+                </div>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Вы уверены, что хотите очистить текущий проект?')) {
+                      setData(EMPTY_STARTUP_DATA);
+                      setNotification({ message: 'Рабочий стол очищен', type: 'success' });
+                    }
+                  }}
+                  className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 hover:bg-rose-100 text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer"
+                  title="Очистить рабочий стол"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Очистить</span>
+                </button>
+              </div>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
+              <Microscope className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-slate-800 mb-2">Проекты студентов на проверке</h3>
+              <p className="text-slate-500 mb-6">В этом разделе вы сможете просматривать стартап-проекты ваших студентов, оставлять правки и рекомендации перед отправкой в Технопарк.</p>
+            </div>
+          </div>
+        )}
+
+        {currentView === 'park_status' && (
+          <div className="container max-w-6xl mx-auto px-4 mt-6">
+            <h2 className="text-2xl font-bold text-slate-800 mb-6">Статусы проектов (Технопарк)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100/60">
+                <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400"></span> На доработке
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-slate-50 rounded-lg text-sm border border-slate-100">Нейросеть для агрономов <span className="float-right font-bold text-amber-600">SSI: 34%</span></div>
+                  <div className="p-3 bg-slate-50 rounded-lg text-sm border border-slate-100">Умные остановки СКФУ <span className="float-right font-bold text-amber-600">SSI: 41%</span></div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100/60">
+                <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span> На экспертизе
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-slate-50 rounded-lg text-sm border border-slate-100">Платформа поиска стажировок <span className="float-right font-bold text-blue-600">SSI: 68%</span></div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100/60">
+                <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Готовы к подаче
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-slate-50 rounded-lg text-sm border border-slate-100">Медицинский VR-тренажер <span className="float-right font-bold text-emerald-600">SSI: 92%</span></div>
+                  <div className="p-3 bg-slate-50 rounded-lg text-sm border border-slate-100">Дрон-доставщик реактивов <span className="float-right font-bold text-emerald-600">SSI: 87%</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentView === 'park_stats' && (
+          <div className="container max-w-6xl mx-auto px-4 mt-6">
+            <h2 className="text-2xl font-bold text-slate-800 mb-6">Сводка и KPI (Технопарк)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Всего подано идей</h3>
+                <p className="text-3xl font-black text-indigo-600">142</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Высокий SSI (&gt;80%)</h3>
+                <p className="text-3xl font-black text-emerald-600">28</p>
+                <p className="text-[10px] text-emerald-600/70 mt-1 font-medium">Вероятно успешные</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Отклонено экспертами</h3>
+                <p className="text-3xl font-black text-rose-500">45</p>
+                <p className="text-[10px] text-rose-500/70 mt-1 font-medium">Низкий индекс / недоработка</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">В работе (Воронка)</h3>
+                <p className="text-3xl font-black text-blue-500">69</p>
+              </div>
+            </div>
+            
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 h-64 flex items-center justify-center">
+              <p className="text-slate-400 font-medium">Здесь будет размещена инфографика (графики конверсии, воронка успешности стартапов)</p>
+            </div>
+          </div>
+        )}
+
         {currentView === 'calculator' && (
           <>
             {/* GLOBAL BACKGROUND ELEMENTS (HIDDEN IN PRINT) */}
@@ -788,6 +953,7 @@ export default function App() {
       <main className="container max-w-6xl mx-auto px-4 mt-6">
 
         {/* SMART PASTE HINT BAR (HIDDEN IN PRINT) */}
+        {activeTab === 'anketa' && (
         <section id="smart-autofill" className="print:hidden mb-6">
           <div 
             className="group relative bg-gradient-to-br from-indigo-50/90 via-purple-50/80 to-slate-100/95 text-slate-900 p-5 md:p-6 rounded-2xl shadow-xs border border-indigo-100/60 transition-all duration-300 overflow-hidden"
@@ -1016,6 +1182,7 @@ export default function App() {
             </div>
           </div>
         </section>
+        )}
 
         {/* STEP-BY-STEP STUDENT ROADMAP & NAVIGATION (Блоки калькулятора) */}
         <div id="calc-tabs" className="mb-6 print:hidden">
@@ -1164,15 +1331,6 @@ export default function App() {
                 <span>Очистить</span>
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* AUTHOR NOTE BANNER (PRINT HIDDEN) */}
-        <div className="print:hidden mb-6 bg-amber-50/70 border border-amber-200/60 rounded-2xl p-4 md:p-5 flex items-start gap-3 shadow-sm">
-          <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-          <div className="text-xs md:text-sm text-slate-700 leading-relaxed">
-            <span className="font-bold text-slate-900 block mb-0.5">💡 От авторов калькулятора:</span>
-            Калькулятор не собирает ваши персональные и иные данные, согласно 152-ФЗ РФ, не является ЦОД (центром обработки данных). Калькулятор не имеет сервера хранения данных, является автономно работающим ПО. После нажатия кнопки <strong className="text-rose-700">"Очистить"</strong> все введенные данные навсегда удаляются. Но если нажать кнопку <strong className="text-indigo-700">"Экспортировать JSON анкету"</strong>, то вы сохраняете у себя на компьютере (гаджете) анкету текущих значений индекса SSI вашего стартапа.
           </div>
         </div>
 
@@ -3365,741 +3523,93 @@ export default function App() {
         </p>
       </footer>
 
-      {/* AUTHORS MODAL OVERLAY */}
+      
+      {/* CONSENT MODAL OVERLAY */}
       <AnimatePresence>
-        {isAuthorsOpen && (
+        {isConsentOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop with blur */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsAuthorsOpen(false)}
+              onClick={() => setIsConsentOpen(false)}
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
             />
 
-            {/* Modal Body */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-3xl overflow-hidden relative z-10 flex flex-col max-h-[92vh]"
+              className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden relative z-10 flex flex-col max-h-[92vh]"
             >
-              {/* Decorative top strip */}
-              <div className="h-2 bg-gradient-to-r from-amber-400 via-indigo-600 to-violet-600 shrink-0" />
+              <div className="h-2 bg-gradient-to-r from-indigo-500 to-purple-600 shrink-0" />
 
-              {/* Header */}
               <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
-                    <BookOpen className="w-5 h-5 animate-pulse" />
+                    <BookOpen className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="font-display font-black text-slate-900 text-sm md:text-base leading-tight">Методология TRUSEK-6 / SSI</h2>
-                    <p className="text-[11px] text-slate-500 font-medium font-sans mt-0.5">Лист {authorsActiveTab} из 7 · {
-                      authorsActiveTab === 1 ? "Авторы и публикация" : 
-                      authorsActiveTab === 2 ? "Что такое индекс SSI?" : 
-                      authorsActiveTab === 3 ? "Формула индекса SSI" : 
-                      authorsActiveTab === 4 ? "12 микро-метрик" : 
-                      authorsActiveTab === 5 ? "Формирование факторов" : 
-                      authorsActiveTab === 6 ? "Лилия SSI" : 
-                      "Научное обоснование"
-                    }</p>
+                    <h2 className="font-display font-black text-slate-900 text-sm md:text-base leading-tight">Согласие на обработку персональных данных</h2>
+                    <p className="text-[11px] text-slate-500 font-medium font-sans mt-0.5">Оферта платформы</p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsAuthorsOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                  title="Закрыть окно"
+                  onClick={() => setIsConsentOpen(false)}
+                  className="p-2 bg-white rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors shadow-sm border border-slate-200 cursor-pointer"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* TABS SELECTOR (HORIZONTAL SCROLLABLE ON MOBILE) */}
-              <div className="px-4 py-2 bg-slate-100/50 border-b border-slate-200/60 overflow-x-auto flex gap-1.5 scrollbar-thin shrink-0 select-none">
-                {[
-                  { id: 1, name: '1. Авторы' },
-                  { id: 2, name: '2. Суть SSI' },
-                  { id: 3, name: '3. Формула' },
-                  { id: 4, name: '4. 12 метрик' },
-                  { id: 5, name: '5. Расчет' },
-                  { id: 6, name: '6. Лилия SSI' },
-                  { id: 7, name: '7. Источники' }
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setAuthorsActiveTab(tab.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                      authorsActiveTab === tab.id 
-                        ? 'bg-indigo-600 text-white shadow-sm' 
-                        : 'bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200/50'
-                    }`}
-                  >
-                    {tab.name}
-                  </button>
-                ))}
+              <div className="p-6 overflow-y-auto custom-scrollbar flex-1 text-sm text-slate-600 space-y-4">
+                <p>Настоящим я, пользователь системы "Лаборатория прединвестиционной экспресс-оценки самодостаточности технологических стартапов" Технопарка СКФУ, (далее – «Стартапер» или «Научный руководитель») даю свое согласие Технопарку СКФУ на обработку моих персональных данных.</p>
+                <h3 className="font-bold text-slate-800">1. Перечень обрабатываемых данных</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Фамилия, имя, отчество;</li>
+                  <li>Контактная информация (телефон, адрес электронной почты);</li>
+                  <li>Сведения об образовании, месте учебы/работы;</li>
+                  <li>Информация о стартап-проекте и связанные с ним материалы.</li>
+                </ul>
+                <h3 className="font-bold text-slate-800">2. Цели обработки</h3>
+                <p>Мои персональные данные могут обрабатываться в целях:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Оценки и экспертизы стартап-проекта (расчет индекса SSI);</li>
+                  <li>Осуществления коммуникации между стартапером, научным руководителем и экспертами Технопарка;</li>
+                  <li>Ведения статистики и мониторинга деятельности платформы.</li>
+                </ul>
+                <h3 className="font-bold text-slate-800">3. Действия с персональными данными</h3>
+                <p>Согласие предоставляется на осуществление следующих действий: сбор, запись, систематизация, накопление, хранение, уточнение (обновление, изменение), извлечение, использование, передача (предоставление, доступ), обезличивание, блокирование, удаление, уничтожение персональных данных.</p>
+                <h3 className="font-bold text-slate-800">4. Срок действия согласия</h3>
+                <p>Настоящее согласие действует бессрочно с момента его принятия и может быть отозвано путем направления письменного заявления в адрес Технопарка СКФУ.</p>
               </div>
 
-              {/* Scrollable Content */}
-              <div className="p-5 md:p-6 overflow-y-auto flex-1 space-y-5">
-                
-                {/* LIST 1: AUTHORS AND PUBLICATION */}
-                {authorsActiveTab === 1 && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-                    <p className="text-xs text-slate-500 leading-relaxed font-normal">
-                      Представленный калькулятор является полной программной реализацией комплексной прединвестиционной экспресс-оценки инновационных бизнес-идей на основе международных методик оценки стартапов и отечественных разработок РФ и СКФУ.
-                    </p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Author 1 */}
-                      <div className="bg-gradient-to-br from-slate-50 to-indigo-50/20 p-4.5 rounded-2xl border border-slate-150 relative group overflow-hidden">
-                        <div className="absolute right-0 bottom-0 opacity-5 text-indigo-950 scale-150 pointer-events-none">
-                          <Users className="w-20 h-20" />
-                        </div>
-                        <div className="flex items-center gap-1.5 mb-2.5 text-amber-500">
-                          <Award className="w-3.5 h-3.5 text-amber-500" />
-                          <span className="text-[9px] font-black tracking-widest uppercase">Профессор</span>
-                        </div>
-                        <h3 className="font-display font-extrabold text-slate-900 text-sm mb-1 leading-snug">
-                          Мандрица Игорь Владимирович
-                        </h3>
-                        <p className="text-[11px] text-slate-600 font-semibold mb-2">
-                          Доктор экономических наук, доцент
-                        </p>
-                        <p className="text-[10px] text-slate-500 leading-normal border-t border-slate-100 pt-2 font-normal">
-                          Профессор кафедры организации и технологии защиты информации <br />
-                          <span className="text-indigo-600 font-semibold">Северо-Кавказский федеральный университет, Ставрополь</span>
-                        </p>
-                      </div>
-
-                      {/* Author 2 */}
-                      <div className="bg-gradient-to-br from-slate-50 to-violet-50/20 p-4.5 rounded-2xl border border-slate-150 relative group overflow-hidden">
-                        <div className="absolute right-0 bottom-0 opacity-5 text-indigo-950 scale-150 pointer-events-none">
-                          <Users className="w-20 h-20" />
-                        </div>
-                        <div className="flex items-center gap-1.5 mb-2.5 text-indigo-500">
-                          <Award className="w-3.5 h-3.5 text-indigo-500" />
-                          <span className="text-[9px] font-black tracking-widest uppercase">Зав. кафедрой</span>
-                        </div>
-                        <h3 className="font-display font-extrabold text-slate-900 text-sm mb-1 leading-snug">
-                          Мандрица Ольга Владимировна
-                        </h3>
-                        <p className="text-[11px] text-slate-600 font-semibold mb-2">
-                          Кандидат экономических наук, доцент
-                        </p>
-                        <p className="text-[10px] text-slate-500 leading-normal border-t border-slate-100 pt-2 font-normal">
-                          Заведующая кафедрой региональной экономики <br />
-                          <span className="text-violet-600 font-semibold">МИРЭА — Российский технологический университет, Ставропольский филиал</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Publication */}
-                    <div className="bg-slate-900 text-slate-100 p-4 md:p-5 rounded-2xl border border-slate-800 shadow-inner relative overflow-hidden">
-                      <div className="absolute top-0 right-0 bg-gradient-to-b from-indigo-500/10 to-transparent w-36 h-36 rounded-full blur-xl pointer-events-none" />
-                      <div className="flex items-center gap-2 mb-2">
-                        <BookOpen className="w-4 h-4 text-amber-400" />
-                        <span className="text-[9px] font-bold tracking-widest uppercase text-amber-300">Научная публикация</span>
-                      </div>
-                      <h4 className="font-display font-bold text-xs text-white mb-2.5 italic leading-relaxed">
-                        «Индекс самодостаточности бизнес-идеи стартапа (SSI) как предиктивный инструмент прединвестиционной оценки венчурной привлекательности инновационных проектов»
-                      </h4>
-                      <div className="border-t border-slate-800 pt-2.5 space-y-1 text-[10px] text-slate-300 font-normal">
-                        <p><strong className="text-slate-100">Издание:</strong> Журнал МИР (Модернизация. Инновации. Развитие) · Рецензия ВАК · ISSN 2079-4665</p>
-                        <p className="text-amber-400"><strong className="text-slate-200">Статус:</strong> Подана в издательство · 2026</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* LIST 2: WHAT IS SSI? */}
-                {authorsActiveTab === 2 && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 font-sans text-xs text-slate-700 font-normal leading-relaxed">
-                    <div className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100 text-slate-800">
-                      <p className="font-bold text-indigo-950 mb-1.5 text-sm">SSI (Startup Self-Sufficiency Index)</p>
-                      <p>
-                        Индекс самодостаточности бизнес-идеи стартапа (SSI) — это интегральный показатель из интервала <strong className="text-slate-900">[0; 10]</strong>, измеряющий уровень жизнеспособности инновационного проекта при выходе в конкурентную среду. Индекс предиктивно оценивает шансы стартапа на окупаемость и минимизирует риски кассового разрыва.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border border-slate-150 rounded-2xl p-4 bg-slate-50/60">
-                        <h4 className="font-bold text-slate-900 mb-1">Основные задачи индекса:</h4>
-                        <ul className="list-disc pl-4 space-y-1.5 text-slate-600">
-                          <li>Оценка устойчивости стартап-модели без внешней подпитки грантами;</li>
-                          <li>Ранжирование инновационных студенческих бизнес-планов технопарком;</li>
-                          <li>Прединвестиционный скоринг для венчурных студий и «бизнес-ангелов»;</li>
-                          <li>Поиск "узких мест" до непосредственного привлечения первого CAPEX.</li>
-                        </ul>
-                      </div>
-
-                      <div className="border border-slate-150 rounded-2xl p-4 bg-slate-50/60">
-                        <h4 className="font-bold text-slate-900 mb-1">Факторный баланс:</h4>
-                        <p className="text-slate-600 leading-relaxed">
-                          Методика базируется на 6 ключевых факторах устойчивости модели (TRUSEK-6): утилитарность решения, эмоциональная наценка, спросовая регулярность удержания, капитал-эффективность, скорость достижения безубыточности и органический вирусный коэффициент рекомендации.
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* LIST 3: THE FORMULA OF INDEX SSI */}
-                {authorsActiveTab === 3 && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 font-sans text-xs text-slate-700 font-normal leading-relaxed">
-                    <div className="bg-slate-50 p-4 border border-slate-200 rounded-2xl space-y-2.5">
-                      <h4 className="font-bold text-slate-900 text-sm">Сбалансированная взвешенность MIMIC</h4>
-                      <p className="text-slate-600">
-                        Интегральная формула вычисляет финальный индекс SSI посредством суммирования нормализованных баллов по 6 базовым осям, где каждая ось обладает жестко верификационным весом в зависимости от силы влияния на выживаемость бизнеса:
-                      </p>
-                      <div className="font-mono bg-slate-900 text-amber-300 py-3 px-4 rounded-xl text-center text-xs md:text-sm font-black tracking-wide shadow-inner">
-                        SSI = 0.15·U + 0.20·E + 0.15·R + 0.15·K + 0.20·T + 0.15·S
-                      </div>
-                    </div>
-
-                    <div className="border border-slate-150 rounded-2xl overflow-hidden bg-white shadow-sm">
-                      <div className="grid grid-cols-12 bg-slate-100 px-3 py-2 text-[10px] font-black tracking-wider text-slate-500 uppercase">
-                        <div className="col-span-1">Ось</div>
-                        <div className="col-span-3">Название фактора</div>
-                        <div className="col-span-1 text-center">Вес</div>
-                        <div className="col-span-7">Описание математической сути</div>
-                      </div>
-                      <div className="divide-y divide-slate-150">
-                      <div className="grid grid-cols-12 px-3 py-1.5 items-center bg-white">
-                          <div className="col-span-1 font-mono text-blue-600 font-extrabold">U</div>
-                          <div className="col-span-3 font-semibold text-slate-800">Утилитарность</div>
-                          <div className="col-span-1 text-center font-mono font-bold text-slate-500">0.15</div>
-                          <div className="col-span-7 text-slate-600">Сколько денег в рублях теряет клиент без использования вашего решения.</div>
-                        </div>
-                        <div className="grid grid-cols-12 px-3 py-1.5 items-center bg-slate-50/50">
-                          <div className="col-span-1 font-mono text-rose-600 font-extrabold">E</div>
-                          <div className="col-span-3 font-semibold text-slate-800">Эмоция</div>
-                          <div className="col-span-1 text-center font-mono font-bold text-slate-500">0.20</div>
-                          <div className="col-span-7 text-slate-600">Насколько сильно клиент привыкает и эмоционально вовлекается в потребление.</div>
-                        </div>
-                        <div className="grid grid-cols-12 px-3 py-1.5 items-center bg-white">
-                          <div className="col-span-1 font-mono text-pink-600 font-extrabold">R</div>
-                          <div className="col-span-3 font-semibold text-slate-800">Повторяемость</div>
-                          <div className="col-span-1 text-center font-mono font-bold text-slate-500">0.15</div>
-                          <div className="col-span-7 text-slate-600">Инициирует ли потребитель повторные закупки сам, или требуется массированная реклама.</div>
-                        </div>
-                        <div className="grid grid-cols-12 px-3 py-1.5 items-center bg-slate-50/50">
-                          <div className="col-span-1 font-mono text-emerald-600 font-extrabold">K</div>
-                          <div className="col-span-3 font-semibold text-slate-800">Капитал⁻¹</div>
-                          <div className="col-span-1 text-center font-mono font-bold text-slate-500">0.15</div>
-                          <div className="col-span-7 text-slate-600">Чем меньше требуемый стартовый капитал (CAPEX) — тем выше присуждаемый модели балл.</div>
-                        </div>
-                        <div className="grid grid-cols-12 px-3 py-1.5 items-center bg-white">
-                          <div className="col-span-1 font-mono text-purple-600 font-extrabold">T</div>
-                          <div className="col-span-3 font-semibold text-slate-800">Время⁻¹</div>
-                          <div className="col-span-1 text-center font-mono font-bold text-slate-500">0.20</div>
-                          <div className="col-span-7 text-slate-600">Чем динамичнее происходит выход стартапа в реальную чистую прибыль — тем выше балл.</div>
-                        </div>
-                        <div className="grid grid-cols-12 px-3 py-1.5 items-center bg-slate-50/50">
-                          <div className="col-span-1 font-mono text-cyan-600 font-extrabold">S</div>
-                          <div className="col-span-3 font-semibold text-slate-800">Социальность</div>
-                          <div className="col-span-1 text-center font-mono font-bold text-slate-500">0.15</div>
-                          <div className="col-span-7 text-slate-600">Насколько активно клиенты рекомендуют проект своим партнерам и друзьям.</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-[11px] bg-indigo-50 text-indigo-900/90 rounded-xl p-3 border border-indigo-150 leading-relaxed font-normal">
-                      <strong>★ Научное примечание:</strong> Исключительные весовые коэффициенты факторов <strong>E (Эмоция)</strong> и <strong>T (Время)</strong> равные <strong>0.20</strong> продиктованы открытиями поведенческой экономики (Kahneman & Tversky, 1979), доказывающими доминирование эмоционального фактора в более чем 70% потребительских решений, а также критичной важностью сокращения горизонта окупаемости в пределах 3–5 лет для профессиональных венчурных инвесторов.
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* LIST 4: 12 MICRO-METRICS */}
-                {authorsActiveTab === 4 && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3.5">
-                    <p className="text-xs text-slate-600 leading-normal font-normal">
-                      Каждый из 6 факторов TRUSEK-6 математически раскладывается на две микро-метрики, исключающие субъективные суждения студента:
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                      {/* Factor U */}
-                      <div className="border border-slate-150 rounded-2xl p-3 bg-indigo-50/10 hover:bg-indigo-50/20 transition-all">
-                        <span className="text-[10px] font-black tracking-wider text-blue-600 uppercase">U — Утилитарность</span>
-                        <div className="space-y-1.5 mt-1 text-[11px] leading-relaxed">
-                          <p><strong className="text-slate-900 font-bold font-mono">U1 Переключаемость:</strong> Отношение стоимости перехода на продукт конкурента к ежемесячным потерям клиента.</p>
-                          <p><strong className="text-slate-900 font-bold font-mono">U2 Критичность боли:</strong> Число суток, которое клиент способен безболезненно обходиться без вашего продукта.</p>
-                        </div>
-                      </div>
-
-                      {/* Factor E */}
-                      <div className="border border-slate-150 rounded-2xl p-3 bg-rose-50/10 hover:bg-rose-50/20 transition-all">
-                        <span className="text-[10px] font-black tracking-wider text-rose-600 uppercase">E — Эмоция</span>
-                        <div className="space-y-1.5 mt-1 text-[11px] leading-relaxed">
-                          <p><strong className="text-slate-900 font-bold font-mono">E1 Вовлечённость:</strong> Отношение минут сеанса к 10 + доля активно генерируемого UGC (User Generated Content) × 5.</p>
-                          <p><strong className="text-slate-900 font-bold font-mono">E2 Ценовая премия:</strong> Индекс наценки (превосходство вашей розничной стоимости над среднерыночной базой).</p>
-                        </div>
-                      </div>
-
-                      {/* Factor R */}
-                      <div className="border border-slate-150 rounded-2xl p-3 bg-pink-50/10 hover:bg-pink-50/20 transition-all">
-                        <span className="text-[10px] font-black tracking-wider text-pink-600 uppercase">R — Повторяемость</span>
-                        <div className="space-y-1.5 mt-1 text-[11px] leading-relaxed">
-                          <p><strong className="text-slate-900 font-bold font-mono">R1 Частота возврата:</strong> Доля повторных транзакций по закупкам внутри всей совокупности заказов за год.</p>
-                          <p><strong className="text-slate-900 font-bold font-mono">R2 Коэффициент окупаемости LTV / CAC:</strong> Соотношение жизненного цикла клиента к стоимости его привлечения.</p>
-                        </div>
-                      </div>
-
-                      {/* Factor K */}
-                      <div className="border border-slate-150 rounded-2xl p-3 bg-emerald-50/10 hover:bg-emerald-50/20 transition-all">
-                        <span className="text-[10px] font-black tracking-wider text-emerald-600 uppercase">K — Капитал⁻¹</span>
-                        <div className="space-y-1.5 mt-1 text-[11px] leading-relaxed">
-                          <p><strong className="text-slate-900 font-bold font-mono">K1 Порог входа:</strong> Формульный индикатор: <code>10 − (CAPEX в млн руб.) / 30</code> (чем меньше CAPEX — тем выше балл).</p>
-                          <p><strong className="text-slate-900 font-bold font-mono">K2 Операционная эффективность:</strong> <code>10 − (OPEX / Целевая Выручка) × 10</code>.</p>
-                        </div>
-                      </div>
-
-                      {/* Factor T */}
-                      <div className="border border-slate-150 rounded-2xl p-3 bg-purple-50/10 hover:bg-purple-50/20 transition-all">
-                        <span className="text-[10px] font-black tracking-wider text-purple-600 uppercase">T — Время⁻¹</span>
-                        <div className="space-y-1.5 mt-1 text-[11px] leading-relaxed">
-                          <p><strong className="text-slate-900 font-bold font-mono">T1 Выход в чистую прибыль:</strong> Время достижения точки EBITDA+. Рассчитывается как <code>10 − (месяцев) / 12</code>.</p>
-                          <p><strong className="text-slate-900 font-bold font-mono">T2 Операционная самоокупаемость:</strong> Скорость генерации потока за счет покрытия Опекс.</p>
-                        </div>
-                      </div>
-
-                      {/* Factor S */}
-                      <div className="border border-slate-150 rounded-2xl p-3 bg-cyan-50/10 hover:bg-cyan-50/20 transition-all">
-                        <span className="text-[10px] font-black tracking-wider text-cyan-600 uppercase">S — Социальность</span>
-                        <div className="space-y-1.5 mt-1 text-[11px] leading-relaxed">
-                          <p><strong className="text-slate-900 font-bold font-mono">S1 Вирусный рост:</strong> Общий численный объем привлеченных клиентов по пользовательским промокодам.</p>
-                          <p><strong className="text-slate-900 font-bold font-mono">S2 Индекс NPS лояльности:</strong> Процент активных сторонников бренда за вычетом процента критиков.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* LIST 5: DETAILED STEP CALCULATION & THEORY */}
-                {authorsActiveTab === 5 && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    className="relative min-h-[380px] p-1 flex items-center justify-center"
-                  >
-                    {/* Clean view of list 5 without blur or opacity overlay */}
-                    <div className="space-y-4 text-xs text-slate-700 font-normal leading-relaxed w-full">
-                      <div className="space-y-2.5">
-                        <h4 className="font-bold text-slate-900 text-sm border-l-2 border-amber-500 pl-2">Шаг 1 — Нормализация каждого подфактора</h4>
-                        <p>
-                          Поскольку показатели измеряются в абсолютно несопоставимых единицах (сроки в месяцах, объемы в рублях, доли в процентах), модель TRUSEK-6 нормализует «сырые» данные по кусочно-линейным функциям с использованием жестко заданных отраслевых бенчмарков в диапазоне [2; 10].
-                        </p>
-                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 font-medium text-[11px] grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div>
-                            <span className="font-bold text-indigo-700">Пример по U1 (Переключаемость):</span>
-                            <ul className="list-disc pl-4 mt-1 space-y-0.5 text-slate-600 font-normal">
-                              <li>Отношение затрат &gt; 4× → балл 10</li>
-                              <li>Отношение 3–4× → балл 8</li>
-                              <li>Отношение 2–3× → балл 6</li>
-                              <li>Отношение 1–2× → балл 4</li>
-                              <li>Отношение &lt; 1× → балл 2</li>
-                            </ul>
-                          </div>
-                          <div>
-                            <span className="font-bold text-rose-700">Пример по U2 (Критичность боли):</span>
-                            <ul className="list-disc pl-4 mt-1 space-y-0.5 text-slate-600 font-normal">
-                              <li>Безболезненно без продукта &lt; 1 дня → 10</li>
-                              <li>Безболезненно от 1 до 7 дней → 8</li>
-                              <li>Безболезненно от 7 до 30 дней → 5</li>
-                              <li>Безболезненно свыше 30 дней → 2</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        <h4 className="font-bold text-slate-900 text-sm border-l-2 border-indigo-500 pl-2">Шаг 2 — Агрегационное слияние двух подфакторов в один фактор</h4>
-                        <p>
-                          Внутри каждого укрупненного фактора пара определяющих его микро-метрик взвешивается с равными долями влияния (через математическое среднее арифметическое):
-                        </p>
-                        <div className="font-mono bg-indigo-50 text-indigo-900 px-4 py-2 rounded-xl text-center text-[11px] space-y-1">
-                          <div>U = (U1_норм + U2_норм) / 2</div>
-                          <div>E = (E1_норм + E2_норм) / 2</div>
-                          <div>R = (R1_норм + R2_норм) / 2</div>
-                          <div>K = (K1_норм + K2_норм) / 2</div>
-                          <div>T = (T1_норм + T2_норм) / 2</div>
-                          <div>S = (S1_норм + S2_норм) / 2</div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        <h4 className="font-bold text-slate-900 text-sm border-l-2 border-violet-500 pl-2">Шаг 3 — Сборка итогового индекса SSI</h4>
-                        <p>
-                          На третьем завершающем уровне шесть сбалансированных факторов взвешиваются коэффициентами модели <strong>MIMIC</strong> (Multiple Indicators Multiple Causes):
-                        </p>
-                        <p className="font-mono bg-slate-900 text-slate-200 px-4 py-2.5 rounded-xl text-center text-xs">
-                          SSI = 0.15·U + 0.20·E + 0.15·R + 0.15·K + 0.20·T + 0.15·S
-                        </p>
-                      </div>
-
-                      <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-200/50 space-y-2 text-[11px] leading-relaxed">
-                        <h5 className="font-extrabold text-slate-900">Прикладной сквозной пример (Месяцы до EBITDA+):</h5>
-                        <p>
-                          Возьмем микро-метрику <strong>T1</strong> (время до EBITDA+) для SaaS-платформы:
-                        </p>
-                        <ul className="list-decimal pl-5 space-y-1 text-slate-700 font-normal">
-                          <li><strong>Сырые данные:</strong> 3 календарных месяца до планируемого выхода в чистый плюс.</li>
-                          <li><strong>Нормализация:</strong> <code>T1_норм = 10 − (3 / 12) = 9.75</code>. Калькулятор округляет показатель до нормативного ровного шага <code>9.0</code> по шкале бенчмарка.</li>
-                          <li><strong>Агрегация с T2:</strong> Если измеритель T2 показал 9.0, то расчетный агрегированный фактор <code>T = (9.0 + 9.0) / 2 = 9.0</code>.</li>
-                          <li><strong>Вклад в итоговый индекс SSI:</strong> <code>0.20 × 9.0 = 1.80 пунктов</code> из условных максимальных 2.0 возможных.</li>
-                        </ul>
-                      </div>
-
-                      <div className="border border-slate-200 p-3 bg-slate-50/70 rounded-xl space-y-1.5 text-[10px] leading-normal text-slate-500 font-sans">
-                        <strong className="text-slate-800">Матричная нотация модели:</strong> <br />
-                        <code>Уровень 3 → 2: x_ij_норм = f(x_ij_raw, benchmarks_j)</code> <br />
-                        <code>Уровень 2 → 2: F_i = (x_i1_норм + x_i2_норм) / 2</code> <br />
-                        <code>Уровень 2 → 1: SSI = Σ (β_i · F_i), где совокупная сумма весов Σ β_i = 1.0</code>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* LIST 6: LILIYA SSI & 4 CIRCLES (SOM SAM TOM TAV) */}
-                {authorsActiveTab === 6 && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 text-xs text-slate-700 leading-relaxed">
-                    
-                    {/* Header Block and Description */}
-                    <div className="bg-gradient-to-r from-indigo-50/70 to-purple-50/70 p-4 rounded-2xl border border-indigo-100/80">
-                      <h4 className="font-display font-bold text-sm text-indigo-950 flex items-center gap-1.5 mb-1.5">
-                        <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
-                        <span>Концептуальный образ «Лилия SSI»</span>
-                      </h4>
-                      <p className="font-normal text-slate-600">
-                        Методология оценивает самодостаточность стартапа по форме «лилии» факторов: 
-                        чем более сбалансированы и развиты сильные стороны её лепестков (показателей), 
-                        тем более жизнеспособна бизнес-идея проекта в реальной рыночной среде.
-                      </p>
-                    </div>
-
-                    {/* TWO-COLUMN VISUAL LAYOUT */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                      
-                      {/* Left side: Interactive SVG Lily */}
-                      <div className="lg:col-span-6 bg-white border border-slate-150 rounded-2xl p-4 flex flex-col items-center justify-center relative min-h-[300px]">
-                        <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Интерактивный чертёж «Лилия»</span>
-                        <div className="w-full max-w-[260px] h-[260px] relative mt-4">
-                          {/* CSS SVG Lily flower */}
-                          <svg viewBox="0 0 200 200" className="w-full h-full">
-                            <defs>
-                              <linearGradient id="petal-u-tab6" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#818cf8" />
-                                <stop offset="100%" stopColor="#4f46e5" />
-                              </linearGradient>
-                              <linearGradient id="petal-e-tab6" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#f472b6" />
-                                <stop offset="100%" stopColor="#db2777" />
-                              </linearGradient>
-                              <linearGradient id="petal-r-tab6" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#fb7185" />
-                                <stop offset="100%" stopColor="#e11d48" />
-                              </linearGradient>
-                              <linearGradient id="petal-k-tab6" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#34d399" />
-                                <stop offset="100%" stopColor="#059669" />
-                              </linearGradient>
-                              <linearGradient id="petal-t-tab6" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#c084fc" />
-                                <stop offset="100%" stopColor="#9333ea" />
-                              </linearGradient>
-                              <linearGradient id="petal-s-tab6" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#22d3ee" />
-                                <stop offset="100%" stopColor="#0891b2" />
-                              </linearGradient>
-                            </defs>
-                            
-                            {/* Petals */}
-                            {/* U - Utility (0 deg) */}
-                            <g transform="translate(100, 100) rotate(0)" className="cursor-pointer group select-none">
-                              <path d="M0,0 Q-20,-55 0,-85 Q20,-55 0,0" fill="url(#petal-u-tab6)" opacity="0.85" className="hover:opacity-100 transition-all duration-200 hover:scale-105 transform origin-bottom" />
-                              <circle cx="0" cy="-60" r="8" fill="#ffffff" opacity="0.9" />
-                              <text x="0" y="-57" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#4f46e5">U</text>
-                            </g>
-                            
-                            {/* E - Emotion (60 deg) */}
-                            <g transform="translate(100, 100) rotate(60)" className="cursor-pointer group select-none">
-                              <path d="M0,0 Q-20,-55 0,-85 Q20,-55 0,0" fill="url(#petal-e-tab6)" opacity="0.85" className="hover:opacity-100 transition-all duration-200 hover:scale-105 transform origin-bottom" />
-                              <circle cx="0" cy="-60" r="8" fill="#ffffff" opacity="0.9" />
-                              <text x="0" y="-57" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#db2777">E</text>
-                            </g>
-
-                            {/* R - Recurrence (120 deg) */}
-                            <g transform="translate(100, 100) rotate(120)" className="cursor-pointer group select-none">
-                              <path d="M0,0 Q-20,-55 0,-85 Q20,-55 0,0" fill="url(#petal-r-tab6)" opacity="0.85" className="hover:opacity-100 transition-all duration-200 hover:scale-105 transform origin-bottom" />
-                              <circle cx="0" cy="-60" r="8" fill="#ffffff" opacity="0.9" />
-                              <text x="0" y="-57" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#e11d48">R</text>
-                            </g>
-
-                            {/* K - Capital (180 deg) */}
-                            <g transform="translate(100, 100) rotate(180)" className="cursor-pointer group select-none">
-                              <path d="M0,0 Q-20,-55 0,-85 Q20,-55 0,0" fill="url(#petal-k-tab6)" opacity="0.85" className="hover:opacity-100 transition-all duration-200 hover:scale-105 transform origin-bottom" />
-                              <circle cx="0" cy="-60" r="8" fill="#ffffff" opacity="0.9" />
-                              <text x="0" y="-57" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#059669">K</text>
-                            </g>
-
-                            {/* T - Time (240 deg) */}
-                            <g transform="translate(100, 100) rotate(240)" className="cursor-pointer group select-none">
-                              <path d="M0,0 Q-20,-55 0,-85 Q20,-55 0,0" fill="url(#petal-t-tab6)" opacity="0.85" className="hover:opacity-100 transition-all duration-200 hover:scale-105 transform origin-bottom" />
-                              <circle cx="0" cy="-60" r="8" fill="#ffffff" opacity="0.9" />
-                              <text x="0" y="-57" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#9333ea">T</text>
-                            </g>
-
-                            {/* S - Social (300 deg) */}
-                            <g transform="translate(100, 100) rotate(300)" className="cursor-pointer group select-none">
-                              <path d="M0,0 Q-20,-55 0,-85 Q20,-55 0,0" fill="url(#petal-s-tab6)" opacity="0.85" className="hover:opacity-100 transition-all duration-200 hover:scale-105 transform origin-bottom" />
-                              <circle cx="0" cy="-60" r="8" fill="#ffffff" opacity="0.9" />
-                              <text x="0" y="-57" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#0891b2">S</text>
-                            </g>
-
-                            {/* Central core */}
-                            <circle cx="100" cy="100" r="22" fill="#ffffff" stroke="#e2e8f0" strokeWidth="2" />
-                            <circle cx="100" cy="100" r="18" fill="#312e81" />
-                            <text x="100" y="103" textAnchor="middle" fontSize="7" fontWeight="black" fill="#fcd34d">SSI</text>
-                          </svg>
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-2 text-center italic">Цветок лилии символизирует сбалансированную структуру из 6 лепестков модели TRUSEK-6</div>
-                      </div>
-
-                      {/* Right side: Detailed weights table */}
-                      <div className="lg:col-span-6 space-y-3 flex flex-col justify-between">
-                        <div className="border border-slate-150 rounded-2xl p-4 bg-slate-50/50 space-y-2.5">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-450">Веса и влияние лепестков в формуле Lily SSI</span>
-                          <div className="space-y-2 text-[11px]">
-                            <div className="flex items-center justify-between p-1.5 bg-white border border-slate-150 rounded-xl leading-relaxed">
-                              <span className="font-bold text-slate-800 flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-indigo-500 rounded-full" />U (Утилитарность)</span>
-                              <span className="font-mono font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg text-[10px]">Вес: 25% (0.25)</span>
-                            </div>
-                            <div className="flex items-center justify-between p-1.5 bg-white border border-slate-150 rounded-xl leading-relaxed">
-                              <span className="font-bold text-slate-800 flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-purple-500 rounded-full" />T (Время до автономии)</span>
-                              <span className="font-mono font-extrabold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-lg text-[10px]">Вес: 20% (0.20)</span>
-                            </div>
-                            <div className="flex items-center justify-between p-1.5 bg-white border border-slate-150 rounded-xl leading-relaxed">
-                              <span className="font-bold text-slate-800 flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-rose-500 rounded-full" />E (Эмоциональная ценность)</span>
-                              <span className="font-mono font-extrabold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg text-[10px]">Вес: 15% (0.15)</span>
-                            </div>
-                            <div className="flex items-center justify-between p-1.5 bg-white border border-slate-150 rounded-xl leading-relaxed">
-                              <span className="font-bold text-slate-800 flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-pink-500 rounded-full" />R (Повторяемость спроса)</span>
-                              <span className="font-mono font-extrabold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-lg text-[10px]">Вес: 15% (0.15)</span>
-                            </div>
-                            <div className="flex items-center justify-between p-1.5 bg-white border border-slate-150 rounded-xl leading-relaxed">
-                              <span className="font-bold text-slate-800 flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />K (Капиталоэффективность)</span>
-                              <span className="font-mono font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg text-[10px]">Вес: 15% (0.15)</span>
-                            </div>
-                            <div className="flex items-center justify-between p-1.5 bg-white border border-slate-150 rounded-xl leading-relaxed">
-                              <span className="font-bold text-slate-800 flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-cyan-400 rounded-full" />S (Социальный рост)</span>
-                              <span className="font-mono font-extrabold text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-lg text-[10px]">Вес: 10% (0.10)</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="text-[10px] bg-slate-900 text-slate-300 p-3 rounded-xl font-mono leading-relaxed border border-slate-800">
-                          <span className="text-amber-300 font-bold block mb-1">Формула Математической Гармонии Лилии:</span>
-                          SSI = 0.25·U + 0.15·E + 0.15·R + 0.15·K + 0.20·T + 0.10·S
-                        </div>
-                      </div>
-
-                    </div>
-
-                    {/* FOUR CONCENTRIC CIRCLES OF MARKET ENTRY: SOM, SAM, TOM, TAV */}
-                    <div className="border border-slate-150 rounded-2xl p-4 bg-white space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h4 className="font-display font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                          <Users className="w-4 h-4 text-amber-500 animate-pulse" />
-                          <span>4 круга рыночного вхождения стартапа (SOM, SAM, TOM, TAV)</span>
-                        </h4>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans">Структура масштабирования</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                        
-                        {/* Interactive concentric circle graphics */}
-                        <div className="md:col-span-12 lg:col-span-5 flex justify-center py-4">
-                          <div className="relative w-48 h-48 flex items-center justify-center rounded-full bg-slate-50 border border-slate-100 shadow-inner overflow-hidden select-none">
-                            
-                            {/* TAV - Inner Core */}
-                            <div className="absolute w-[44px] h-[44px] rounded-full bg-indigo-600/10 border-2 border-indigo-600 flex items-center justify-center animate-pulse z-40 shadow-sm" title="TAV: Порог автономии за счет OPEX">
-                              <span className="text-[9px] font-black text-indigo-900">TAV</span>
-                            </div>
-
-                            {/* SOM - Second Ring */}
-                            <div className="absolute w-[90px] h-[90px] rounded-full border-2 border-emerald-500/70 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors flex items-center justify-center z-30" title="SOM: Реальный план продаж за 3 года">
-                              <span className="text-[9px] font-bold text-emerald-800 mt-[52px]">SOM</span>
-                            </div>
-
-                            {/* SAM - Third Ring */}
-                            <div className="absolute w-[136px] h-[136px] rounded-full border-2 border-amber-500/60 bg-amber-500/5 hover:bg-amber-500/10 transition-colors flex items-center justify-center z-20" title="SAM: Доступный по каналам дистрибуции сегмент">
-                              <span className="text-[9px] font-bold text-amber-800 mt-[105px]">SAM</span>
-                            </div>
-
-                            {/* TOM / TAM - Outer Ring */}
-                            <div className="absolute w-[180px] h-[180px] rounded-full border-2 border-rose-500/50 bg-rose-500/5 hover:bg-rose-500/10 transition-colors flex items-center justify-center z-10" title="TOM / TAM: Целевой / Общий объем национального спроса">
-                              <span className="text-[9px] font-bold text-rose-800 mt-[155px]">TOM / TAM</span>
-                            </div>
-
-                          </div>
-                        </div>
-
-                        {/* Detailed Description Columns */}
-                        <div className="md:col-span-12 lg:col-span-7 space-y-2.5 text-[11px]">
-                          <div className="grid grid-cols-12 gap-2 p-2 bg-rose-500/5 hover:bg-rose-500/10 rounded-xl border border-rose-500/10 transition-all font-sans">
-                            <div className="col-span-2 font-mono font-black text-rose-700 bg-rose-100 flex items-center justify-center rounded-lg text-xs leading-none">TOM</div>
-                            <div className="col-span-10">
-                              <strong className="text-slate-900 font-bold block">Target Obtainable Market (или TAM - Общий объем):</strong>
-                              Потенциальный финансовый объем спроса по всей стране или макрорегионе, соответствующий профилю вашей категории решений.
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-12 gap-2 p-2 bg-amber-500/5 hover:bg-amber-500/10 rounded-xl border border-amber-500/10 transition-all font-sans">
-                            <div className="col-span-2 font-mono font-black text-amber-700 bg-amber-100 flex items-center justify-center rounded-lg text-xs leading-none">SAM</div>
-                            <div className="col-span-10">
-                              <strong className="text-slate-900 font-bold block">Serviceable Addressable Market (Доступный сегмент):</strong>
-                              Доля целевого рынка, которую стартап физически может охватить с помощью своей бизнес-модели, технологий и текущих рекламных каналов.
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-12 gap-2 p-2 bg-emerald-500/5 hover:bg-emerald-500/10 rounded-xl border border-emerald-500/10 transition-all font-sans">
-                            <div className="col-span-2 font-mono font-black text-emerald-700 bg-emerald-100 flex items-center justify-center rounded-lg text-xs leading-none">SOM</div>
-                            <div className="col-span-10">
-                              <strong className="text-slate-900 font-bold block">Serviceable Obtainable Market (Реальный захват):</strong>
-                              Консервативный реалистичный объем продаж, который молодая компания планирует завоевать в течение первых 3-х лет деятельности.
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-12 gap-2 p-2 bg-indigo-500/5 hover:bg-indigo-500/10 rounded-xl border border-indigo-500/10 transition-all font-sans font-normal">
-                            <div className="col-span-2 font-mono font-black text-indigo-700 bg-indigo-100 flex items-center justify-center rounded-lg text-xs leading-none">TAV</div>
-                            <div className="col-span-10">
-                              <strong className="text-slate-900 font-bold block">Total Available Value / Порог автономии (Микро-ядро):</strong>
-                              Жизненно важный внутренний круг окупаемости OPEX. Показывает необходимый минимальный порог выручки, ниже которого проект начинает терпеть чистые убытки.
-                            </div>
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-
-                  </motion.div>
-                )}
-
-                {/* LIST 7: BIBLIOGRAPHY & SCIENTIFIC SOURCES */}
-                {authorsActiveTab === 7 && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 text-xs text-slate-700 font-normal leading-relaxed">
-                    <p className="font-semibold text-slate-950">
-                      Научно-теоретическое основание: метаанализ ключевых 15 фундаментальных научных трудов (период публикации с 1984 по 2025 гг.):
-                    </p>
-
-                    <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                      <table className="w-full text-[10px] text-slate-600 font-sans">
-                        <thead className="bg-slate-100 text-slate-700 text-[9px] uppercase font-black tracking-wider text-left border-b border-slate-200">
-                          <tr>
-                            <th className="px-3 py-2 w-8">№</th>
-                            <th className="px-3 py-2 w-48">Автор, Источник, Год</th>
-                            <th className="px-2 py-2 text-center">U</th>
-                            <th className="px-2 py-2 text-center">E</th>
-                            <th className="px-2 py-2 text-center">R</th>
-                            <th className="px-2 py-2 text-center">K</th>
-                            <th className="px-2 py-2 text-center">T</th>
-                            <th className="px-2 py-2 text-center">S</th>
-                            <th className="px-3 py-2 text-center">Ранг</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-150 font-normal">
-                          {[
-                            { id: 1, ref: 'Maxwell et al. (2011)', u: '~', e: '✗', r: '✗', k: '~', t: '~', s: '✗', score: '4/10' },
-                            { id: 2, ref: 'Tyebjee & Bruno (1984)', u: '~', e: '✗', r: '~', k: '~', t: '~', s: '✗', score: '3/10' },
-                            { id: 3, ref: 'Franke et al. (2006)', u: '✗', e: '✗', r: '✗', k: '✗', t: '✗', s: '✗', score: '2/10' },
-                            { id: 4, ref: 'Żbikowski & Antosiuk (2021)', u: '~', e: '✗', r: '~', k: '~', t: '✓', s: '✗', score: '5/10' },
-                            { id: 5, ref: 'Bhattu & Bedi (2022)', u: '✓', e: '✗', r: '~', k: '~', t: '~', s: '✗', score: '6/10' },
-                            { id: 6, ref: 'Maarouf et al. (2025)', u: '✓', e: '✓', r: '~', k: '✗', t: '~', s: '~', score: '6/10' },
-                            { id: 7, ref: 'Jafari et al. (2025)', u: '~', e: '✗', r: '✗', k: '~', t: '✗', s: '✗', score: '7/10' },
-                            { id: 8, ref: 'Valdivieso et al. (2025)', u: '~', e: '✗', r: '~', k: '~', t: '✓', s: '✗', score: '7/10' },
-                            { id: 9, ref: 'Preuveneers et al. (2025)', u: '✓', e: '✓', r: '~', k: '✗', t: '~', s: '✗', score: '5/10' },
-                            { id: 10, ref: 'Coad et al. (2013)', u: '~', e: '✗', r: '✓', k: '✓', t: '✓', s: '✗', score: '6/10' },
-                            { id: 11, ref: 'Franke et al. (2008)', u: '✗', e: '✗', r: '✗', k: '✗', t: '~', s: '✗', score: '3/10' },
-                            { id: 12, ref: 'Li et al. (2024)', u: '~', e: '~', r: '~', k: '~', t: '✓', s: '✓', score: '5/10' },
-                            { id: 13, ref: 'Collewaert & Manigart (2016)', u: '~', e: '✗', r: '✗', k: '✓', t: '~', s: '✗', score: '4/10' },
-                            { id: 14, ref: 'Pardo-del-Val et al. (2024)', u: '✓', e: '~', r: '✓', k: '✓', t: '✓', s: '✓', score: '8/10' },
-                            { id: 15, ref: 'SSI / TRUSEK-6 (Авторская разработка)', u: '✓', e: '✓', r: '✓', k: '✓', t: '✓', s: '✓', score: '10/10', highlight: true }
-                          ].map(row => (
-                            <tr key={row.id} className={`${row.highlight ? 'bg-indigo-50/80 font-bold text-indigo-950' : 'hover:bg-slate-50'}`}>
-                              <td className="px-3 py-1.5 font-mono">{row.id}</td>
-                              <td className="px-3 py-1.5 font-semibold text-slate-800">{row.ref}</td>
-                              <td className="px-2 py-1.5 text-center font-mono font-bold">
-                                {row.u === '✓' ? <span className="text-emerald-600">✓</span> : row.u === '~' ? <span className="text-amber-500">~</span> : <span className="text-slate-350">✗</span>}
-                              </td>
-                              <td className="px-2 py-1.5 text-center font-mono font-bold">
-                                {row.e === '✓' ? <span className="text-emerald-600">✓</span> : row.e === '~' ? <span className="text-amber-500">~</span> : <span className="text-slate-350">✗</span>}
-                              </td>
-                              <td className="px-2 py-1.5 text-center font-mono font-bold">
-                                {row.r === '✓' ? <span className="text-emerald-600">✓</span> : row.r === '~' ? <span className="text-amber-500">~</span> : <span className="text-slate-350">✗</span>}
-                              </td>
-                              <td className="px-2 py-1.5 text-center font-mono font-bold">
-                                {row.k === '✓' ? <span className="text-emerald-600">✓</span> : row.k === '~' ? <span className="text-amber-500">~</span> : <span className="text-slate-350">✗</span>}
-                              </td>
-                              <td className="px-2 py-1.5 text-center font-mono font-bold">
-                                {row.t === '✓' ? <span className="text-emerald-600">✓</span> : row.t === '~' ? <span className="text-amber-500">~</span> : <span className="text-slate-350">✗</span>}
-                              </td>
-                              <td className="px-2 py-1.5 text-center font-mono font-bold">
-                                {row.s === '✓' ? <span className="text-emerald-600">✓</span> : row.s === '~' ? <span className="text-amber-500">~</span> : <span className="text-slate-350">✗</span>}
-                              </td>
-                              <td className="px-3 py-1.5 text-center font-mono font-extrabold">{row.score}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="flex gap-4 text-[9px] text-slate-500 font-sans italic border-t border-slate-100 pt-2 shrink-0">
-                      <span>✓ фактор полноценно операционализирован в модели</span>
-                      <span>~ фактор учтен лишь частично</span>
-                      <span>✗ фактор полностью отсутствует</span>
-                    </div>
-                  </motion.div>
-                )}
-
-              </div>
-
-              {/* Footer action button */}
-              <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0">
-                {/* Pagination Controls */}
-                <div className="flex items-center gap-1">
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between shrink-0 gap-4">
+                <p className="text-[10px] text-slate-500 px-2 max-w-sm">
+                  Нажимая «Принять оферту», вы подтверждаете свое ознакомление с текстом согласия и даете полное и безоговорочное согласие на обработку ваших персональных данных.
+                </p>
+                <div className="flex items-center gap-3 w-full md:w-auto">
                   <button
                     type="button"
-                    onClick={() => setAuthorsActiveTab(prev => Math.max(1, prev - 1))}
-                    disabled={authorsActiveTab === 1}
-                    className="p-2 rounded-xl border border-slate-250 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-40 disabled:hover:bg-white transition-all cursor-pointer"
-                    title="Предыдущий лист"
+                    onClick={() => setIsConsentOpen(false)}
+                    className="flex-1 md:flex-none px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    Отклонить
                   </button>
-                  <span className="text-xs font-mono font-extrabold text-slate-500 px-2 min-w-[70px] text-center">
-                    {authorsActiveTab} / 7
-                  </span>
                   <button
                     type="button"
-                    onClick={() => setAuthorsActiveTab(prev => Math.min(7, prev + 1))}
-                    disabled={authorsActiveTab === 7}
-                    className="p-2 rounded-xl border border-slate-250 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-40 disabled:hover:bg-white transition-all cursor-pointer"
-                    title="Следующий лист"
+                    onClick={() => {
+                      localStorage.setItem('ssi_consent_accepted', 'true');
+                      setHasAcceptedConsent(true);
+                      setIsConsentOpen(false);
+                      setNotification({ message: 'Согласие успешно принято.', type: 'success' });
+                      setTimeout(() => setNotification(null), 3000);
+                    }}
+                    className="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-all shadow-md hover:shadow-lg cursor-pointer"
                   >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsAuthorsOpen(false)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
-                  >
-                    Понятно
+                    Принять оферту
                   </button>
                 </div>
               </div>
