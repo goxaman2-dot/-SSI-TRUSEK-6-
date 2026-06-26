@@ -43,7 +43,6 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenCo
       items: [
         { id: 'dashboard', label: 'Рабочий стол студента', icon: LayoutDashboard, color: 'text-emerald-600' },
         { id: 'supervisor', label: 'Научный руководитель', icon: FileEdit, color: 'text-blue-600' },
-        { id: 'applications', label: 'База заявок', icon: FolderOpen, color: 'text-amber-500' },
       ]
     },
     {
@@ -59,6 +58,7 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenCo
     {
       title: 'ТЕХНОПАРК СКФУ',
       items: [
+        { id: 'applications', label: 'База заявок', icon: FolderOpen, color: 'text-amber-500' },
         { id: 'park_status', label: 'Статусы (Экспертиза)', icon: LayoutDashboard, color: 'text-indigo-600' },
         { id: 'park_stats', label: 'Сводка и KPI', icon: FileText, color: 'text-slate-500' },
       ]

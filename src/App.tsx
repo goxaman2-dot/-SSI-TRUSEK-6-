@@ -26,10 +26,12 @@ import {
   Scale,
   ArrowLeftRight,
   Bot,
-  ExternalLink,
   FileText,
   Microscope,
-  Rocket
+  Rocket,
+  Presentation,
+  ArrowLeft,
+  ChevronDown
 } from 'lucide-react';
 import { StartupData, Subfactors, CalculationResult, DataWarning } from './types';
 import { 
@@ -54,6 +56,7 @@ import { AuthPortal } from './components/AuthPortal';
 import { Sidebar } from './components/Sidebar';
 import { ApplicationsView } from './components/ApplicationsView';
 import { MiniLily } from './components/MiniLily';
+import { getAccessToken } from './firebase';
 
 function getPastelBackground(ssi: number): { bg: string, text: string, border: string, badgeBg: string, badgeText: string } {
   if (ssi >= 8.5) {
@@ -116,6 +119,19 @@ export default function App() {
       return null;
     }
   });
+
+  useEffect(() => {
+    import('./firebase').then(({ initAuth }) => {
+      initAuth(
+        (authUser) => {
+          // optionally update auth user
+        },
+        () => {
+          // optionally handle failure
+        }
+      );
+    });
+  }, []);
 
   const isSupervisor = Boolean(user?.name?.includes('Мандрица') || user?.name?.includes('Ренат') || user?.name?.includes('Максим') || user?.name?.includes('Кузьменко') || user?.name?.includes('руководител'));
   
@@ -424,35 +440,8 @@ export default function App() {
   const handleExportDocx = async () => {
     showToast('⏳ Генерируем академический отчет в Word (DOCX по ГОСТ)...', 'info');
     try {
-      const response = await fetch('/api/export-docx', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data,
-          results: {
-            finalSsi: results.finalSsi,
-            interpretation: results.interpretation,
-            subfactors: results.subfactors,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Ошибка сервера: ' + response.statusText);
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const sanitizedName = (data.name || "startup_report")
-        .replace(/[^a-zA-Z0-9а-яА-ЯёЁ_-]/g, "_")
-        .substring(0, 50);
-      a.download = `${sanitizedName}_SSI_Report.docx`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const { generateDocx } = await import('./exportDocx');
+      await generateDocx(data, results);
       showToast('✅ Академический отчет DOCX успешно сохранен!', 'success');
     } catch (e: any) {
       console.error('Docx export error:', e);
@@ -465,7 +454,7 @@ export default function App() {
     
     try {
       const { default: jsPDF } = await import('jspdf');
-      const { default: html2canvas } = await import('html2canvas');
+      const { toCanvas } = await import('html-to-image');
 
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageHeightMm = 297;
@@ -491,11 +480,9 @@ export default function App() {
         if (!element) continue;
 
         // Render card to canvas
-        const canvas = await html2canvas(element, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false
+        const canvas = await toCanvas(element, {
+          pixelRatio: 2,
+          backgroundColor: '#ffffff'
         });
 
         const cardHeightMm = (canvas.height * usableWidth) / canvas.width;
@@ -586,21 +573,91 @@ export default function App() {
     }
   };
 
+  const handleExportAll = async () => {
+    showToast('⏳ Начинаем последовательную генерацию 3х отчетов...', 'info');
+    try {
+      await handleDownloadPdf();
+      await handleExportPptx();
+      await handleExportDocx();
+      showToast('🏆 Все три отчета (PDF, PPTX, DOCX) успешно скачаны!', 'success');
+    } catch (error) {
+      console.error('Batch export error:', error);
+      showToast('❌ Произошла ошибка при пакетной генерации отчетов', 'error');
+    }
+  };
+
+  const handleExportPptx = async () => {
+    showToast('⏳ Генерируем презентацию PowerPoint (PPTX)...', 'info');
+    try {
+      const pptxgen = (await import('pptxgenjs')).default;
+      const { toCanvas } = await import('html-to-image');
+
+      const pptx = new pptxgen();
+      pptx.layout = 'LAYOUT_16x9'; 
+
+      const cards = [
+        { id: 'pdf-results-header', name: 'Результаты' },
+        { id: 'pdf-lily-chart', name: 'Диаграмма Лилия' },
+        { id: 'pdf-factor-profile', name: 'Сводный профиль' },
+        { id: 'pdf-risk-analysis', name: 'Карта рисков' }
+      ];
+
+      for (const card of cards) {
+        const element = document.getElementById(card.id);
+        if (!element) continue;
+
+        const canvas = await toCanvas(element, {
+          pixelRatio: 2,
+          backgroundColor: '#ffffff'
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const slide = pptx.addSlide();
+
+        const slideW = 10;
+        const slideH = 5.625;
+        const margin = 0.5;
+
+        const canvasRatio = canvas.width / canvas.height;
+        const slideRatio = (slideW - margin * 2) / (slideH - margin * 2);
+
+        let finalW, finalH;
+        if (canvasRatio > slideRatio) {
+          finalW = slideW - margin * 2;
+          finalH = finalW / canvasRatio;
+        } else {
+          finalH = slideH - margin * 2;
+          finalW = finalH * canvasRatio;
+        }
+
+        const x = (slideW - finalW) / 2;
+        const y = (slideH - finalH) / 2;
+
+        slide.addImage({ data: imgData, x, y, w: finalW, h: finalH });
+      }
+
+      const fileName = `${data.name ? data.name.replace(/[^a-zA-Z0-9а-яА-Я_]/g, '_') : 'Startup'}_Presentation.pptx`;
+      await pptx.writeFile({ fileName });
+      showToast('✅ Презентация PPTX успешно скачана!', 'success');
+    } catch (e) {
+      console.error('PPTX creation error:', e);
+      showToast('❌ Ошибка при генерации PPTX', 'error');
+    }
+  };
+
   const handleDownloadPng = async () => {
     showToast('⏳ Генерируем PNG-изображение диаграммы...', 'info');
     try {
-      const { default: html2canvas } = await import('html2canvas');
+      const { toCanvas } = await import('html-to-image');
       const element = document.getElementById('pdf-lily-chart');
       if (!element) {
         showToast('❌ Диаграмма не найдена', 'error');
         return;
       }
 
-      const canvas = await html2canvas(element, {
-        scale: 3, // High scale for great print quality
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false
+      const canvas = await toCanvas(element, {
+        pixelRatio: 3, // High scale for great print quality
+        backgroundColor: '#ffffff'
       });
 
       const image = canvas.toDataURL('image/png');
@@ -808,7 +865,7 @@ export default function App() {
         </AnimatePresence>
 
         {currentView === 'applications' && (
-          <ApplicationsView onNewApplication={() => setCurrentView('calculator')} />
+          <ApplicationsView onNewApplication={() => { setCurrentView('calculator'); setActiveTab('agent'); }} />
         )}
 
         {currentView === 'dashboard' && (
@@ -835,7 +892,7 @@ export default function App() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Активные проекты</h3>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Мои активные проекты</h3>
                 <p className="text-4xl font-black text-indigo-600">2</p>
               </div>
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -849,7 +906,7 @@ export default function App() {
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
               <p className="text-slate-500">Здесь будет отображаться детальная информация о ходе работы над вашими стартапами, рекомендации ИИ и комментарии научного руководителя.</p>
-              <button onClick={() => setCurrentView('calculator')} className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition-colors">Начать новую оценку</button>
+              <button onClick={() => { setCurrentView('calculator'); setActiveTab('agent'); }} className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition-colors">Начать заполнять новый стартап</button>
             </div>
           </div>
         )}
@@ -859,9 +916,24 @@ export default function App() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <h2 className="text-2xl font-bold text-slate-800">Кабинет научного руководителя</h2>
               <div className="flex items-center gap-2">
-                <div className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-sm font-semibold flex items-center gap-2">
-                  <Rocket className="w-4 h-4" />
-                  Проверяемый стартап: {data?.name?.trim() ? data.name : "Готов к вводу данных"}
+                <div className="relative">
+                  <select
+                    className="appearance-none pl-10 pr-10 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer shadow-sm hover:bg-emerald-100 transition-colors"
+                    defaultValue=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setData({ ...STUDENT_STARTUP_DATA, name: e.target.options[e.target.selectedIndex].text });
+                        setNotification({ message: 'Заявка загружена на проверку', type: 'success' });
+                      }
+                    }}
+                  >
+                    <option value="" disabled hidden>{data?.name?.trim() ? data.name : "Выбрать стартап на проверку"}</option>
+                    <option value="app1">Нейросеть для медиков (Иванов А.А.)</option>
+                    <option value="app2">Платформа доставки дронами (Петров В.И.)</option>
+                    <option value="app3">Агро-трекер (Сидорова М.В.)</option>
+                  </select>
+                  <Rocket className="w-4 h-4 text-emerald-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="w-4 h-4 text-emerald-600 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 <button
                   onClick={() => {
@@ -876,10 +948,25 @@ export default function App() {
                 </button>
               </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Проекты моих студентов</h3>
+                <p className="text-4xl font-black text-emerald-600">12</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">На проверке</h3>
+                <p className="text-4xl font-black text-amber-500">5</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Допущено к защите</h3>
+                <p className="text-4xl font-black text-indigo-600">7</p>
+              </div>
+            </div>
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
               <Microscope className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-slate-800 mb-2">Проекты студентов на проверке</h3>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">Проекты моих студентов</h3>
               <p className="text-slate-500 mb-6">В этом разделе вы сможете просматривать стартап-проекты ваших студентов, оставлять правки и рекомендации перед отправкой в Технопарк.</p>
+              <button onClick={() => { setCurrentView('calculator'); setActiveTab('agent'); }} className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold text-sm transition-colors">Перейти к проверке анкеты</button>
             </div>
           </div>
         )}
@@ -1193,24 +1280,33 @@ export default function App() {
         {/* WORKSPACE HEADER INSIDE CALCULATOR */}
         <div className="container max-w-6xl mx-auto px-4 mt-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <h2 className="text-2xl font-bold text-slate-800">
-              {isSupervisor ? 'Кабинет руководителя' : 'Рабочий стол студента'}
-            </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setCurrentView(isSupervisor ? 'supervisor' : 'dashboard')}
+                className="p-2.5 bg-yellow-400 border border-yellow-500 rounded-xl text-yellow-900 hover:bg-yellow-500 transition-colors animate-pulse shadow-[0_0_15px_rgba(250,204,21,0.6)]"
+                title="Вернуться назад"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800">
+                Заполнение анкеты стартапа
+              </h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <div className={`px-4 py-2 ${isSupervisor ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'} border rounded-xl text-sm font-semibold flex items-center gap-2`}>
                 <Rocket className="w-4 h-4" />
-                {isSupervisor ? 'Проверяемый стартап:' : 'Стартап:'} {data?.name?.trim() ? data.name : "Готов к вводу данных"}
+                {isSupervisor ? 'Проверяемый стартап:' : 'Текущий стартап:'} {data?.name?.trim() ? data.name : "Готов к вводу данных"}
               </div>
               <button
                 onClick={() => {
                   setData({ ...EMPTY_STARTUP_DATA });
-                  setNotification({ message: isSupervisor ? 'Кабинет руководителя очищен' : 'Рабочий стол студента очищен', type: 'success' });
+                  setNotification({ message: 'Данные стартапа очищены', type: 'success' });
                 }}
                 className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 hover:bg-rose-100 text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer"
-                title={isSupervisor ? 'Очистить кабинет' : 'Очистить стол студента'}
+                title="Очистить данные анкеты"
               >
                 <Trash2 className="w-4 h-4" />
-                <span className="hidden sm:inline">{isSupervisor ? 'Очистить кабинет' : 'Очистить стол студента'}</span>
+                <span className="hidden sm:inline">Очистить анкету</span>
               </button>
             </div>
           </div>
@@ -1502,7 +1598,7 @@ export default function App() {
                     <ul className="list-disc pl-5 mt-2 space-y-1 text-emerald-900/90 font-normal">
                       <li><strong className="text-emerald-950 font-bold">Индекс SSI (в центре Лилии):</strong> Итоговая оценка устойчивости. Идеально — 10. Показывает, насколько ваш стартап защищен от провала.</li>
                       <li><strong className="text-emerald-950 font-bold">Лепестки Лилии:</strong> Каждый лепесток отображает один из факторов. Узкие и короткие лепестки — это «слабые места» вашего бизнеса. Используйте кнопки <strong className="text-emerald-950 font-bold">«Слабые факторы»</strong> для их подсветки и получите рекомендации по исправлению.</li>
-                      <li><strong className="text-emerald-950 font-bold">Экспорт для диплома:</strong> Внизу страницы доступны кнопки <strong className="text-emerald-950 font-bold">«Печать текущего варианта...»</strong> и <strong className="text-emerald-950 font-bold">«Скачать академический отчет (Word *.docx)»</strong>. Отчет Word оформлен строго по стандартам ГОСТ (1.5 интервал, абзацный отступ 1.25 см, выравнивание по ширине, таблицы слева, рисунки по центру) и содержит готовую лепестковую диаграмму (Лилия SSI) и текстовые выводы!</li>
+                      <li><strong className="text-emerald-950 font-bold">Экспорт для диплома:</strong> Внизу страницы доступна кнопка <strong className="text-emerald-950 font-bold">«Cоздать три отчета стартапа»</strong>. Она автоматически сгенерирует для вас PDF-отчет, презентацию PowerPoint (PPTX) и академический отчет Word (DOCX), оформленный строго по стандартам ГОСТ!</li>
                     </ul>
                   </div>
                 </div>
@@ -3090,34 +3186,15 @@ export default function App() {
 
               {/* REPORT PRINT & ACTION TOOLS */}
               <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-6 print:hidden">
-                
-                <a
-                  href={window.location.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 border border-sky-100 shadow-xs cursor-pointer"
-                >
-                  <ExternalLink className="w-4 h-4 text-sky-500" />
-                  <span>Открыть стартап в окне G-браузера</span>
-                </a>
 
                 <button
                   type="button"
-                  onClick={handlePrint}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                  onClick={handleExportAll}
+                  className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 font-bold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Скачать все три отчета одним пакетом: PDF, презентацию PPTX и академический отчет Word DOCX"
                 >
-                  <Printer className="w-4 h-4 text-slate-400" />
-                  <span>Печать текущего варианта стартапа</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleExportDocx}
-                  className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  title="Скачать профессиональный научно-практический отчет по ГОСТ в формате Microsoft Word (1.5 интервала, отступы 1.25 см, выравнивание по ширине, таблицы слева, рисунки по центру)"
-                >
-                  <FileText className="w-4 h-4 text-emerald-600" />
-                  <span>📑 Скачать академический отчет (Word *.docx)</span>
+                  <FileText className="w-4 h-4 text-indigo-600" />
+                  <span>Cоздать три отчета стартапа (PDF, PPTX, DOCX)</span>
                 </button>
 
                 <button

@@ -16,7 +16,8 @@ import {
   RefreshCw,
   Info,
   AlertTriangle,
-  Play
+  Play,
+  Upload
 } from 'lucide-react';
 import { StartupData, Subfactors, CalculationResult } from '../types';
 import { 
@@ -634,8 +635,18 @@ export function AIAgentTab({ onApplyData, showToast }: AIAgentTabProps) {
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Опишите, в чем суть проекта, какую 'острую боль' клиента он решает, кто целевая аудитория, какова бизнес-модель (как вы зарабатываете), примерную стоимость, и как будете привлекать первых клиентов..."
-              className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-light text-sm outline-none focus:border-purple-500 transition-colors shadow-3xs h-36 resize-y leading-relaxed"
+              className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-light text-sm outline-none focus:border-purple-500 transition-colors shadow-3xs h-36 resize-y leading-relaxed mb-2"
             />
+            <div className="flex items-center gap-2 mt-1">
+              <input type="file" id="file-upload" className="hidden" accept=".docx,.pptx,.xlsx" />
+              <label 
+                htmlFor="file-upload" 
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Загрузить доп. материалы (*.docx, *.pptx, *.xlsx)
+              </label>
+            </div>
           </div>
 
           {/* Action Trigger */}
