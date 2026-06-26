@@ -116,15 +116,17 @@ export default function App() {
       return null;
     }
   });
+
+  const isSupervisor = Boolean(user?.name?.includes('Мандрица') || user?.name?.includes('Ренат') || user?.name?.includes('Максим') || user?.name?.includes('Кузьменко') || user?.name?.includes('руководител'));
   
   const [currentView, setCurrentView] = useState('dashboard');
 
   const [data, setData] = useState<StartupData>(() => {
     try {
       const saved = localStorage.getItem('ssi_calculator_data');
-      return saved ? JSON.parse(saved) : INITIAL_STARTUP_DATA;
+      return saved ? JSON.parse(saved) : { ...EMPTY_STARTUP_DATA };
     } catch {
-      return INITIAL_STARTUP_DATA;
+      return { ...EMPTY_STARTUP_DATA };
     }
   });
   const [activeTab, setActiveTab] = useState<'anketa' | 'expert' | 'result' | 'compare' | 'agent'>(() => {
@@ -358,13 +360,13 @@ export default function App() {
   };
 
   const loadPresetDemo = () => {
-    setData(INITIAL_STARTUP_DATA);
+    setData({ ...INITIAL_STARTUP_DATA });
     setShowValidationResults(false);
     showToast('🌱 Загружен демонстрационный проект "Умный Сенсорный Сад"', 'success');
   };
 
   const loadStudentSample = () => {
-    setData(STUDENT_STARTUP_DATA);
+    setData({ ...STUDENT_STARTUP_DATA });
     setShowValidationResults(false);
     showToast('🎓 Вечный образец JSON анкеты стартапера успешно загружен в калькулятор!', 'success');
   };
@@ -385,7 +387,7 @@ export default function App() {
   };
 
   const resetForm = () => {
-    setData(EMPTY_STARTUP_DATA);
+    setData({ ...EMPTY_STARTUP_DATA });
     setShowValidationResults(false);
     showToast('🧹 Все поля анкеты успешно очищены', 'info');
   };
@@ -710,7 +712,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-500 selection:text-white">
       {/* Full Width Top Banner representing the user's uploaded image similar to RSF site */}
-      <div className="w-full h-48 md:h-64 lg:h-[340px] shrink-0 bg-slate-200 relative overflow-hidden flex-none z-10">
+      <div className="w-full h-48 md:h-64 lg:h-[340px] shrink-0 bg-slate-200 relative overflow-hidden flex-none z-10 print:hidden">
         <div className="absolute inset-0 bg-indigo-900/10 flex items-center justify-center">
             <span className="text-sm font-medium text-indigo-800 bg-white/70 px-4 py-2 rounded-lg backdrop-blur-sm shadow-sm border border-indigo-100">
               {/* Note for the user since I can't read the chat attachment directly into code */}
@@ -735,25 +737,33 @@ export default function App() {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent pointer-events-none z-20"></div>
-        <div className="absolute top-6 md:top-10 left-6 md:left-12 z-30">
-           <h1 className="text-3xl md:text-5xl font-black text-white drop-shadow-md tracking-tight">Технопарк СКФУ</h1>
-           <p className="text-indigo-100 md:text-lg font-medium mt-1 md:mt-2 opacity-90 drop-shadow-sm">Лаборатория прединвестиционной экспресс-оценки стартапов</p>
+        <div className="absolute top-8 md:top-12 left-6 md:left-12 z-30">
+           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white drop-shadow-lg tracking-tight">Технопарк СКФУ</h1>
+           <p className="text-indigo-100 md:text-xl lg:text-2xl font-bold mt-2 md:mt-3 opacity-95 drop-shadow-md tracking-wide">Лаборатория прединвестиционной экспресс-оценки стартапов</p>
         </div>
         
-        {user && (
-          <div className="absolute top-6 right-6 md:top-10 md:right-12 z-30 bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-3 flex items-center gap-4 shadow-xl">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-inner">
-              {user.name.charAt(0)}
+        <div className="absolute top-6 right-6 md:top-10 md:right-12 z-30 bg-white/95 backdrop-blur-md border border-white/20 rounded-2xl p-5 flex flex-col shadow-2xl max-w-[300px]">
+          <div className="flex items-start justify-between mb-4 gap-4">
+            <div className="flex flex-col">
+              <div className="flex items-center">
+                <div className="bg-emerald-600 text-white rounded pr-2 pl-1.5 py-1 text-xs font-black tracking-wider flex items-center gap-1 shadow-sm mr-2">
+                  <span>SSI</span>
+                </div>
+                <span className="font-extrabold text-slate-800 text-sm md:text-base tracking-tight">Navigator</span>
+              </div>
+              <span className="text-[10px] font-bold text-indigo-600 mt-1.5 uppercase tracking-wider">
+                стартапов v.2.0 2026
+              </span>
             </div>
-            <div className="hidden sm:block">
-              <p className="text-white font-bold text-sm leading-tight">{user.name}</p>
-              <p className="text-indigo-200 text-xs mt-0.5 font-medium flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                В сети
-              </p>
+            <div className="flex-shrink-0 flex items-center justify-center bg-white p-1 rounded-xl border border-indigo-100/60 w-12 h-12 select-none shadow-sm">
+              <MiniLily subfactors={results.subfactors} className="w-[36px] h-[36px] drop-shadow-md" />
             </div>
           </div>
-        )}
+
+          <p className="text-[11px] md:text-xs text-slate-600 leading-snug font-semibold">
+            Навигатор готовности заявки стартапа и оценка бизнес-успешности
+          </p>
+        </div>
       </div>
 
       {/* Main Layout Area below the banner */}
@@ -808,20 +818,18 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <div className="px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-700 text-sm font-semibold flex items-center gap-2">
                   <Rocket className="w-4 h-4" />
-                  Проект: {data?.name || "Без названия"}
+                  Стартап: {data?.name?.trim() ? data.name : "Готов к вводу данных"}
                 </div>
                 <button
                   onClick={() => {
-                    if (window.confirm('Вы уверены, что хотите очистить текущий проект?')) {
-                      setData(EMPTY_STARTUP_DATA);
-                      setNotification({ message: 'Рабочий стол очищен', type: 'success' });
-                    }
+                    setData({ ...EMPTY_STARTUP_DATA });
+                    setNotification({ message: 'Рабочий стол студента очищен', type: 'success' });
                   }}
                   className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 hover:bg-rose-100 text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer"
-                  title="Очистить рабочий стол"
+                  title="Очистить стол студента"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Очистить</span>
+                  <span className="hidden sm:inline">Очистить стол студента</span>
                 </button>
               </div>
             </div>
@@ -853,20 +861,18 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <div className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-sm font-semibold flex items-center gap-2">
                   <Rocket className="w-4 h-4" />
-                  Проверяемый проект: {data?.name || "Без названия"}
+                  Проверяемый стартап: {data?.name?.trim() ? data.name : "Готов к вводу данных"}
                 </div>
                 <button
                   onClick={() => {
-                    if (window.confirm('Вы уверены, что хотите очистить текущий проект?')) {
-                      setData(EMPTY_STARTUP_DATA);
-                      setNotification({ message: 'Рабочий стол очищен', type: 'success' });
-                    }
+                    setData({ ...EMPTY_STARTUP_DATA });
+                    setNotification({ message: 'Кабинет руководителя очищен', type: 'success' });
                   }}
                   className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 hover:bg-rose-100 text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer"
-                  title="Очистить рабочий стол"
+                  title="Очистить кабинет руководителя"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Очистить</span>
+                  <span className="hidden sm:inline">Очистить кабинет</span>
                 </button>
               </div>
             </div>
@@ -1184,6 +1190,32 @@ export default function App() {
         </section>
         )}
 
+        {/* WORKSPACE HEADER INSIDE CALCULATOR */}
+        <div className="container max-w-6xl mx-auto px-4 mt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h2 className="text-2xl font-bold text-slate-800">
+              {isSupervisor ? 'Кабинет руководителя' : 'Рабочий стол студента'}
+            </h2>
+            <div className="flex items-center gap-2">
+              <div className={`px-4 py-2 ${isSupervisor ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'} border rounded-xl text-sm font-semibold flex items-center gap-2`}>
+                <Rocket className="w-4 h-4" />
+                {isSupervisor ? 'Проверяемый стартап:' : 'Стартап:'} {data?.name?.trim() ? data.name : "Готов к вводу данных"}
+              </div>
+              <button
+                onClick={() => {
+                  setData({ ...EMPTY_STARTUP_DATA });
+                  setNotification({ message: isSupervisor ? 'Кабинет руководителя очищен' : 'Рабочий стол студента очищен', type: 'success' });
+                }}
+                className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 hover:bg-rose-100 text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer"
+                title={isSupervisor ? 'Очистить кабинет' : 'Очистить стол студента'}
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">{isSupervisor ? 'Очистить кабинет' : 'Очистить стол студента'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* STEP-BY-STEP STUDENT ROADMAP & NAVIGATION (Блоки калькулятора) */}
         <div id="calc-tabs" className="mb-6 print:hidden">
           <div className="bg-gradient-to-r from-slate-100 to-indigo-50/50 p-4 rounded-2xl border border-slate-200/60 mb-4 shadow-xs">
@@ -1338,7 +1370,7 @@ export default function App() {
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-md p-6 md:p-8">
           
           {/* Dynamic Active Startup Banner (Глазами смотрящего) */}
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 mb-6 border border-indigo-500/20 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5 print:bg-none print:text-black print:border-slate-300 print:p-0 print:mb-4">
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 mb-6 border border-indigo-500/20 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5 print:hidden">
             <div className="absolute right-0 top-0 w-80 h-80 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
             <div className="flex items-center gap-3.5 z-10">
               <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-400/25 flex items-center justify-center text-indigo-300 shrink-0 shadow-inner print:hidden">
@@ -2669,7 +2701,7 @@ export default function App() {
                   </div>
 
                   {/* Interactive Highlight Control Panel */}
-                  <div className="mt-8 mb-4 flex flex-wrap gap-3 justify-center z-10 w-full max-w-xl">
+                  <div className="mt-8 mb-4 flex flex-wrap gap-3 justify-center z-10 w-full max-w-xl print:hidden">
                     <button
                       type="button"
                       id="btn-result-highlight-weak"
@@ -3191,7 +3223,7 @@ export default function App() {
                             <button 
                               type="button"
                               onClick={() => {
-                                setCompareA(STUDENT_STARTUP_DATA);
+                                setCompareA({ ...STUDENT_STARTUP_DATA });
                                 showToast('✅ Студенческий БПЛА проект загружен в Стартап А!', 'success');
                               }}
                               className="w-full bg-indigo-50 hover:bg-indigo-100/80 text-indigo-750 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
@@ -3276,7 +3308,7 @@ export default function App() {
                             <button 
                               type="button"
                               onClick={() => {
-                                setCompareB(INITIAL_STARTUP_DATA);
+                                setCompareB({ ...INITIAL_STARTUP_DATA });
                                 showToast('✅ Проект Сенсорного Сада загружен в Стартап Б!', 'success');
                               }}
                               className="w-full bg-emerald-50 hover:bg-emerald-100/80 text-emerald-750 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"

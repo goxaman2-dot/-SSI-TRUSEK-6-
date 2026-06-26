@@ -68,16 +68,6 @@ export function AuthPortal({ onAuthSuccess, showToast }: AuthPortalProps) {
     }, 1200);
   };
 
-  const handleQuickLogin = (uName: string, uEmail: string, uPhone: string) => {
-    setName(uName);
-    setEmail(uEmail);
-    setPhone(uPhone);
-    setPassword('goxaMandritca2026');
-    setRepeatPassword('goxaMandritca2026');
-    setIsRegistering(false);
-    showToast(`⚡ Учетные данные ${uName} успешно предзаполнены!`, 'success');
-  };
-
   // Submit First Step (Form Credentials)
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,18 +104,13 @@ export function AuthPortal({ onAuthSuccess, showToast }: AuthPortalProps) {
         return;
       }
       // If logging in as prefilled, use prefilled values, else use input or default phone
-      if (email === 'goxamandartman@gmail.com') {
-        setName('Мандрица И.В.');
-        setPhone('+7 (995) 543-21-09');
-      } else {
-        setName(email.split('@')[0]);
-        setPhone('+7 (900) 123-45-67');
-      }
+      setName(name || email.split('@')[0] || 'Пользователь');
+      setPhone(phone || '+7 (900) 123-45-67');
     }
 
     // Advance to SMS verification
     setStep('sms');
-    const targetPhone = phone || '+7 (995) 543-21-09';
+    const targetPhone = phone || '+7 (900) 123-45-67';
     triggerSms(targetPhone);
   };
 
@@ -135,9 +120,9 @@ export function AuthPortal({ onAuthSuccess, showToast }: AuthPortalProps) {
     if (smsCode === generatedCode || smsCode === '2026') {
       showToast('🌸 Двухфакторная аутентификация подтверждена! Добро пожаловать.', 'success');
       onAuthSuccess({
-        name: name || 'Мандрица И.В.',
-        email: email || 'goxamandartman@gmail.com',
-        phone: phone || '+7 (995) 543-21-09'
+        name: name || 'Пользователь',
+        email: email || 'user@example.com',
+        phone: phone || '+7 (900) 123-45-67'
       });
     } else {
       showToast('❌ Неверный СМС-код. Пожалуйста, попробуйте еще раз.', 'error');
@@ -210,43 +195,6 @@ export function AuthPortal({ onAuthSuccess, showToast }: AuthPortalProps) {
             </span>
           </div>
         </div>
-        
-        {/* Quick Demo Fill Button (Start with me) */}
-        {step === 'form' && (
-          <div className="flex flex-col gap-1.5 items-end">
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('Мандрица И.В.', 'goxamandartman@gmail.com', '+7 (995) 543-21-09')}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-[10px] font-black tracking-wide transition-all duration-200 cursor-pointer shadow-xs"
-            >
-              <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
-              <span>Мандрица И.В. ⚡</span>
-            </button>
-            <div className="flex gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('Мандрица 2', 'mandritca2@tech.ru', '+7 (900) 000-00-02')}
-                className="flex items-center gap-1 px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-[9px] font-bold transition-all duration-200 cursor-pointer shadow-xs"
-              >
-                Мандрица 2
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('Тех. спец. Ренат', 'renat@tech.ru', '+7 (900) 000-00-03')}
-                className="flex items-center gap-1 px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl text-[9px] font-bold transition-all duration-200 cursor-pointer shadow-xs"
-              >
-                Ренат
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('Тех. спец. Максим', 'maxim@tech.ru', '+7 (900) 000-00-04')}
-                className="flex items-center gap-1 px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl text-[9px] font-bold transition-all duration-200 cursor-pointer shadow-xs"
-              >
-                Максим
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       <AnimatePresence mode="wait">

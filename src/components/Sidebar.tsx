@@ -85,37 +85,7 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenCo
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 h-[100vh] flex flex-col sticky top-0 shrink-0 hidden md:flex">
-      {/* Logo Area */}
-      <div className="flex flex-col px-5 py-4 border-b border-slate-100 shrink-0 bg-slate-50/50">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex flex-col">
-            <div className="flex items-center">
-              <div className="bg-emerald-600 text-white rounded pr-2 pl-1.5 py-1 text-xs font-black tracking-wider flex items-center gap-1 shadow-sm mr-2">
-                <span>SSI</span>
-              </div>
-              <span className="font-extrabold text-slate-800 text-sm tracking-tight">Navigator</span>
-            </div>
-            <span className="text-[10px] font-bold text-indigo-600 mt-1 uppercase tracking-wider">
-              стартапов v.2.0 2026
-            </span>
-          </div>
-          <div className="flex-shrink-0 flex items-center justify-center bg-white p-0.5 rounded-lg border border-indigo-100/60 w-10 h-10 select-none shadow-xs">
-            <MiniLily subfactors={subfactors} className="w-[32px] h-[32px] drop-shadow-sm" />
-          </div>
-        </div>
-
-        <p className="text-[10px] text-slate-500 leading-tight mb-2">
-          Лаборатория прединвестиционной экспресс-оценки самодостаточности технологических стартапов.
-        </p>
-        <div className="text-[9px] text-slate-400 font-medium mb-1.5 leading-relaxed">
-          Выполнено по техзаданию:
-          <strong className="text-slate-600 block mt-0.5">Кузьменко В.В., Мандрица И.В.</strong>
-          Техн. специалисты:
-          <strong className="text-slate-600 block mt-0.5">Ренат, Максим</strong>
-        </div>
-      </div>
-
+    <aside className="w-64 bg-white border-r border-slate-200 h-[100vh] flex flex-col sticky top-0 shrink-0 hidden md:flex print:hidden">
       {/* Menu Area */}
       <div className="flex-1 overflow-y-auto py-6 px-3 space-y-6 custom-scrollbar">
         {menuSections.map((section, idx) => (
