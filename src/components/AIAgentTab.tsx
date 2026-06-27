@@ -136,6 +136,7 @@ export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAg
   const [startupName, setStartupName] = useState<string>('');
   const [authorName, setAuthorName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [solution, setSolution] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [attachedFiles, setAttachedFiles] = useState<{name: string, size: number}[]>([]);
   const [isAutoFilling, setIsAutoFilling] = useState<boolean>(false);
@@ -188,22 +189,26 @@ export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAg
         setStartupName('YardMaster / Двор-Платформа');
         setAuthorName('ИИ-Ассистент');
         setDescription('B2B/B2C Web-платформа для проектирования дворов домов и ландшафтного дизайна. Позволяет пользователям конструировать 3D-макеты дворовых территорий, а подрядчикам (строителям, озеленителям) — получать готовые сметы и заказы. Монетизация: SaaS подписка для подрядчиков + % от сделок.');
+        setSolution('Интерактивный 3D-редактор, который связывает напрямую заказчика и исполнителя, минимизируя издержки на проектирование и согласование. Предоставляется как облачный сервис.');
       } else {
         const concepts = [
           {
             type: 'saas',
             name: 'NeuroAnalytics Pro',
-            desc: 'Инновационная облачная платформа на базе искусственного интеллекта. Платформа решает проблему неэффективного распределения ресурсов в малом бизнесе за счет автоматизации планирования и предиктивной аналитики. Основная бизнес-модель - B2B SaaS по подписке с многоуровневой системой тарифов в зависимости от объема анализируемых данных.'
+            desc: 'Инновационная облачная платформа на базе искусственного интеллекта. Платформа решает проблему неэффективного распределения ресурсов в малом бизнесе за счет автоматизации планирования и предиктивной аналитики. Основная бизнес-модель - B2B SaaS по подписке с многоуровневой системой тарифов в зависимости от объема анализируемых данных.',
+            sol: 'Использование нейросетевых моделей для прогнозирования спроса и цепочек поставок, что снижает издержки компаний до 30%.'
           },
           {
             type: 'product',
             name: 'EcoSmart Materials',
-            desc: 'Производство экологически чистых, биоразлагаемых строительных материалов нового поколения. Проект решает проблему высоких выбросов CO2 и строительного мусора. Модель монетизации включает прямые B2B продажи застройщикам и B2C реализацию через сеть строительных гипермаркетов.'
+            desc: 'Производство экологически чистых, биоразлагаемых строительных материалов нового поколения. Проект решает проблему высоких выбросов CO2 и строительного мусора. Модель монетизации включает прямые B2B продажи застройщикам и B2C реализацию через сеть строительных гипермаркетов.',
+            sol: 'Запатентованная технология создания композитных материалов на основе растительных волокон и биополимеров, не уступающих по прочности бетону.'
           },
           {
             type: 'service',
             name: 'AgroDrone Service',
-            desc: 'Сервис точного земледелия с использованием тяжелых БПЛА для мониторинга полей и точечного распыления удобрений. Целевая аудитория - средние и крупные фермерские хозяйства. Заработок на пакетном обслуживании (гектар/сезон) с включенной нейросетевой аналитикой состояния посевов.'
+            desc: 'Сервис точного земледелия с использованием тяжелых БПЛА для мониторинга полей и точечного распыления удобрений. Целевая аудитория - средние и крупные фермерские хозяйства. Заработок на пакетном обслуживании (гектар/сезон) с включенной нейросетевой аналитикой состояния посевов.',
+            sol: 'Разработка собственного легкого БПЛА с увеличенной грузоподъемностью и интеграция системы машинного зрения для точного распыления.'
           }
         ];
         const randomConcept = concepts[Math.floor(Math.random() * concepts.length)];
@@ -212,6 +217,7 @@ export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAg
         setStartupName(randomConcept.name);
         setAuthorName('ИИ-Ассистент');
         setDescription(randomConcept.desc);
+        setSolution(randomConcept.sol);
       }
       setIsAutoFilling(false);
       showToast('✅ Анкета заполнена нейросетью! (Имя стартапа вверху изменится после применения данных в Шаге 4)', 'success');
@@ -802,8 +808,20 @@ export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAg
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Опишите, в чем суть проекта, какую 'острую боль' клиента он решает, кто целевая аудитория, какова бизнес-модель (как вы зарабатываете), примерную стоимость, и как будете привлекать первых клиентов..."
+              className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-light text-sm outline-none focus:border-purple-500 transition-colors shadow-3xs h-36 resize-y leading-relaxed mb-4"
+            />
+            
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Решение проблемы стартапом <span className="text-rose-500">*</span></label>
+              <span className="text-[10px] text-slate-400 font-mono">Как вы решаете эту боль</span>
+            </div>
+            <textarea 
+              value={solution}
+              onChange={e => setSolution(e.target.value)}
+              placeholder="Опишите ваше уникальное решение проблемы, технологию, или подход..."
               className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-light text-sm outline-none focus:border-purple-500 transition-colors shadow-3xs h-36 resize-y leading-relaxed mb-2"
             />
+            
             <div className="flex flex-col gap-2 mt-1">
               <div className="flex flex-wrap items-center gap-2">
                 <input 

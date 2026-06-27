@@ -57,6 +57,7 @@ import { AuthPortal } from './components/AuthPortal';
 import { Sidebar } from './components/Sidebar';
 import { ApplicationsView } from './components/ApplicationsView';
 import { DefenseScheduleView } from './components/DefenseScheduleView';
+import { WordReportView } from './components/WordReportView';
 import { MiniLily } from './components/MiniLily';
 import { getAccessToken } from './firebase';
 
@@ -840,6 +841,12 @@ export default function App() {
           user={user}
           subfactors={results.subfactors}
           consentAccepted={hasAcceptedConsent}
+          isApproved={data.supervisorApproved || false}
+          onApprove={() => {
+            setData({...data, supervisorApproved: !data.supervisorApproved});
+            setNotification({message: data.supervisorApproved ? 'Подтверждение снято' : 'Заявка подтверждена', type: 'success'});
+          }}
+          currentStartup={data.name || ''}
         />
         
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto relative pb-20">
@@ -872,6 +879,10 @@ export default function App() {
 
         {currentView === 'defense_schedule' && (
           <DefenseScheduleView />
+        )}
+
+        {currentView === 'word_report' && (
+          <WordReportView data={data} ssiScore={calculateResult(data).finalSsi} />
         )}
 
         {currentView === 'dashboard' && (
@@ -970,9 +981,26 @@ export default function App() {
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
               <Microscope className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-slate-800 mb-2">Проекты моих студентов</h3>
-              <p className="text-slate-500 mb-6">В этом разделе вы сможете просматривать стартап-проекты ваших студентов, оставлять правки и рекомендации перед отправкой в Технопарк.</p>
-              <button onClick={() => { setCurrentView('calculator'); setActiveTab('agent'); }} className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold text-sm transition-colors">Перейти к проверке анкеты</button>
+              {data.name && data.name.trim() !== '' ? (
+                <>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Стартап: {data.name}</h3>
+                  <p className="text-slate-500 mb-6">В этом разделе вы сможете просматривать стартап-проект вашего студента.</p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4">
+                    <button onClick={() => { setCurrentView('calculator'); setActiveTab('agent'); }} className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold text-sm transition-colors shadow-sm">Перейти к проверке анкеты</button>
+                    {data.supervisorApproved ? (
+                      <button onClick={() => { setData({...data, supervisorApproved: false}); setNotification({message: 'Подтверждение снято', type: 'success'}); }} className="px-6 py-2.5 bg-rose-100 text-rose-700 rounded-lg hover:bg-rose-200 font-semibold text-sm transition-colors shadow-sm">Отменить подтверждение</button>
+                    ) : (
+                      <button onClick={() => { setData({...data, supervisorApproved: true}); setNotification({message: 'Заявка подтверждена', type: 'success'}); }} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition-colors shadow-sm">Подтверждаю заявку стартапа</button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Проекты моих студентов</h3>
+                  <p className="text-slate-500 mb-6">В этом разделе вы сможете просматривать стартап-проекты ваших студентов, оставлять правки и рекомендации перед отправкой в Технопарк.</p>
+                  <button onClick={() => { setCurrentView('calculator'); setActiveTab('agent'); }} className="mt-4 px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold text-sm transition-colors shadow-sm">Перейти к проверке анкеты</button>
+                </>
+              )}
             </div>
           </div>
         )}

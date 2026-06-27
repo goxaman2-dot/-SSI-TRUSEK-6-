@@ -33,9 +33,12 @@ interface SidebarProps {
   user: { name: string; email: string; phone: string };
   subfactors: Subfactors;
   consentAccepted: boolean;
+  isApproved?: boolean;
+  onApprove?: () => void;
+  currentStartup?: string;
 }
 
-export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenConsent, onLogout, user, subfactors, consentAccepted }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenConsent, onLogout, user, subfactors, consentAccepted, isApproved, onApprove, currentStartup }: SidebarProps) {
   const [isCalcExpanded, setIsCalcExpanded] = useState(true);
 
   const menuSections = [
@@ -43,6 +46,7 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenCo
       title: 'КАБИНЕТЫ ПРОЕКТОВ',
       items: [
         { id: 'dashboard', label: 'Рабочий стол студента', icon: LayoutDashboard, color: 'text-emerald-600' },
+        { id: 'word_report', label: 'Отчет по стартапу Word', icon: FileText, color: 'text-blue-500' },
         { id: 'supervisor', label: 'Научный руководитель', icon: FileEdit, color: 'text-blue-600' },
       ]
     },
@@ -122,6 +126,34 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenCo
             </div>
           </div>
         ))}
+        {activeTab === 'supervisor' && currentStartup && (
+          <div className="mt-4 px-3">
+            <div className="px-3 mb-2 text-[10px] font-bold text-rose-500 tracking-wider uppercase">Действия руководителя</div>
+            <button
+              onClick={onApprove}
+              className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm ${
+                isApproved 
+                  ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              }`}
+            >
+              {isApproved ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Снять подтверждение
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Подтверждаю заявку стартапа
+                </>
+              )}
+            </button>
+            <p className="text-[9px] text-slate-400 mt-2 text-center px-2 leading-tight">
+              {isApproved ? 'Заявка одобрена для Технопарка' : 'Подтвердите заявку перед отправкой в Технопарк СКФУ'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* User Info / Logout Area */}
