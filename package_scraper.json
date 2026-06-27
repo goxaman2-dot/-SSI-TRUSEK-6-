@@ -1,0 +1,6 @@
+{
+  "name": "scraper",
+  "dependencies": {
+    "puppeteer": "latest"
+  }
+}

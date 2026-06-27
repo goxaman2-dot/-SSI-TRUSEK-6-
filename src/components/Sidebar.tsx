@@ -17,7 +17,8 @@ import {
   Microscope,
   Flower2,
   Rocket,
-  CheckCircle
+  CheckCircle,
+  Calendar
 } from 'lucide-react';
 import { MiniLily } from './MiniLily';
 import { Subfactors } from '../utils';
@@ -60,6 +61,7 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenCo
       items: [
         { id: 'applications', label: 'База заявок', icon: FolderOpen, color: 'text-amber-500' },
         { id: 'park_status', label: 'Статусы (Экспертиза)', icon: LayoutDashboard, color: 'text-indigo-600' },
+        { id: 'defense_schedule', label: 'График защит (Бизнес СК)', icon: Calendar, color: 'text-teal-600' },
         { id: 'park_stats', label: 'Сводка и KPI', icon: FileText, color: 'text-slate-500' },
       ]
     },

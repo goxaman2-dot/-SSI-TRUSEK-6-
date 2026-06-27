@@ -56,6 +56,7 @@ import { SalesRealismValidator } from './components/SalesRealismValidator';
 import { AuthPortal } from './components/AuthPortal';
 import { Sidebar } from './components/Sidebar';
 import { ApplicationsView } from './components/ApplicationsView';
+import { DefenseScheduleView } from './components/DefenseScheduleView';
 import { MiniLily } from './components/MiniLily';
 import { getAccessToken } from './firebase';
 
@@ -867,6 +868,10 @@ export default function App() {
 
         {currentView === 'applications' && (
           <ApplicationsView onNewApplication={() => { setCurrentView('calculator'); setActiveTab('agent'); }} />
+        )}
+
+        {currentView === 'defense_schedule' && (
+          <DefenseScheduleView />
         )}
 
         {currentView === 'dashboard' && (
