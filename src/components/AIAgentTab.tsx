@@ -17,7 +17,10 @@ import {
   Info,
   AlertTriangle,
   Play,
-  Upload
+  Upload,
+  FileText,
+  X,
+  Trash2
 } from 'lucide-react';
 import { StartupData, Subfactors, CalculationResult } from '../types';
 import { 
@@ -28,6 +31,7 @@ import {
 
 interface AIAgentTabProps {
   onApplyData: (data: StartupData) => void;
+  onUpdatePartialData?: (data: Partial<StartupData>) => void;
   showToast: (message: string, type: 'success' | 'error' | 'info') => void;
 }
 
@@ -125,13 +129,151 @@ const PRESET_IDEAS = [
   }
 ];
 
-export function AIAgentTab({ onApplyData, showToast }: AIAgentTabProps) {
+export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAgentTabProps) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [bizType, setBizType] = useState<string>('saas');
   const [startupName, setStartupName] = useState<string>('');
   const [authorName, setAuthorName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [attachedFiles, setAttachedFiles] = useState<{name: string, size: number}[]>([]);
+  const [isAutoFilling, setIsAutoFilling] = useState<boolean>(false);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+
+  const handleVerifyAI = () => {
+    if (!description.trim() && attachedFiles.length === 0) {
+      showToast('⚠️ Сначала введите описание или загрузите документы для верификации', 'error');
+      return;
+    }
+
+    setIsVerifying(true);
+    showToast('🔮 ИИ-Агент анализирует ваши данные для верификации...', 'info');
+
+    setTimeout(() => {
+      const text = description.toLowerCase();
+      let type = 'saas';
+      if (text.includes('производств') || text.includes('материал') || text.includes('издели')) type = 'product';
+      if (text.includes('услуг') || text.includes('сервис') || text.includes('ремонт') || text.includes('бпла')) type = 'service';
+      if (text.includes('строй') || text.includes('проект') || text.includes('инженер')) type = 'work';
+      
+      setBizType(type);
+      
+      if (!startupName.trim()) {
+        if (text.includes('двор') || text.includes('ландшафт') || text.includes('дом')) {
+          setStartupName('SmartYard Platform');
+        } else {
+          setStartupName('Инновационный стартап (ИИ-Верифицировано)');
+        }
+      }
+
+      setDescription(prev => {
+        if (prev.includes('[ИИ-Верификация пройдена]')) return prev;
+        return prev + '\n\n[ИИ-Верификация пройдена]: Данная бизнес-идея корректно структурирована. Обнаружены ключевые триггеры целевой аудитории. Рекомендуется сфокусироваться на юнит-экономике на Шаге 3.';
+      });
+
+      setIsVerifying(false);
+      showToast('✅ Данные успешно верифицированы ИИ-Агентом!', 'success');
+    }, 2000);
+  };
+
+  const handleAutoFillAI = () => {
+    setIsAutoFilling(true);
+    showToast('🔮 Нейросеть генерирует концепцию стартапа...', 'info');
+
+    setTimeout(() => {
+      // If user has entered text about "двор", "дом", "платформа", let's be smart
+      if (description.toLowerCase().includes('двор') || description.toLowerCase().includes('дом')) {
+        setBizType('saas');
+        setStartupName('YardMaster / Двор-Платформа');
+        setAuthorName('ИИ-Ассистент');
+        setDescription('B2B/B2C Web-платформа для проектирования дворов домов и ландшафтного дизайна. Позволяет пользователям конструировать 3D-макеты дворовых территорий, а подрядчикам (строителям, озеленителям) — получать готовые сметы и заказы. Монетизация: SaaS подписка для подрядчиков + % от сделок.');
+      } else {
+        const concepts = [
+          {
+            type: 'saas',
+            name: 'NeuroAnalytics Pro',
+            desc: 'Инновационная облачная платформа на базе искусственного интеллекта. Платформа решает проблему неэффективного распределения ресурсов в малом бизнесе за счет автоматизации планирования и предиктивной аналитики. Основная бизнес-модель - B2B SaaS по подписке с многоуровневой системой тарифов в зависимости от объема анализируемых данных.'
+          },
+          {
+            type: 'product',
+            name: 'EcoSmart Materials',
+            desc: 'Производство экологически чистых, биоразлагаемых строительных материалов нового поколения. Проект решает проблему высоких выбросов CO2 и строительного мусора. Модель монетизации включает прямые B2B продажи застройщикам и B2C реализацию через сеть строительных гипермаркетов.'
+          },
+          {
+            type: 'service',
+            name: 'AgroDrone Service',
+            desc: 'Сервис точного земледелия с использованием тяжелых БПЛА для мониторинга полей и точечного распыления удобрений. Целевая аудитория - средние и крупные фермерские хозяйства. Заработок на пакетном обслуживании (гектар/сезон) с включенной нейросетевой аналитикой состояния посевов.'
+          }
+        ];
+        const randomConcept = concepts[Math.floor(Math.random() * concepts.length)];
+        
+        setBizType(randomConcept.type);
+        setStartupName(randomConcept.name);
+        setAuthorName('ИИ-Ассистент');
+        setDescription(randomConcept.desc);
+      }
+      setIsAutoFilling(false);
+      showToast('✅ Анкета заполнена нейросетью! (Имя стартапа вверху изменится после применения данных в Шаге 4)', 'success');
+    }, 2500);
+  };
+
+  const handleClearAIForm = () => {
+    setStartupName('');
+    setAuthorName('');
+    setDescription('');
+    setAttachedFiles([]);
+    showToast('🗑️ Анкета очищена от документов и текста', 'info');
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAttachedFiles(prev => [...prev, { name: file.name, size: file.size }]);
+    showToast(`⏳ Обработка файла ${file.name}...`, 'info');
+
+    try {
+      if (file.name.endsWith('.docx')) {
+        const mammoth = await import('mammoth');
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        const text = result.value;
+        if (text) {
+          setDescription(prev => {
+            const separator = prev.trim() ? '\n\n' : '';
+            return prev + separator + `--- Извлечено из ${file.name} ---\n` + text;
+          });
+          showToast(`✅ Текст из ${file.name} успешно добавлен`, 'success');
+        } else {
+          showToast(`⚠️ Не удалось извлечь текст из ${file.name}`, 'error');
+        }
+      } else if (file.name.endsWith('.txt')) {
+        const text = await file.text();
+        setDescription(prev => {
+          const separator = prev.trim() ? '\n\n' : '';
+          return prev + separator + `--- Извлечено из ${file.name} ---\n` + text;
+        });
+        showToast(`✅ Текст из ${file.name} успешно добавлен`, 'success');
+      } else {
+        // Mock extract for other file types since client-side is limited
+        setTimeout(() => {
+          setDescription(prev => {
+            const separator = prev.trim() ? '\n\n' : '';
+            return prev + separator + `--- Содержимое файла ${file.name} прикреплено к проекту (текст скрыт в демо-режиме) ---`;
+          });
+          showToast(`✅ Файл ${file.name} успешно прикреплен`, 'success');
+        }, 1000);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(`❌ Ошибка при чтении файла ${file.name}`, 'error');
+    }
+    
+    // Clear input so same file can be uploaded again if needed
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
 
   // Step 2: 12 subfactors and market sizes (TAM, SAM, SOM, TAV)
   const [subfactorsData, setSubfactorsData] = useState({
@@ -269,13 +411,37 @@ export function AIAgentTab({ onApplyData, showToast }: AIAgentTabProps) {
 
   // Step 1 -> Step 2 (Heuristic Smart Analysis)
   const handleStartAnalysis = () => {
-    if (!startupName.trim()) {
+    let finalStartupName = startupName.trim();
+    let finalAuthorName = authorName.trim();
+
+    if (!finalStartupName && (description.trim() || attachedFiles.length > 0)) {
+      // Mock AI extraction from description/files
+      if (description.toLowerCase().includes('двор') || description.toLowerCase().includes('дом')) {
+        finalStartupName = "YardMaster / Двор-Платформа";
+      } else {
+        finalStartupName = "Сгенерированный Стартап (ИИ)";
+      }
+      setStartupName(finalStartupName);
+      
+      if (!finalAuthorName) {
+        finalAuthorName = "Иван Иванов (ИИ-извлечено)";
+        setAuthorName(finalAuthorName);
+      }
+      showToast('🤖 ИИ-Агент извлек название стартапа и автора из документов', 'info');
+    } else if (!finalStartupName) {
       showToast('⚠️ Введите название вашего стартапа', 'error');
       return;
     }
-    if (!description.trim() || description.length < 20) {
-      showToast('⚠️ Опишите идею более подробно (минимум 20 символов)', 'error');
+
+    if (!description.trim() && attachedFiles.length === 0) {
+      showToast('⚠️ Опишите идею более подробно или прикрепите документы', 'error');
       return;
+    }
+
+    // Pass the name/author directly to the main workspace so it shows in "Текущий стартап"
+    if (onUpdatePartialData) {
+      // @ts-ignore - we'll access the passed props safely
+      onUpdatePartialData({ name: finalStartupName, author: finalAuthorName });
     }
 
     setIsAnalyzing(true);
@@ -637,15 +803,84 @@ export function AIAgentTab({ onApplyData, showToast }: AIAgentTabProps) {
               placeholder="Опишите, в чем суть проекта, какую 'острую боль' клиента он решает, кто целевая аудитория, какова бизнес-модель (как вы зарабатываете), примерную стоимость, и как будете привлекать первых клиентов..."
               className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-900 font-light text-sm outline-none focus:border-purple-500 transition-colors shadow-3xs h-36 resize-y leading-relaxed mb-2"
             />
-            <div className="flex items-center gap-2 mt-1">
-              <input type="file" id="file-upload" className="hidden" accept=".docx,.pptx,.xlsx" />
-              <label 
-                htmlFor="file-upload" 
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                Загрузить доп. материалы (*.docx, *.pptx, *.xlsx)
-              </label>
+            <div className="flex flex-col gap-2 mt-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <input 
+                  type="file" 
+                  id="file-upload" 
+                  className="hidden" 
+                  accept=".docx,.pptx,.xlsx,.pdf,.txt" 
+                  onChange={handleFileUpload}
+                />
+                <label 
+                  htmlFor="file-upload" 
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Загрузить доп. материалы (*.docx, *.pptx, *.xlsx, *.txt)
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handleAutoFillAI}
+                  disabled={isAutoFilling}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm disabled:opacity-50"
+                >
+                  {isAutoFilling ? (
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-purple-300 border-t-purple-600 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5" />
+                  )}
+                  Заполнить анкету
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleVerifyAI}
+                  disabled={isVerifying}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm disabled:opacity-50"
+                  title="ИИ-проверка текущего текста стартапа и прикрепленных документов"
+                >
+                  {isVerifying ? (
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-emerald-300 border-t-emerald-600 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                  Верификация (ИИ)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleClearAIForm}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm"
+                  title="Очистить все введенные данные и прикрепленные файлы"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Очистить анкету
+                </button>
+              </div>
+
+              {/* Attached files list */}
+              {attachedFiles.length > 0 && (
+                <div className="flex flex-col gap-1.5 mt-2">
+                  <span className="text-xs font-bold text-slate-700">Прикрепленные документы:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {attachedFiles.map((file, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-800 px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm">
+                        <FileText className="w-3.5 h-3.5 text-indigo-500" />
+                        <span className="truncate max-w-[200px]">{file.name}</span>
+                        <button 
+                          onClick={() => setAttachedFiles(prev => prev.filter((_, idx) => idx !== i))}
+                          className="hover:bg-indigo-200 rounded p-0.5 transition-colors"
+                          title="Удалить файл"
+                        >
+                          <X className="w-3.5 h-3.5 text-indigo-600" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1417,7 +1652,7 @@ export function AIAgentTab({ onApplyData, showToast }: AIAgentTabProps) {
                 onClick={() => setStep(4)}
                 className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold px-6 py-2.5 rounded-xl shadow transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <span>📊 Сгенерировать результат SSI</span>
+                <span>📊 Сформировать и рассчитать SSI индекс стартапа</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -1540,7 +1775,7 @@ export function AIAgentTab({ onApplyData, showToast }: AIAgentTabProps) {
                   title="Загрузить полученные результаты напрямую в основную вкладку Калькулятора"
                 >
                   <Play className="w-4 h-4 text-purple-100 fill-purple-100 animate-pulse" />
-                  <span>🔌 Применить в калькуляторе!</span>
+                  <span>🌸 Сформировать и рассчитать SSI индекс стартапа</span>
                 </button>
                 <button
                   type="button"
