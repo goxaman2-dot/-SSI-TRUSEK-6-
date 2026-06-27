@@ -20,7 +20,8 @@ import {
   Upload,
   FileText,
   X,
-  Trash2
+  Trash2,
+  Rocket
 } from 'lucide-react';
 import { StartupData, Subfactors, CalculationResult } from '../types';
 import { 
@@ -130,7 +131,7 @@ const PRESET_IDEAS = [
 ];
 
 export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAgentTabProps) {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [bizType, setBizType] = useState<string>('saas');
   const [startupName, setStartupName] = useState<string>('');
   const [authorName, setAuthorName] = useState<string>('');
@@ -634,7 +635,7 @@ export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAg
   // Load into main application directly
   const handleApplyToMainApp = () => {
     onApplyData(startupData);
-    showToast('🔌 Данные из ИИ Агента успешно интегрированы в рабочий калькулятор!', 'success');
+    showToast('✅ Идея стартапа успешно зафиксирована на рабочем столе!', 'success');
   };
 
   // Reset all values to start anew
@@ -1767,12 +1768,11 @@ export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAg
               </div>
 
               <div className="flex flex-wrap gap-2.5 w-full sm:w-auto justify-end">
-                {/* Apply Directly into main calculator! */}
                 <button
                   type="button"
-                  onClick={handleApplyToMainApp}
+                  onClick={() => setStep(5)}
                   className="w-full sm:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                  title="Загрузить полученные результаты напрямую в основную вкладку Калькулятора"
+                  title="Перейти к фиксации стартапа"
                 >
                   <Play className="w-4 h-4 text-purple-100 fill-purple-100 animate-pulse" />
                   <span>🌸 Сформировать и рассчитать SSI индекс стартапа</span>
@@ -1786,6 +1786,33 @@ export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAg
                   <span>Новая идея</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 5: FIXTURE / REGISTRY OF THE STARTUP */}
+      {step === 5 && (
+        <div className="space-y-6 max-w-4xl mx-auto">
+          <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-md space-y-6 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mb-4">
+              <Rocket className="w-8 h-8" />
+            </div>
+            <h3 className="font-display font-black text-2xl text-slate-900">Фиксация стартапа в заявке</h3>
+            <p className="text-sm text-slate-600 max-w-lg mx-auto">
+              Почти готово! Индекс SSI для <strong>{startupName}</strong> рассчитан ({results.finalSsi.toFixed(2)}).
+              Для того, чтобы зафиксировать стартап в реестре заявок и продолжить работу на рабочем столе, нажмите кнопку ниже.
+            </p>
+            
+            <div className="pt-6 border-t border-slate-100 flex justify-center">
+              <button
+                type="button"
+                onClick={handleApplyToMainApp}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-8 py-4 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer text-lg"
+              >
+                <Check className="w-5 h-5" />
+                <span>Зафиксировать стартапа идею</span>
+              </button>
             </div>
           </div>
         </div>

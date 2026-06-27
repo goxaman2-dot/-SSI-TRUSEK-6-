@@ -31,6 +31,7 @@ import {
   Rocket,
   Presentation,
   ArrowLeft,
+  ArrowRight,
   ChevronDown
 } from 'lucide-react';
 import { StartupData, Subfactors, CalculationResult, DataWarning } from './types';
@@ -1082,108 +1083,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* STEP-BY-STEP STUDENT ROADMAP & NAVIGATION (Блоки калькулятора) */}
+        {/* QUICK ACTION BUTTONS */}
         <div id="calc-tabs" className="mb-6 print:hidden">
-          <div className="bg-gradient-to-r from-slate-100 to-indigo-50/50 p-4 rounded-2xl border border-slate-200/60 mb-4 shadow-xs">
-            <h4 className="text-xs font-black uppercase tracking-widest text-indigo-800 flex items-center gap-1.5 mb-3">
-              <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-ping" />
-              <span>🧭 ТРАЕКТОРИЯ СТУДЕНТА: ОЦЕНИТЕ СТАРТАП ЗА 5 ШАГОВ</span>
-            </h4>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-              {[
-                {
-                  id: 'agent',
-                  stepNum: 1,
-                  title: 'Шаг 1: ИИ Агент (Старт)',
-                  desc: 'Сгенерируйте данные ИИ или загрузите демо',
-                  badge: 'Старт',
-                  color: 'hover:border-purple-300 hover:bg-purple-50/40 text-purple-950',
-                  activeColor: 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white border-purple-500 ring-4 ring-purple-100'
-                },
-                {
-                  id: 'anketa',
-                  stepNum: 2,
-                  title: 'Шаг 2: Ввод метрик',
-                  desc: 'Укажите название и настройте 12 показателей',
-                  badge: 'Анкета показателей',
-                  color: 'hover:border-blue-300 hover:bg-blue-50/40 text-blue-950',
-                  activeColor: 'bg-gradient-to-br from-indigo-600 to-blue-700 text-white border-indigo-500 ring-4 ring-indigo-100'
-                },
-                {
-                  id: 'expert',
-                  stepNum: 3,
-                  title: 'Шаг 3: Режим эксперта',
-                  desc: 'Настройте весовые доли TRUSEK-6',
-                  badge: 'Веса формулы',
-                  color: 'hover:border-slate-400 hover:bg-slate-100/60 text-slate-900',
-                  activeColor: 'bg-gradient-to-br from-slate-800 to-slate-900 text-white border-slate-700 ring-4 ring-slate-200'
-                },
-                {
-                  id: 'result',
-                  stepNum: 4,
-                  title: 'Шаг 4: Лилия & SSI',
-                  desc: 'Посмотрите цветок устойчивости и вердикт',
-                  badge: 'Оценка и График',
-                  color: 'hover:border-emerald-300 hover:bg-emerald-50/40 text-emerald-950',
-                  activeColor: 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-500 ring-4 ring-emerald-100'
-                },
-                {
-                  id: 'compare',
-                  stepNum: 5,
-                  title: 'Шаг 5: Сравнение',
-                  desc: 'Сравните ваш проект с другим стартапом',
-                  badge: 'Баттл проектов',
-                  color: 'hover:border-amber-400 hover:bg-amber-50/40 text-amber-950',
-                  activeColor: 'bg-gradient-to-br from-amber-500 to-orange-500 text-slate-950 font-black border-amber-400 ring-4 ring-amber-100'
-                }
-              ].map((block) => {
-                const isActive = activeTab === block.id;
-                return (
-                  <button
-                    key={block.id}
-                    onClick={() => {
-                      setActiveTab(block.id as any);
-                    }}
-                    className={`group flex flex-col justify-between text-left p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer shadow-xs relative overflow-hidden ${
-                      isActive 
-                        ? block.activeColor + ' shadow-md' 
-                        : 'bg-white border-slate-200/80 text-slate-800'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex justify-between items-center w-full mb-1.5">
-                        <span className={`text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md ${
-                          isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'
-                        }`}>
-                          {block.badge}
-                        </span>
-                        <span className={`font-mono text-xs font-black h-5 w-5 rounded-full flex items-center justify-center ${
-                          isActive ? 'bg-white text-slate-900' : 'bg-slate-100 text-slate-400'
-                        }`}>
-                          {block.stepNum}
-                        </span>
-                      </div>
-                      <h3 className="font-display font-bold text-xs md:text-[13px] leading-tight">
-                        {block.title}
-                      </h3>
-                      <p className={`text-[10px] mt-1 leading-snug font-normal ${
-                        isActive ? 'text-white/80' : 'text-slate-500'
-                      }`}>
-                        {block.desc}
-                      </p>
-                    </div>
-                    <div className="mt-3.5 flex items-center gap-1 text-[10px] font-bold">
-                      <span className={isActive ? 'text-white' : 'text-indigo-600 group-hover:underline'}>
-                        {isActive ? '👉 Вы работаете здесь' : 'Перейти к блоку →'}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Quick preset buttons */}
           <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/50">
             <span className="text-[11px] text-slate-500 font-semibold pl-1">
@@ -2195,6 +2096,28 @@ export default function App() {
                 </div>
               </div>
 
+              {/* AUTOMATIC TRANSITION BUTTONS */}
+              <div className="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 print:hidden">
+                <div className="text-sm text-slate-500">Завершили заполнение метрик? Переходите к просмотру результатов!</div>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('expert')}
+                    className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  >
+                    К Шагу 3 (Режим Эксперта)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('result')}
+                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>К Шагу 4 (Смотреть результаты SSI)</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -2987,6 +2910,17 @@ export default function App() {
                   Изменить параметры анкеты
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('compare');
+                    showToast('⚖️ Переход к сравнению проектов', 'info');
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold px-5 py-3 rounded-xl text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <span>К Шагу 5 (Сравнение проектов)</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
 
             </div>
