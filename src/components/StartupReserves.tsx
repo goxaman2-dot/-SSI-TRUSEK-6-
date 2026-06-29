@@ -565,19 +565,19 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
       </div>
 
       {/* COMBINED INTERACTIVE ZONE: SLIDERS & DUAL LILY */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch pt-2">
+      <div className="flex flex-col gap-6 pt-2">
         
         {/* Sliders Control Panel (Combined Block Part 1) */}
-        <div className="lg:col-span-3 bg-white rounded-2xl p-5 border border-indigo-100 shadow-xs flex flex-col justify-between space-y-4">
+        <div className="bg-white rounded-2xl p-5 border border-indigo-100 shadow-xs flex flex-col space-y-4">
           <div className="space-y-4">
             <h4 className="font-display font-bold text-xs text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
               <Settings2 className="w-4 h-4 text-indigo-700" />
               <span>Тонкая ручная регулировка</span>
             </h4>
 
-            <div className="space-y-3.5 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 gap-6 text-xs">
               {/* Slider 1: COGS */}
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center text-slate-700">
                   <span className="font-medium">Оптимизация COGS</span>
                   <span className="font-mono font-bold text-rose-700">{cogsOptim}%</span>
@@ -588,12 +588,12 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   max="40" 
                   value={cogsOptim} 
                   onChange={e => handleSliderChange('cogs', parseInt(e.target.value) || 0)}
-                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-500"
                 />
               </div>
 
               {/* Slider 2: CAC */}
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center text-slate-700">
                   <span className="font-medium">Снижение CAC</span>
                   <span className="font-mono font-bold text-amber-700">{cacOptim}%</span>
@@ -604,12 +604,12 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   max="50" 
                   value={cacOptim} 
                   onChange={e => handleSliderChange('cac', parseInt(e.target.value) || 0)}
-                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
                 />
               </div>
 
               {/* Slider 3: OPEX */}
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center text-slate-700">
                   <span className="font-medium">Административный OPEX</span>
                   <span className="font-mono font-bold text-indigo-700">{opexOptim}%</span>
@@ -620,12 +620,12 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   max="30" 
                   value={opexOptim} 
                   onChange={e => handleSliderChange('opex', parseInt(e.target.value) || 0)}
-                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                 />
               </div>
 
               {/* Slider 4: Price Premium */}
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center text-slate-700">
                   <span className="font-medium">Рост ценности LTV</span>
                   <span className="font-mono font-bold text-emerald-700">{pricePremium}%</span>
@@ -636,14 +636,14 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
                   max="25" 
                   value={pricePremium} 
                   onChange={e => handleSliderChange('ltv', parseInt(e.target.value) || 0)}
-                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2 items-start text-[10px] text-slate-650 leading-snug">
-            <HelpCircle className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2 items-center text-xs text-slate-650 leading-snug w-full">
+            <HelpCircle className="w-4 h-4 text-indigo-500 shrink-0" />
             <span className="italic">
               Базовый объем рассчитывается от вашего целевого рынка <strong>SOM ({activeRevenue} млн ₽)</strong>. Если вы хотите применить более агрессивную тактику, переведите ручки вправо.
             </span>
@@ -651,13 +651,13 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
         </div>
 
         {/* RECREATED MAGNIFICENT 6-PETAL LILY OF THE INDEX (Combined Block Part 2) */}
-        <div className="lg:col-span-3 bg-white border border-indigo-100 rounded-2xl p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-xs">
-          <span className="absolute top-3 left-3 text-[10px] font-bold text-slate-550 uppercase tracking-widest">
+        <div className="bg-white border border-indigo-100 rounded-2xl p-5 flex flex-col md:flex-row print:flex-row items-center justify-center relative overflow-hidden shadow-xs gap-6">
+          <span className="absolute top-3 left-3 text-[10px] font-bold text-slate-550 uppercase tracking-widest z-10">
             Лилия индекса SSI
           </span>
 
           {/* Native High-Performance SVG Lily of the Index with 2 states overlay */}
-          <div className="w-full h-[220px] flex items-center justify-center mt-3 relative">
+          <div className="w-full md:w-1/2 print:w-1/2 h-[220px] flex items-center justify-center mt-6 md:mt-0 print:mt-0 relative">
             <svg 
               viewBox="0 0 300 300" 
               className="w-full h-full select-none"
@@ -785,26 +785,59 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
             </svg>
           </div>
 
-          {/* Mini Legend for student clarity */}
-          <div className="mt-2 text-[9px] text-slate-650 space-y-1 w-full bg-slate-50 p-2.5 rounded-xl border border-slate-200 leading-normal">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-0.5 border-t-2 border-dashed border-indigo-500 block" />
-              <span>Пунктир — Ваш текущий профиль</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2 rounded-sm bg-indigo-100 border border-indigo-400 block" />
-              <span>Сплошной — Оптимальный профиль</span>
+          <div className="w-full md:w-1/2 print:w-1/2 flex flex-col justify-center px-2 lg:px-6">
+            {/* Legend and Data Table for student clarity */}
+            <div className="text-xs lg:text-sm text-slate-650 w-full bg-slate-50 p-4 lg:p-6 rounded-xl border border-slate-200 leading-normal flex flex-col gap-4">
+              
+              <div className="space-y-2 border-b border-slate-200 pb-3">
+                <div className="flex items-center gap-3">
+                  <span className="w-4 h-0.5 border-t-2 border-dashed border-indigo-500 block" />
+                  <span className="font-medium text-slate-700">Пунктир — Ваш текущий профиль</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="w-4 h-3 rounded-sm bg-indigo-100 border border-indigo-400 block" />
+                  <span className="font-medium text-slate-700">Сплошной — Оптимальный профиль</span>
+                </div>
+              </div>
+
+              {/* Data Table */}
+              <div className="space-y-1.5 font-mono text-[10px] lg:text-xs">
+                <div className="grid grid-cols-3 font-bold text-slate-500 pb-1 border-b border-slate-100 uppercase text-[9px] tracking-wider">
+                  <span>Фактор TRUSEK</span>
+                  <span className="text-right">Тек. балл</span>
+                  <span className="text-right text-indigo-600">Оптим. балл</span>
+                </div>
+                {factorKeys.map(key => {
+                  const base = sub[key];
+                  const opt = key === 'T' ? optimT : key === 'U' ? optimU : key === 'R' ? optimR : key === 'S' ? optimS : key === 'E' ? optimE : optimK;
+                  
+                  return (
+                    <div key={key} className="grid grid-cols-3 items-center">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: factorColors[key] }} />
+                        {key}
+                      </span>
+                      <span className="text-right">{base.toFixed(1)}</span>
+                      <span className="text-right font-bold text-indigo-700 flex justify-end items-center gap-1">
+                        {opt.toFixed(1)}
+                        {opt > base && <span className="text-emerald-500 text-[10px]">↑</span>}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
             </div>
           </div>
         </div>
 
         {/* LTV/CAC VIABILITY DYNAMICS CHART (Combined Block Part 3) */}
-        <div className="lg:col-span-3 bg-white border border-indigo-100 rounded-2xl p-5 flex flex-col items-center justify-between relative overflow-hidden shadow-xs">
-          <span className="absolute top-3 left-3 text-[10px] font-bold text-slate-550 uppercase tracking-widest">
+        <div className="bg-white border border-indigo-100 rounded-2xl p-5 flex flex-col md:flex-row print:flex-row items-center justify-between relative overflow-hidden shadow-xs gap-6">
+          <span className="absolute top-3 left-3 text-[10px] font-bold text-slate-550 uppercase tracking-widest z-10">
             Динамика LTV/CAC & Жизнь
           </span>
 
-          <div className="w-full mt-6 space-y-3">
+          <div className="w-full md:w-2/3 print:w-2/3 mt-6 lg:mt-2 print:mt-2 space-y-3">
             {/* Real-time Indicator */}
             <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-200">
               <span className="text-[10px] text-slate-600 font-sans">Отношение LTV/CAC:</span>
@@ -915,125 +948,141 @@ export function StartupReserves({ data, resultsColor = '#6366f1' }: StartupReser
             </div>
           </div>
 
-          {/* Educational Legend */}
-          <div className="mt-2 text-[8px] text-slate-650 space-y-0.5 w-full bg-slate-50 p-2 rounded-xl border border-slate-200 leading-normal">
-            <span className="font-bold text-slate-800 block mb-0.5">🎓 Жизнеспособность:</span>
-            <div className="flex items-start gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-0.5" />
-              <span><strong>&gt; 3.0x (Зеленая зона)</strong> — Бизнес-модель устойчива.</span>
-            </div>
-            <div className="flex items-start gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 mt-0.5" />
-              <span><strong>&lt; 1.5x (Красная зона)</strong> — Сжигание капитала.</span>
+          <div className="w-full md:w-1/3 print:w-1/3 flex flex-col mt-4 md:mt-0 print:mt-0 px-2">
+            {/* Educational Legend */}
+            <div className="text-xs text-slate-650 space-y-2 w-full bg-slate-50 p-4 rounded-xl border border-slate-200 leading-normal h-full flex flex-col justify-center">
+              <span className="font-bold text-slate-800 block mb-1">🎓 Жизнеспособность:</span>
+              <div className="flex items-start gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1" />
+                <span><strong>&gt; 3.0x (Зеленая зона)</strong> — Бизнес-модель устойчива.</span>
+              </div>
+              <div className="flex items-start gap-2 mt-2">
+                <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0 mt-1" />
+                <span><strong>&lt; 1.5x (Красная зона)</strong> — Сжигание капитала.</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* RESERVES INDICATORS & ACTIONS MATRIX (Combined Block Part 4) */}
-        <div className="lg:col-span-3 bg-white border border-indigo-100 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-xs">
+        <div className="bg-white border border-indigo-100 rounded-2xl p-5 flex flex-col space-y-4 shadow-xs">
           
-          <div className="space-y-4">
-            <h4 className="font-display font-bold text-xs text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-indigo-700" />
-              <span>Показатели резервов</span>
-            </h4>
+          <h4 className="font-display font-bold text-xs text-indigo-900 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+            <Sparkles className="w-4 h-4 text-indigo-700" />
+            <span>Показатели резервов</span>
+          </h4>
 
-            {/* STUDENT EXPLANATION NOTE ON SIGNS (+/-) */}
-            <div className="bg-purple-50/55 border border-purple-100 rounded-xl p-3 text-[10px] text-slate-700 leading-normal">
-              <span className="font-bold text-amber-900 block mb-1">💡 Как понимать знаки для студентов:</span>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Знак <span className="font-bold text-rose-700 font-mono">-</span> означает <strong>сокращение (экономию)</strong> расходов.</li>
-                <li>Знак <span className="font-bold text-emerald-700 font-mono">+</span> означает <strong>дополнительный заработок</strong> благодаря LTV.</li>
-              </ul>
+          <div className="flex flex-col lg:flex-row print:flex-row gap-6">
+            
+            {/* Left Column: Legend + Large Indicators */}
+            <div className="w-full lg:w-1/3 print:w-1/3 flex flex-col justify-between gap-4">
+              {/* STUDENT EXPLANATION NOTE ON SIGNS (+/-) */}
+              <div className="bg-purple-50/55 border border-purple-100 rounded-xl p-3 text-[10px] lg:text-xs text-slate-700 leading-normal">
+                <span className="font-bold text-amber-900 block mb-1">💡 Как понимать знаки для студентов:</span>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Знак <span className="font-bold text-rose-700 font-mono">-</span> означает <strong>сокращение (экономию)</strong> расходов.</li>
+                  <li>Знак <span className="font-bold text-emerald-700 font-mono">+</span> означает <strong>дополнительный заработок</strong> благодаря LTV.</li>
+                </ul>
+              </div>
+
+              {/* LARGE INDICATORS GRID */}
+              <div className="grid grid-cols-2 gap-3 h-full">
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-center shadow-xs flex flex-col justify-center">
+                  <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-1">Эффект</span>
+                  <span className="block text-xl md:text-2xl font-black text-amber-700 font-mono tracking-tight">
+                    +{totalReservesReleased.toFixed(1)}M
+                  </span>
+                  <span className="block text-[10px] text-slate-550 mt-1">млн ₽ в год к марже</span>
+                </div>
+
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-center shadow-xs flex flex-col justify-center">
+                  <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-1">Рентабельность</span>
+                  <span className="block text-xl md:text-2xl font-black text-emerald-700 font-mono tracking-tight">
+                    +{currentProfitabilityIncrease.toFixed(1)}%
+                  </span>
+                  <span className="block text-[10px] text-emerald-700 font-bold mt-1">прирост маржи</span>
+                </div>
+              </div>
             </div>
 
-            {/* LARGE INDICATORS GRID */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200 text-center shadow-xs">
-                <span className="block text-[8px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Эффект</span>
-                <span className="block text-lg md:text-xl font-black text-amber-700 font-mono tracking-tight">
-                  +{totalReservesReleased.toFixed(1)}M
-                </span>
-                <span className="block text-[9px] text-slate-550 mt-0.5">млн ₽ в год к марже</span>
+            {/* Right Column: Breakdown Grid */}
+            <div className="w-full lg:w-2/3 print:w-2/3 flex flex-col gap-4">
+              {/* BREAKDOWN LIST WITH STUDENT EXPLANATIONS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 gap-4 text-xs font-mono">
+                {/* COGS Item */}
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-600 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-rose-500" />
+                        <span className="font-bold text-slate-700 text-[10px]">Сберегли COGS:</span>
+                      </span>
+                    </div>
+                    <span className="font-bold text-slate-800 text-lg block mb-2">-{cogsSaved.toFixed(1)}M ₽</span>
+                  </div>
+                  <p className="text-[10px] text-slate-650 font-sans leading-relaxed pt-2 border-t border-slate-200 mt-auto">
+                    <strong>COGS:</strong> Прямые расходы на производство. Оптимизируется по ТРИЗ.
+                  </p>
+                </div>
+
+                {/* CAC Item */}
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-600 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-500" />
+                        <span className="font-bold text-slate-700 text-[10px]">Сберегли CAC:</span>
+                      </span>
+                    </div>
+                    <span className="font-bold text-slate-800 text-lg block mb-2">-{cacSaved.toFixed(1)}M ₽</span>
+                  </div>
+                  <p className="text-[10px] text-slate-650 font-sans leading-relaxed pt-2 border-t border-slate-200 mt-auto">
+                    <strong>CAC:</strong> Затраты на получение 1 клиента. Снижается ростом конверсий.
+                  </p>
+                </div>
+
+                {/* OPEX Item */}
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-600 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-blue-500" />
+                        <span className="font-bold text-slate-700 text-[10px]">Сберегли OPEX:</span>
+                      </span>
+                    </div>
+                    <span className="font-bold text-slate-800 text-lg block mb-2">-{opexSaved.toFixed(1)}M ₽</span>
+                  </div>
+                  <p className="text-[10px] text-slate-650 font-sans leading-relaxed pt-2 border-t border-slate-200 mt-auto">
+                    <strong>OPEX:</strong> Постоянные затраты. Оптимизируется ИИ-ассистентами.
+                  </p>
+                </div>
+
+                {/* LTV Item */}
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-600 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="font-bold text-slate-700 text-[10px]">Рост LTV:</span>
+                      </span>
+                    </div>
+                    <span className="font-bold text-slate-800 text-lg block mb-2">+{premiumAdded.toFixed(1)}M ₽</span>
+                  </div>
+                  <p className="text-[10px] text-slate-650 font-sans leading-relaxed pt-2 border-t border-slate-200 mt-auto">
+                    <strong>LTV:</strong> Ценность клиента. Рост премиум-маржи за счет сервиса.
+                  </p>
+                </div>
               </div>
 
-              <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200 text-center shadow-xs">
-                <span className="block text-[8px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Рентабельность</span>
-                <span className="block text-lg md:text-xl font-black text-emerald-700 font-mono tracking-tight">
-                  +{currentProfitabilityIncrease.toFixed(1)}%
-                </span>
-                <span className="block text-[9px] text-emerald-700 font-bold mt-0.5">прирост маржи</span>
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 flex gap-2 items-center shadow-xs w-full">
+                <ShieldAlert className="w-5 h-5 text-purple-700 shrink-0" />
+                <div className="text-[10px] lg:text-xs leading-relaxed text-slate-700">
+                  <strong className="text-purple-900">Важное предупреждение:</strong> За созданием каждого резерва должны строго следовать компенсирующие мероприятия. Это исключит падение качества.
+                </div>
               </div>
             </div>
 
-            {/* BREAKDOWN LIST WITH STUDENT EXPLANATIONS */}
-            <div className="space-y-3 text-xs font-mono">
-              {/* COGS Item */}
-              <div className="border-b border-slate-200 pb-1.5">
-                <div className="flex justify-between items-center py-0.5">
-                  <span className="text-slate-600 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    <span className="font-bold text-slate-700">Сберегли COGS:</span>
-                  </span>
-                  <span className="font-bold text-slate-800">-{cogsSaved.toFixed(1)} млн ₽</span>
-                </div>
-                <p className="text-[9px] text-slate-650 font-sans leading-relaxed mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                  <strong>COGS:</strong> Прямые расходы на облака/производство. Оптимизируется по ТРИЗ.
-                </p>
-              </div>
-
-              {/* CAC Item */}
-              <div className="border-b border-slate-200 pb-1.5">
-                <div className="flex justify-between items-center py-0.5">
-                  <span className="text-slate-600 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span className="font-bold text-slate-700">Сберегли CAC:</span>
-                  </span>
-                  <span className="font-bold text-slate-800">-{cacSaved.toFixed(1)} млн ₽</span>
-                </div>
-                <p className="text-[9px] text-slate-650 font-sans leading-relaxed mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                  <strong>CAC:</strong> Затраты на получение 1 клиента. Снижается ростом конверсий.
-                </p>
-              </div>
-
-              {/* OPEX Item */}
-              <div className="border-b border-slate-200 pb-1.5">
-                <div className="flex justify-between items-center py-0.5">
-                  <span className="text-slate-600 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span className="font-bold text-slate-700">Сберегли OPEX:</span>
-                  </span>
-                  <span className="font-bold text-slate-800">-{opexSaved.toFixed(1)} млн ₽</span>
-                </div>
-                <p className="text-[9px] text-slate-650 font-sans leading-relaxed mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                  <strong>OPEX:</strong> Постоянные опер. затраты. Оптимизируется ИИ-ассистентами.
-                </p>
-              </div>
-
-              {/* LTV Item */}
-              <div className="pb-0.5">
-                <div className="flex justify-between items-center py-0.5">
-                  <span className="text-slate-600 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="font-bold text-slate-700">Получили от LTV:</span>
-                  </span>
-                  <span className="font-bold text-slate-800">+{premiumAdded.toFixed(1)} млн ₽</span>
-                </div>
-                <p className="text-[9px] text-slate-650 font-sans leading-relaxed mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                  <strong>LTV / Прайс-премиум:</strong> Ценность клиента за все время жизни.
-                </p>
-              </div>
-            </div>
           </div>
-
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-2.5 flex gap-2 items-start mt-2 shadow-xs">
-            <ShieldAlert className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
-            <div className="text-[9px] leading-relaxed text-slate-700">
-              <strong className="text-purple-900 block">Важное предупреждение:</strong>
-              За созданием каждого резерва должны строго следовать компенсирующие мероприятия. Это исключит падение качества.
-            </div>
-          </div>
-
         </div>
 
       </div>

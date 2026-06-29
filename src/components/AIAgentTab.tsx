@@ -575,6 +575,7 @@ export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAg
       name: startupName,
       author: authorName || 'Студент-предприниматель',
       expert: 'ИИ Агент SSI (TRUSEK-6)',
+      bizType: bizType,
       u1: subfactorsData.u1,
       u2: subfactorsData.u2,
       e1: subfactorsData.e1,
@@ -725,49 +726,67 @@ export function AIAgentTab({ onApplyData, onUpdatePartialData, showToast }: AIAg
             <p className="text-xs text-slate-500 mt-0.5">Выберите вид деятельности и внесите базовые сведения.</p>
           </div>
 
-          {/* Quick presets list */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Быстрые готовые шаблоны для теста:</label>
-            <div className="flex flex-wrap gap-2">
-              {PRESET_IDEAS.map(p => (
-                <button
-                  key={p.name}
-                  type="button"
-                  onClick={() => handleLoadPreset(p)}
-                  className="px-3 py-1.5 text-xs bg-white hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 text-slate-700 font-semibold rounded-xl border border-slate-200 transition-all shadow-3xs cursor-pointer"
-                >
-                  🚀 {p.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Business Type Selector Grid */}
-          <div className="space-y-2.5">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Тип вашей бизнес-модели:</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Business Type Selector Grid with Presets */}
+          <div className="space-y-3">
+            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Отраслевая модель и быстрый старт (ОКВЭД):</label>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {[
-                { id: 'saas', icon: '💻', title: 'IT / Платформы', desc: 'Web-платформы, эко-системы, цифровые сервисы и другое' },
-                { id: 'service', icon: '🤝', title: 'Новые Услуги', desc: 'БПЛА, туризм, СМИ, ресто-услуги, аудит, ремонт' },
-                { id: 'product', icon: '📦', title: 'Новая Продукция', desc: 'Пищевые изделия, лекарства, приборы, новые материалы' },
-                { id: 'work', icon: '🔧', title: 'Инженерия / Проекты', desc: 'Инженерные разработки, архитектура, проекты постройки' }
+                { 
+                  id: 'product', 
+                  icon: '🏭', 
+                  title: 'Производство (ОКВЭД 10-33)', 
+                  desc: 'Пищевые изделия, лекарства, приборы, новые материалы, инженерия',
+                  presets: PRESET_IDEAS.filter(p => p.type === 'product' || p.type === 'work')
+                },
+                { 
+                  id: 'saas', 
+                  icon: '💻', 
+                  title: 'IT / SaaS (ОКВЭД 62-63)', 
+                  desc: 'Web-платформы, эко-системы, цифровые сервисы и другое',
+                  presets: PRESET_IDEAS.filter(p => p.type === 'saas')
+                },
+                { 
+                  id: 'service', 
+                  icon: '🤝', 
+                  title: 'Услуги (ОКВЭД 55-56, 86-88)', 
+                  desc: 'БПЛА, туризм, СМИ, ресто-услуги, аудит, ремонт',
+                  presets: PRESET_IDEAS.filter(p => p.type === 'service')
+                },
               ].map(opt => (
                 <div 
                   key={opt.id}
-                  onClick={() => {
-                    setBizType(opt.id);
-                    // Adjust defaults for budget names depending on biz type
-                  }}
-                  className={`p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between h-36 ${
-                    bizType === opt.id 
-                      ? 'bg-purple-50/40 border-purple-500 shadow-xs' 
-                      : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                  className={`p-4 rounded-2xl border-2 transition-all duration-200 flex flex-col h-full ${
+                    bizType === opt.id || (bizType === 'work' && opt.id === 'product')
+                      ? 'bg-indigo-50/70 border-indigo-500 shadow-sm' 
+                      : 'bg-white border-slate-200 hover:border-indigo-300'
                   }`}
                 >
-                  <div className="text-3xl">{opt.icon}</div>
-                  <div>
-                    <span className="block font-bold text-xs text-slate-900 leading-none">{opt.title}</span>
-                    <span className="block text-[10px] text-slate-400 mt-1 leading-snug">{opt.desc}</span>
+                  <div 
+                    onClick={() => setBizType(opt.id)}
+                    className="cursor-pointer mb-4 flex flex-col sm:flex-row items-start gap-3"
+                  >
+                    <div className="text-3xl shrink-0 p-2 bg-white rounded-xl shadow-sm border border-slate-100">{opt.icon}</div>
+                    <div>
+                      <span className="block font-bold text-sm text-slate-900 leading-tight mb-1">{opt.title}</span>
+                      <span className="block text-[11px] text-slate-500 leading-snug">{opt.desc}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Presets for this type */}
+                  <div className="mt-auto pt-3 border-t border-slate-200/60">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 mb-2 block tracking-wider">Быстрые демо-данные:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {opt.presets.map(p => (
+                        <button
+                          key={p.name}
+                          type="button"
+                          onClick={() => { setBizType(opt.id); handleLoadPreset({...p, type: opt.id}); }}
+                          className="px-2.5 py-1 text-[11px] bg-white border border-slate-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 text-slate-700 font-semibold rounded-lg transition-all shadow-sm"
+                        >
+                          🚀 {p.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}

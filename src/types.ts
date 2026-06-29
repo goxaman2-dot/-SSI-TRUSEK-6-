@@ -3,6 +3,7 @@ export interface StartupData {
   author: string;
   expert?: string;
   supervisorApproved?: boolean;
+  bizType?: string;
   u1: number;
   u2: number;
   e1: number;

@@ -4,6 +4,7 @@ export const INITIAL_STARTUP_DATA: StartupData = {
   name: 'ИДЕИДВОРА.РФ',
   author: 'Студент',
   expert: 'Эксперт',
+  bizType: 'saas',
   u1: 180000,  // Разница стоимости ручного проектирования в архбюро (200 т.р.) и онлайн (20 т.р.) = 180 000 руб
   u2: 12,      // 12 эпизодов потребности в год у управляющей компании или товарищества ТСЖ
   e1: 45,      // 45 минут взаимодействия за сессию в умном онлайн-конструкторе
@@ -26,6 +27,7 @@ export const EMPTY_STARTUP_DATA: StartupData = {
   name: '',
   author: '',
   expert: '',
+  bizType: 'saas',
   u1: 0,
   u2: 1,
   e1: 0,
@@ -48,6 +50,7 @@ export const STUDENT_STARTUP_DATA: StartupData = {
   name: 'АгроПоиск — БПЛА мониторинг полей',
   author: 'Студент',
   expert: 'Эксперт',
+  bizType: 'service',
   u1: 45000,   // Стоимость альтернативы для клиента в рублях
   u2: 6,       // Эпизодов потребности в год
   e1: 20,      // Минут контакта с продуктом за сессию
@@ -123,9 +126,20 @@ export function calculateSubfactors(v: StartupData): Subfactors {
   };
 }
 
+export function getWeights(bizType?: string) {
+  if (bizType === 'product') {
+    return { U: 0.20, E: 0.10, R: 0.15, K: 0.25, T: 0.20, S: 0.10 };
+  } else if (bizType === 'service') {
+    return { U: 0.10, E: 0.25, R: 0.25, K: 0.10, T: 0.10, S: 0.20 };
+  }
+  // Default or saas
+  return { U: 0.15, E: 0.25, R: 0.20, K: 0.05, T: 0.15, S: 0.20 };
+}
+
 export function calculateResult(data: StartupData): CalculationResult {
   const sub = calculateSubfactors(data);
-  const rawSsi = 0.15 * sub.U + 0.20 * sub.E + 0.15 * sub.R + 0.15 * sub.K + 0.20 * sub.T + 0.15 * sub.S;
+  const w = getWeights(data.bizType);
+  const rawSsi = w.U * sub.U + w.E * sub.E + w.R * sub.R + w.K * sub.K + w.T * sub.T + w.S * sub.S;
 
   let mei = 1.0;
   const { tam, sam, som, tav } = data;

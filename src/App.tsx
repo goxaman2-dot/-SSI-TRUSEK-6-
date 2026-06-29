@@ -46,7 +46,8 @@ import {
   looksLikeSSIJson, 
   parseSSIJson,
   norm,
-  validateStartupData
+  validateStartupData,
+  getWeights
 } from './utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { AIAgentTab } from './components/AIAgentTab';
@@ -138,7 +139,7 @@ export default function App() {
 
   const isSupervisor = Boolean(user?.name?.includes('Мандрица') || user?.name?.includes('Ренат') || user?.name?.includes('Максим') || user?.name?.includes('Кузьменко') || user?.name?.includes('руководител'));
   
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'defense_schedule' | 'word_report' | 'calculator'>('calculator');
 
   const [data, setData] = useState<StartupData>(() => {
     try {
@@ -148,6 +149,8 @@ export default function App() {
       return { ...EMPTY_STARTUP_DATA };
     }
   });
+  
+  const w = getWeights(data.bizType);
   const [activeTab, setActiveTab] = useState<'anketa' | 'expert' | 'result' | 'compare' | 'agent'>(() => {
     try {
       const saved = localStorage.getItem('ssi_calculator_tab');
@@ -799,7 +802,10 @@ export default function App() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent pointer-events-none z-20"></div>
         <div className="absolute top-8 md:top-12 left-6 md:left-12 z-30">
            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white drop-shadow-lg tracking-tight">Технопарк СКФУ</h1>
-           <p className="text-indigo-100 md:text-xl lg:text-2xl font-bold mt-2 md:mt-3 opacity-95 drop-shadow-md tracking-wide">Лаборатория прединвестиционной экспресс-оценки стартапов</p>
+           <p className="text-indigo-100 text-xl md:text-3xl lg:text-4xl font-bold mt-2 md:mt-4 opacity-95 drop-shadow-md tracking-wide max-w-2xl leading-tight">
+             Лаборатория прединвестиционной<br />
+             экспресс-оценки стартапов
+           </p>
         </div>
         
         <div className="absolute top-6 right-6 md:top-10 md:right-12 z-30 bg-white/95 backdrop-blur-md border border-white/20 rounded-2xl p-5 flex flex-col shadow-2xl max-w-[300px]">
@@ -812,7 +818,7 @@ export default function App() {
                 <span className="font-extrabold text-slate-800 text-sm md:text-base tracking-tight">Navigator</span>
               </div>
               <span className="text-[10px] font-bold text-indigo-600 mt-1.5 uppercase tracking-wider">
-                стартапов v.2.0 2026
+                стартапов v.3.0 (ОКВЭД)
               </span>
             </div>
             <div className="flex-shrink-0 flex items-center justify-center bg-white p-1 rounded-xl border border-indigo-100/60 w-12 h-12 select-none shadow-sm">
@@ -1486,7 +1492,7 @@ export default function App() {
                   <div>
                     <h3 className="font-display font-bold text-lg text-indigo-900 flex items-center gap-1.5">
                       <span>U · Утилитарность</span>
-                      <span className="text-xs bg-indigo-100 text-indigo-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: 15%</span>
+                      <span className="text-xs bg-indigo-100 text-indigo-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: {Math.round(w.U * 100)}%</span>
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Фактор определяет силу реальной зависимости покупателя от вашего продукта (изделия, услуги, товара). Чем сильнее "боль" клиента без вашего решения, тем выше маркер фактора.</p>
                   </div>
@@ -1576,7 +1582,7 @@ export default function App() {
                   <div>
                     <h3 className="font-display font-bold text-lg text-amber-950 flex items-center gap-1.5">
                       <span>E · Эмоция</span>
-                      <span className="text-xs bg-amber-100 text-amber-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: 20%</span>
+                      <span className="text-xs bg-amber-100 text-amber-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: {Math.round(w.E * 100)}%</span>
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Определяет глубину эмоционального вовлечения клиента, преданности вашему продукту (изделию, услуге, товару) и готовность доплачивать премию за Ваш бренд.</p>
                   </div>
@@ -1667,7 +1673,7 @@ export default function App() {
                   <div>
                     <h3 className="font-display font-bold text-lg text-rose-950 flex items-center gap-1.5">
                       <span>R · Повторяемость</span>
-                      <span className="text-xs bg-rose-100 text-rose-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: 15%</span>
+                      <span className="text-xs bg-rose-100 text-rose-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: {Math.round(w.R * 100)}%</span>
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Отражает уровень удержания клиентов вашей фокус-группы, частоту регулярных покупок ими вашего изделия (услуги, работ, товара), что формирует жизнеспособность финансовой пропорции LTV/CAC (LTV, Lifetime Value — пожизненная ценность клиента / CAC, Customer Acquisition Cost — стоимость привлечения клиента).</p>
                   </div>
@@ -1758,7 +1764,7 @@ export default function App() {
                   <div>
                     <h3 className="font-display font-bold text-lg text-emerald-950 flex items-center gap-1.5">
                       <span>K · Капитал</span>
-                      <span className="text-xs bg-emerald-100 text-emerald-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: 15%</span>
+                      <span className="text-xs bg-emerald-100 text-emerald-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: {Math.round(w.K * 100)}%</span>
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Определяет объем требуемых капитальных инвестиций (CAPEX, Capital Expenditure — капитальные расходы) на запуск Вашего проекта и уровень маржинальности Ваших бизнес-процессов.</p>
                   </div>
@@ -1848,7 +1854,7 @@ export default function App() {
                   <div>
                     <h3 className="font-display font-bold text-lg text-purple-950 flex items-center gap-1.5">
                       <span>T · Время окупаемости</span>
-                      <span className="text-xs bg-purple-100 text-purple-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: 20%</span>
+                      <span className="text-xs bg-purple-100 text-purple-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: {Math.round(w.T * 100)}%</span>
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Оценивает скорость разгона вашего проекта до нормы прибыли выше чем у конкурентов и общий срок возврата (окупаемости) стартового первоначального капитала.</p>
                   </div>
@@ -1938,7 +1944,7 @@ export default function App() {
                   <div>
                     <h3 className="font-display font-bold text-lg text-teal-950 flex items-center gap-1.5">
                       <span>S · Социальный</span>
-                      <span className="text-xs bg-teal-100 text-teal-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: 15%</span>
+                      <span className="text-xs bg-teal-100 text-teal-800 font-mono px-2 py-0.5 rounded">весовой коэффициент: {Math.round(w.S * 100)}%</span>
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Фактор оценивает силу &quot;сарафанного маркетинга&quot; как реакция на ваш продукт (услугу, изделие, товар), некую самоспособность органически (естественно) распространяться и общий уровень удовлетворенности клиентов (NPS) вашим изделием (продукцией, услугой, работой).</p>
                   </div>
