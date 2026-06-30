@@ -18,7 +18,8 @@ import {
   Flower2,
   Rocket,
   CheckCircle,
-  Calendar
+  Calendar,
+  Archive
 } from 'lucide-react';
 import { MiniLily } from './MiniLily';
 import { Subfactors } from '../utils';
@@ -27,7 +28,7 @@ interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   calcTab: string;
-  setCalcTab: (tab: 'anketa' | 'expert' | 'result' | 'compare' | 'agent') => void;
+  setCalcTab: (tab: 'anketa' | 'expert' | 'result' | 'compare' | 'agent' | 'archive_student' | 'archive_supervisor') => void;
   onOpenConsent: () => void;
   onLogout: () => void;
   user: { name: string; email: string; phone: string };
@@ -46,8 +47,10 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenCo
       title: 'КАБИНЕТЫ ПРОЕКТОВ',
       items: [
         { id: 'dashboard', label: 'Рабочий стол студента', icon: LayoutDashboard, color: 'text-emerald-600' },
+        { id: 'archive_student', label: 'Архив анкет (Студент)', icon: Archive, color: 'text-emerald-500' },
         { id: 'word_report', label: 'Отчет по стартапу Word', icon: FileText, color: 'text-blue-500' },
         { id: 'supervisor', label: 'Научный руководитель', icon: FileEdit, color: 'text-blue-600' },
+        { id: 'archive_supervisor', label: 'Архив анкет (Руководитель)', icon: Archive, color: 'text-blue-500' },
       ]
     },
     {
@@ -61,9 +64,10 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenCo
       ]
     },
     {
-      title: 'ТЕХНОПАРК СКФУ',
+      title: 'ТЕХНОПАРК СКФУ (для служебного пользования)',
       items: [
         { id: 'applications', label: 'База заявок', icon: FolderOpen, color: 'text-amber-500' },
+        { id: 'applications_new', label: 'Архив заявок 2026-2027 учеб. года', icon: Archive, color: 'text-amber-600' },
         { id: 'park_status', label: 'Статусы (Экспертиза)', icon: LayoutDashboard, color: 'text-indigo-600' },
         { id: 'defense_schedule', label: 'График защит (Бизнес СК)', icon: Calendar, color: 'text-teal-600' },
         { id: 'park_stats', label: 'Сводка и KPI', icon: FileText, color: 'text-slate-500' },

@@ -22,6 +22,14 @@ export interface StartupData {
   tav: number;
 }
 
+export interface ArchivedRecord {
+  id: string;
+  name: string;
+  date: string; // ISO string
+  type: 'student' | 'supervisor';
+  data: StartupData;
+}
+
 export interface FactorInterpretation {
   key: keyof Subfactors;
   name: string;

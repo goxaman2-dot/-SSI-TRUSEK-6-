@@ -32,9 +32,10 @@ import {
   Presentation,
   ArrowLeft,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  Archive
 } from 'lucide-react';
-import { StartupData, Subfactors, CalculationResult, DataWarning } from './types';
+import { StartupData, Subfactors, CalculationResult, DataWarning, ArchivedRecord } from './types';
 import { 
   INITIAL_STARTUP_DATA, 
   EMPTY_STARTUP_DATA, 
@@ -56,6 +57,7 @@ import { StartupReserves } from './components/StartupReserves';
 import { SalesRealismValidator } from './components/SalesRealismValidator';
 import { AuthPortal } from './components/AuthPortal';
 import { Sidebar } from './components/Sidebar';
+import { ArchiveView } from './components/ArchiveView';
 import { ApplicationsView } from './components/ApplicationsView';
 import { DefenseScheduleView } from './components/DefenseScheduleView';
 import { WordReportView } from './components/WordReportView';
@@ -139,7 +141,7 @@ export default function App() {
 
   const isSupervisor = Boolean(user?.name?.includes('Мандрица') || user?.name?.includes('Ренат') || user?.name?.includes('Максим') || user?.name?.includes('Кузьменко') || user?.name?.includes('руководител'));
   
-  const [currentView, setCurrentView] = useState<'dashboard' | 'defense_schedule' | 'word_report' | 'calculator'>('calculator');
+  const [currentView, setCurrentView] = useState<string>('calculator');
 
   const [data, setData] = useState<StartupData>(() => {
     try {
@@ -178,6 +180,28 @@ export default function App() {
       return null;
     }
   });
+
+  const [studentArchive, setStudentArchive] = useState<ArchivedRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('ssi_archive_student');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  const [supervisorArchive, setSupervisorArchive] = useState<ArchivedRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('ssi_archive_supervisor');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('ssi_archive_student', JSON.stringify(studentArchive));
+  }, [studentArchive]);
+
+  useEffect(() => {
+    localStorage.setItem('ssi_archive_supervisor', JSON.stringify(supervisorArchive));
+  }, [supervisorArchive]);
 
   // Save changes to localStorage for comparison
   useEffect(() => {
@@ -427,6 +451,26 @@ export default function App() {
     } catch {
       showToast('❌ Не удалось сгенерировать JSON файл', 'error');
     }
+  };
+
+  const saveToArchive = () => {
+    if (!data.name || data.name === 'Безымянный стартап') {
+      showToast('❌ Заполните название стартапа перед сохранением', 'error');
+      return;
+    }
+    const newRecord: ArchivedRecord = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+      name: data.name,
+      date: new Date().toISOString(),
+      type: isSupervisor ? 'supervisor' : 'student',
+      data: { ...data }
+    };
+    if (isSupervisor) {
+      setSupervisorArchive(prev => [newRecord, ...prev]);
+    } else {
+      setStudentArchive(prev => [newRecord, ...prev]);
+    }
+    showToast('💾 Анкета успешно сохранена в архив', 'success');
   };
 
   const handlePrint = () => {
@@ -883,12 +927,83 @@ export default function App() {
           <ApplicationsView onNewApplication={() => { setCurrentView('calculator'); setActiveTab('agent'); }} />
         )}
 
+        {currentView === 'applications_new' && (
+          <ArchiveView 
+            title="Архив заявок 2026-2027 учеб. года"
+            archives={[...studentArchive, ...supervisorArchive].filter(r => new Date(r.date).getFullYear() >= 2026)}
+            onLoad={(archivedData) => {
+              setData(archivedData);
+              setCurrentView('calculator');
+              setActiveTab('anketa');
+              showToast('✅ Анкета успешно загружена', 'success');
+            }}
+            onDelete={(id) => {
+              setStudentArchive(prev => prev.filter(r => r.id !== id));
+              setSupervisorArchive(prev => prev.filter(r => r.id !== id));
+              showToast('🗑️ Анкета удалена из архива', 'info');
+            }}
+            actions={
+              <button 
+                onClick={() => {
+                  const dataStr = JSON.stringify({ studentArchive, supervisorArchive }, null, 2);
+                  const blob = new Blob([dataStr], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `backup_anketi_${new Date().toISOString().split('T')[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  showToast('💾 Бэкап успешно выгружен', 'success');
+                }}
+                className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-semibold text-sm hover:bg-indigo-100 transition-colors flex items-center gap-2 border border-indigo-200"
+              >
+                <Download className="w-4 h-4" />
+                Создать backup - выгрузить базу анкет json анкет
+              </button>
+            }
+          />
+        )}
+
         {currentView === 'defense_schedule' && (
           <DefenseScheduleView />
         )}
 
         {currentView === 'word_report' && (
           <WordReportView data={data} ssiScore={calculateResult(data).finalSsi} />
+        )}
+
+        {currentView === 'archive_student' && (
+          <ArchiveView 
+            title="Архив анкет (Студент)"
+            archives={studentArchive}
+            onLoad={(archivedData) => {
+              setData(archivedData);
+              setCurrentView('calculator');
+              setActiveTab('anketa');
+              showToast('✅ Анкета студента успешно загружена', 'success');
+            }}
+            onDelete={(id) => {
+              setStudentArchive(prev => prev.filter(r => r.id !== id));
+              showToast('🗑️ Анкета удалена из архива', 'info');
+            }}
+          />
+        )}
+
+        {currentView === 'archive_supervisor' && (
+          <ArchiveView 
+            title="Архив анкет (Руководитель)"
+            archives={supervisorArchive}
+            onLoad={(archivedData) => {
+              setData(archivedData);
+              setCurrentView('calculator');
+              setActiveTab('expert');
+              showToast('✅ Анкета руководителя успешно загружена', 'success');
+            }}
+            onDelete={(id) => {
+              setSupervisorArchive(prev => prev.filter(r => r.id !== id));
+              showToast('🗑️ Анкета удалена из архива', 'info');
+            }}
+          />
         )}
 
         {currentView === 'dashboard' && (
@@ -916,15 +1031,15 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Мои активные проекты</h3>
-                <p className="text-4xl font-black text-indigo-600">2</p>
+                <p className="text-4xl font-black text-indigo-600">0</p>
               </div>
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">На доработке</h3>
-                <p className="text-4xl font-black text-amber-500">1</p>
+                <p className="text-4xl font-black text-amber-500">0</p>
               </div>
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Средний индекс SSI</h3>
-                <p className="text-4xl font-black text-emerald-600">76%</p>
+                <p className="text-4xl font-black text-emerald-600">0%</p>
               </div>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
@@ -944,16 +1059,18 @@ export default function App() {
                     className="appearance-none pl-10 pr-10 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer shadow-sm hover:bg-emerald-100 transition-colors"
                     defaultValue=""
                     onChange={(e) => {
-                      if (e.target.value) {
-                        setData({ ...STUDENT_STARTUP_DATA, name: e.target.options[e.target.selectedIndex].text });
-                        setNotification({ message: 'Заявка загружена на проверку', type: 'success' });
+                      const val = e.target.value;
+                      if (val === 'student') {
+                        setCurrentView('archive_student');
+                      } else if (val === 'supervisor') {
+                        setCurrentView('archive_supervisor');
                       }
+                      e.target.value = "";
                     }}
                   >
                     <option value="" disabled hidden>{data?.name?.trim() ? data.name : "Выбрать стартап на проверку"}</option>
-                    <option value="app1">Нейросеть для медиков (Иванов А.А.)</option>
-                    <option value="app2">Платформа доставки дронами (Петров В.И.)</option>
-                    <option value="app3">Агро-трекер (Сидорова М.В.)</option>
+                    <option value="student">Стартап студента</option>
+                    <option value="supervisor">Стартап правка руководителя</option>
                   </select>
                   <Rocket className="w-4 h-4 text-emerald-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <ChevronDown className="w-4 h-4 text-emerald-600 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -974,15 +1091,15 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Проекты моих студентов</h3>
-                <p className="text-4xl font-black text-emerald-600">12</p>
+                <p className="text-4xl font-black text-emerald-600">0</p>
               </div>
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">На проверке</h3>
-                <p className="text-4xl font-black text-amber-500">5</p>
+                <p className="text-4xl font-black text-amber-500">0</p>
               </div>
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Допущено к защите</h3>
-                <p className="text-4xl font-black text-indigo-600">7</p>
+                <p className="text-4xl font-black text-indigo-600">0</p>
               </div>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
@@ -1089,153 +1206,165 @@ export default function App() {
 
         {/* WORKSPACE HEADER INSIDE CALCULATOR */}
         <div className="container max-w-6xl mx-auto px-4 mt-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setCurrentView(isSupervisor ? 'supervisor' : 'dashboard')}
-                className="p-2.5 bg-yellow-400 border border-yellow-500 rounded-xl text-yellow-900 hover:bg-yellow-500 transition-colors animate-pulse shadow-[0_0_15px_rgba(250,204,21,0.6)]"
-                title="Вернуться назад"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
+          {activeTab === 'compare' ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-slate-800">
-                Заполнение анкеты стартапа
+                Сравнение проектов бизнес-идей
               </h2>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className={`px-4 py-2 ${isSupervisor ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'} border rounded-xl text-sm font-semibold flex items-center gap-2`}>
-                <Rocket className="w-4 h-4" />
-                {isSupervisor ? 'Проверяемый стартап:' : 'Текущий стартап:'} {data?.name?.trim() ? data.name : "Готов к вводу данных"}
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setCurrentView(isSupervisor ? 'supervisor' : 'dashboard')}
+                  className="p-2.5 bg-yellow-400 border border-yellow-500 rounded-xl text-yellow-900 hover:bg-yellow-500 transition-colors animate-pulse shadow-[0_0_15px_rgba(250,204,21,0.6)]"
+                  title="Вернуться назад"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h2 className="text-xl md:text-2xl font-bold text-slate-800">
+                  Заполнение анкеты стартапа
+                </h2>
               </div>
-              <button
-                onClick={() => {
-                  setData({ ...EMPTY_STARTUP_DATA });
-                  setNotification({ message: 'Данные стартапа очищены', type: 'success' });
-                }}
-                className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 hover:bg-rose-100 text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer"
-                title="Очистить данные анкеты"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Очистить анкету</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className={`px-4 py-2 ${isSupervisor ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'} border rounded-xl text-sm font-semibold flex items-center gap-2`}>
+                  <Rocket className="w-4 h-4" />
+                  {isSupervisor ? 'Проверяемый стартап:' : 'Текущий стартап:'} {data?.name?.trim() ? data.name : "Готов к вводу данных"}
+                </div>
+                <button
+                  onClick={() => {
+                    setData({ ...EMPTY_STARTUP_DATA });
+                    setNotification({ message: 'Данные стартапа очищены', type: 'success' });
+                  }}
+                  className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 hover:bg-rose-100 text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer"
+                  title="Очистить данные анкеты"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Очистить анкету</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* QUICK ACTION BUTTONS */}
-        <div id="calc-tabs" className="mb-6 print:hidden">
-          {/* Quick preset buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/50">
-            <span className="text-[11px] text-slate-500 font-semibold pl-1">
-              🛠️ Быстрые команды управления:
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={handleValidateData}
-                className={`px-3.5 py-2 text-xs border rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
-                  validationWarnings.length > 0 && showValidationResults
-                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300'
-                    : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600'
-                }`}
-                title="Проверить введенные данные анкеты стартапа на логические ошибки"
-              >
-                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                <span>ПРОВЕРИТЬ данные</span>
-                {validationWarnings.length > 0 && (
-                  <span className="bg-red-650 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-full">
-                    {validationWarnings.length}
-                  </span>
-                )}
-              </button>
+        {activeTab !== 'compare' && (
+          <div id="calc-tabs" className="mb-6 print:hidden">
+            {/* Quick preset buttons */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/50">
+              <span className="text-[11px] text-slate-500 font-semibold pl-1">
+                🛠️ Быстрые команды управления:
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleValidateData}
+                  className={`px-3.5 py-2 text-xs border rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                    validationWarnings.length > 0 && showValidationResults
+                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300'
+                      : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600'
+                  }`}
+                  title="Проверить введенные данные анкеты стартапа на логические ошибки"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>ПРОВЕРИТЬ данные</span>
+                  {validationWarnings.length > 0 && (
+                    <span className="bg-red-650 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-full">
+                      {validationWarnings.length}
+                    </span>
+                  )}
+                </button>
 
-              <button
-                type="button"
-                onClick={loadPresetDemo}
-                className="px-3.5 py-2 text-xs bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-                title="Загрузить полностью заготовленные демонстрационные данные"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-slate-500 animate-spin-slow" />
-                <span>Загрузить демостартап</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-3.5 py-2 text-xs bg-white border border-slate-200 rounded-xl hover:bg-rose-50 hover:border-rose-200 text-slate-600 hover:text-rose-700 font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-                title="Сбросить все показатели анкеты"
-              >
-                <Trash2 className="w-3.5 h-3.5 text-slate-400" />
-                <span>Очистить</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={loadPresetDemo}
+                  className="px-3.5 py-2 text-xs bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  title="Загрузить полностью заготовленные демонстрационные данные"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500 animate-spin-slow" />
+                  <span>Загрузить демостартап</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="px-3.5 py-2 text-xs bg-white border border-slate-200 rounded-xl hover:bg-rose-50 hover:border-rose-200 text-slate-600 hover:text-rose-700 font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  title="Сбросить все показатели анкеты"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Очистить</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* CONTAINER CARD FOR VIEWS */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-md p-6 md:p-8">
           
           {/* Dynamic Active Startup Banner (Глазами смотрящего) */}
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 mb-6 border border-indigo-500/20 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5 print:hidden">
-            <div className="absolute right-0 top-0 w-80 h-80 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
-            <div className="flex items-center gap-3.5 z-10">
-              <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-400/25 flex items-center justify-center text-indigo-300 shrink-0 shadow-inner print:hidden">
-                {activeTab === 'agent' && <Bot className="w-5 h-5 text-purple-350 animate-pulse" />}
-                {activeTab === 'anketa' && <Info className="w-5 h-5 text-indigo-350" />}
-                {activeTab === 'expert' && <Sparkles className="w-5 h-5 text-yellow-350" />}
-                {activeTab === 'result' && <span className="text-lg">🌸</span>}
-                {activeTab === 'compare' && <Scale className="w-5 h-5 text-amber-300" />}
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider print:border-slate-400 print:text-black print:bg-none">
-                    {blockNames[activeTab] || 'Калькулятор'}
-                  </span>
-                  {data.name === 'Умный Сенсорный Сад' ? (
-                    <span className="text-[10px] bg-amber-500/20 border border-amber-400/30 text-amber-300 font-bold px-2 py-0.5 rounded-full print:border-slate-400 print:text-black print:bg-none">
-                      🌱 Активен демо-стартап СКФУ
-                    </span>
-                  ) : data.name ? (
-                    <span className="text-[10px] bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-bold px-2 py-0.5 rounded-full print:border-slate-400 print:text-black print:bg-none">
-                      🚀 Пользовательский проект
-                    </span>
-                  ) : (
-                    <span className="text-[10px] bg-rose-500/20 border border-rose-400/30 text-rose-300 font-bold px-2 py-0.5 rounded-full animate-pulse print:hidden">
-                      ⚠️ Ожидание названия проекта
-                    </span>
-                  )}
+          {activeTab !== 'compare' && (
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 mb-6 border border-indigo-500/20 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5 print:hidden">
+              <div className="absolute right-0 top-0 w-80 h-80 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
+              <div className="flex items-center gap-3.5 z-10">
+                <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-400/25 flex items-center justify-center text-indigo-300 shrink-0 shadow-inner print:hidden">
+                  {activeTab === 'agent' && <Bot className="w-5 h-5 text-purple-350 animate-pulse" />}
+                  {activeTab === 'anketa' && <Info className="w-5 h-5 text-indigo-350" />}
+                  {activeTab === 'expert' && <Sparkles className="w-5 h-5 text-yellow-350" />}
+                  {activeTab === 'result' && <span className="text-lg">🌸</span>}
+                  {activeTab === 'compare' && <Scale className="w-5 h-5 text-amber-300" />}
                 </div>
-                <h2 className="font-display font-black text-base md:text-lg text-white mt-1 leading-tight flex items-center gap-2 print:text-black">
-                  <span>Проект:</span>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-indigo-250 to-emerald-200 underline decoration-indigo-400 decoration-wavy decoration-1 underline-offset-4 print:text-black print:no-underline">
-                    «{data.name || 'Безымянный стартап'}»
-                  </span>
-                </h2>
-                <p className="text-slate-350 text-xs mt-1 print:text-slate-700">
-                  👤 Разработчик: <strong className="text-white font-semibold print:text-black">{data.author || 'Студент СКФУ'}</strong>
-                  {data.expert ? (
-                    <> | 🔬 Ментор-наставник: <strong className="text-white font-semibold print:text-black">{data.expert}</strong></>
-                  ) : null}
-                </p>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider print:border-slate-400 print:text-black print:bg-none">
+                      {blockNames[activeTab] || 'Калькулятор'}
+                    </span>
+                    {data.name === 'Умный Сенсорный Сад' ? (
+                      <span className="text-[10px] bg-amber-500/20 border border-amber-400/30 text-amber-300 font-bold px-2 py-0.5 rounded-full print:border-slate-400 print:text-black print:bg-none">
+                        🌱 Активен демо-стартап СКФУ
+                      </span>
+                    ) : data.name ? (
+                      <span className="text-[10px] bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-bold px-2 py-0.5 rounded-full print:border-slate-400 print:text-black print:bg-none">
+                        🚀 Пользовательский проект
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-rose-500/20 border border-rose-400/30 text-rose-300 font-bold px-2 py-0.5 rounded-full animate-pulse print:hidden">
+                        ⚠️ Ожидание названия проекта
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="font-display font-black text-base md:text-lg text-white mt-1 leading-tight flex items-center gap-2 print:text-black">
+                    <span>Проект:</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-indigo-250 to-emerald-200 underline decoration-indigo-400 decoration-wavy decoration-1 underline-offset-4 print:text-black print:no-underline">
+                      «{data.name || 'Безымянный стартап'}»
+                    </span>
+                  </h2>
+                  <p className="text-slate-350 text-xs mt-1 print:text-slate-700">
+                    👤 Разработчик: <strong className="text-white font-semibold print:text-black">{data.author || 'Студент СКФУ'}</strong>
+                    {data.expert ? (
+                      <> | 🔬 Ментор-наставник: <strong className="text-white font-semibold print:text-black">{data.expert}</strong></>
+                    ) : null}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-3 rounded-xl self-start md:self-auto shrink-0 z-10 backdrop-blur-md print:bg-none print:border-slate-300 print:text-black">
-              <div className="text-center">
-                <div className="text-[9px] uppercase tracking-widest text-slate-400 font-bold print:text-slate-650">Индекс SSI</div>
-                <div className="text-2xl font-black font-mono text-emerald-400 leading-none mt-1 print:text-black">
-                  {results.finalSsi.toFixed(2)}
+              <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-3 rounded-xl self-start md:self-auto shrink-0 z-10 backdrop-blur-md print:bg-none print:border-slate-300 print:text-black">
+                <div className="text-center">
+                  <div className="text-[9px] uppercase tracking-widest text-slate-400 font-bold print:text-slate-650">Индекс SSI</div>
+                  <div className="text-2xl font-black font-mono text-emerald-400 leading-none mt-1 print:text-black">
+                    {results.finalSsi.toFixed(2)}
+                  </div>
                 </div>
-              </div>
-              <div className="h-8 w-px bg-white/10 print:bg-slate-300" />
-              <div className="text-left">
-                <div className="text-[9px] uppercase tracking-widest text-slate-400 font-bold print:text-slate-650">Устойчивость</div>
-                <div className="text-xs font-black text-slate-100 mt-1 leading-tight max-w-[155px] truncate print:text-black" title={results.interpretation.split('—')[0]}>
-                  {results.interpretation.split('—')[0]}
+                <div className="h-8 w-px bg-white/10 print:bg-slate-300" />
+                <div className="text-left">
+                  <div className="text-[9px] uppercase tracking-widest text-slate-400 font-bold print:text-slate-650">Устойчивость</div>
+                  <div className="text-xs font-black text-slate-100 mt-1 leading-tight max-w-[155px] truncate print:text-black" title={results.interpretation.split('—')[0]}>
+                    {results.interpretation.split('—')[0]}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* 🎓 Interactive Student Guides for each Active Step */}
           <div className="mb-6 print:hidden">
@@ -1325,9 +1454,9 @@ export default function App() {
                       Здесь вы можете наглядно сравнить сильные и слабые стороны двух разных проектов или вариантов развития одного бизнеса:
                     </p>
                     <ul className="list-disc pl-5 mt-2 space-y-1 text-amber-900/90 font-normal">
-                      <li><strong className="text-amber-950 font-bold">Как загрузить Стартап А:</strong> Вернитесь на Шаг 2, настройте ваши цифры и нажмите кнопку <strong className="text-amber-950 font-bold">«Зафиксировать текущий проект как Стартап А»</strong> ниже.</li>
-                      <li><strong className="text-amber-950 font-bold">Как загрузить Стартап Б:</strong> Измените показатели в калькуляторе (например, загрузите демо-проект или введите другие цифры) и нажмите кнопку <strong className="text-amber-950 font-bold">«Зафиксировать как Стартап Б»</strong>.</li>
-                      <li><strong className="text-amber-950 font-bold">Интерактивная аналитика:</strong> Наша система сравнит 12 подфакторов проектов и автоматически выведет цветного победителя в каждом раунде!</li>
+                      <li><strong className="text-amber-950 font-bold">Выбор стартапов:</strong> Загрузите сохраненные проекты из Архива (студента или руководителя), импортируйте JSON-файлы, используйте текущую анкету из калькулятора или загрузите демо-версии.</li>
+                      <li><strong className="text-amber-950 font-bold">Интерактивная аналитика:</strong> Система сравнит 12 подфакторов проектов и автоматически выведет цветного победителя по шкале от 0 до 10 в каждом факторе TRUSEK-6.</li>
+                      <li><strong className="text-amber-950 font-bold">Бюджетная эффективность (BEI):</strong> Оценка окупаемости гранта для бюджета через расчет налоговых поступлений, точки безубыточности и созданных рабочих мест для экспертной комиссии!</li>
                     </ul>
                   </div>
                 </div>
@@ -2114,7 +2243,7 @@ export default function App() {
 
               {/* ACTIONS BOTTOM BLOCK */}
               <div className="flex flex-wrap items-center justify-between border-t border-slate-100 pt-6 gap-4">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={exportToJsonFile}
@@ -2122,6 +2251,14 @@ export default function App() {
                   >
                     <FileJson className="w-4 h-4 text-slate-500" />
                     <span>Скачать текущую рабочую версию стартапа JSON</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveToArchive}
+                    className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 text-emerald-700 px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center gap-2"
+                  >
+                    <Archive className="w-4 h-4 text-emerald-600" />
+                    <span>В архив</span>
                   </button>
                   <button
                     type="button"
@@ -2940,6 +3077,15 @@ export default function App() {
 
                 <button
                   type="button"
+                  onClick={saveToArchive}
+                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-4 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5 border border-emerald-200/50"
+                >
+                  <Archive className="w-4 h-4 text-emerald-500" />
+                  <span>В архив</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => {
                     setActiveTab('anketa');
                     showToast('📝 Переход на страницу редактирования анкеты', 'info');
@@ -2974,22 +3120,6 @@ export default function App() {
             return (
               <div className="space-y-8 print:space-y-4">
                 
-                {/* HEADER EXPLANATORY CARD */}
-                <div className="bg-gradient-to-r from-indigo-900 to-indigo-950 text-white rounded-3xl p-6 shadow-lg border border-slate-800 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-                  <div className="relative z-10 animate-fade-in">
-                    <span className="bg-amber-400 text-slate-950 text-[10px] font-black tracking-widest uppercase py-1 px-3 rounded-full">
-                      Модуль аналитического сравнения моделей
-                    </span>
-                    <h2 className="font-display font-black text-2xl md:text-3xl mt-3 tracking-tight">
-                      Сравнение двух стартапов (А и Б)
-                    </h2>
-                    <p className="text-xs md:text-sm text-indigo-150 mt-2 max-w-3xl leading-relaxed font-light">
-                      Загрузите два файла сохраненных анкет стартапа <code className="text-amber-100 font-mono">.json</code>, чтобы сравнить их сильные и слабые стороны, финальные индексы SSI и форму лепестков лилии. Вы также можете перенести ваши текущие рабочие данные анкеты в качестве одного из сравниваемых образцов!
-                    </p>
-                  </div>
-                </div>
-
                 {/* TWO COLUMNS LOADING GRID */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   
@@ -3030,6 +3160,28 @@ export default function App() {
                                 onChange={handleCompareAImport} 
                               />
                             </label>
+
+                            {(isSupervisor ? supervisorArchive : studentArchive).length > 0 && (
+                              <select 
+                                className="w-full bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition-all outline-none focus:border-indigo-500"
+                                onChange={(e) => {
+                                  const id = e.target.value;
+                                  if (!id) return;
+                                  const record = (isSupervisor ? supervisorArchive : studentArchive).find(r => r.id === id);
+                                  if (record) {
+                                    setCompareA(record.data);
+                                    showToast('✅ Анкета А загружена из архива!', 'success');
+                                  }
+                                  e.target.value = "";
+                                }}
+                              >
+                                <option value="">⬇️ Загрузить из архива А</option>
+                                {(isSupervisor ? supervisorArchive : studentArchive).map(r => (
+                                  <option key={r.id} value={r.id}>{r.name} ({new Date(r.date).toLocaleDateString()})</option>
+                                ))}
+                              </select>
+                            )}
+
                             <button 
                               type="button"
                               onClick={() => {
@@ -3115,6 +3267,28 @@ export default function App() {
                                 onChange={handleCompareBImport} 
                               />
                             </label>
+
+                            {(isSupervisor ? supervisorArchive : studentArchive).length > 0 && (
+                              <select 
+                                className="w-full bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition-all outline-none focus:border-emerald-500"
+                                onChange={(e) => {
+                                  const id = e.target.value;
+                                  if (!id) return;
+                                  const record = (isSupervisor ? supervisorArchive : studentArchive).find(r => r.id === id);
+                                  if (record) {
+                                    setCompareB(record.data);
+                                    showToast('✅ Анкета Б загружена из архива!', 'success');
+                                  }
+                                  e.target.value = "";
+                                }}
+                              >
+                                <option value="">⬇️ Загрузить из архива Б</option>
+                                {(isSupervisor ? supervisorArchive : studentArchive).map(r => (
+                                  <option key={r.id} value={r.id}>{r.name} ({new Date(r.date).toLocaleDateString()})</option>
+                                ))}
+                              </select>
+                            )}
+
                             <button 
                               type="button"
                               onClick={() => {
@@ -3175,11 +3349,21 @@ export default function App() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center justify-center max-w-4xl mx-auto">
                       {/* Flower A */}
-                      <div className="flex flex-col items-center">
+                      <div className="flex flex-col items-center relative">
                         <div className="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full mb-3 uppercase tracking-wider max-w-[260px] truncate">
                           {compareA ? compareA.name : 'Стартап А не выбран'}
                         </div>
                         
+                        {compareA && (
+                          <div className="absolute top-10 -left-4 md:-left-8 z-20 shadow-md rounded-lg overflow-hidden border border-slate-200">
+                             {(compareA.expert || compareA.supervisorApproved) ? (
+                                 <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase px-2.5 py-1.5 flex items-center gap-1.5"><Microscope className="w-3.5 h-3.5"/> Экспертная корректировка</span>
+                             ) : (
+                                 <span className="bg-purple-100 text-purple-900 text-[10px] font-black uppercase px-2.5 py-1.5 flex items-center gap-1.5"><Bot className="w-3.5 h-3.5"/> Базовая ИИ-модель</span>
+                             )}
+                          </div>
+                        )}
+
                         <div className="w-full max-w-[325px] aspect-square relative selection:bg-none bg-slate-50/60 p-4 rounded-2xl border border-slate-100 flex items-center justify-center shadow-inner">
                           {compareA && resultsA ? (
                             <div className="w-full h-full relative">
@@ -3197,11 +3381,21 @@ export default function App() {
                       </div>
 
                       {/* Flower B */}
-                      <div className="flex flex-col items-center">
+                      <div className="flex flex-col items-center relative">
                         <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full mb-3 uppercase tracking-wider max-w-[260px] truncate">
                           {compareB ? compareB.name : 'Стартап Б не выбран'}
                         </div>
                         
+                        {compareB && (
+                          <div className="absolute top-10 -right-4 md:-right-8 z-20 shadow-md rounded-lg overflow-hidden border border-slate-200">
+                             {(compareB.expert || compareB.supervisorApproved) ? (
+                                 <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase px-2.5 py-1.5 flex items-center gap-1.5"><Microscope className="w-3.5 h-3.5"/> Экспертная корректировка</span>
+                             ) : (
+                                 <span className="bg-purple-100 text-purple-900 text-[10px] font-black uppercase px-2.5 py-1.5 flex items-center gap-1.5"><Bot className="w-3.5 h-3.5"/> Базовая ИИ-модель</span>
+                             )}
+                          </div>
+                        )}
+
                         <div className="w-full max-w-[325px] aspect-square relative selection:bg-none bg-slate-50/60 p-4 rounded-2xl border border-slate-100 flex items-center justify-center shadow-inner">
                           {compareB && resultsB ? (
                             <div className="w-full h-full relative">
@@ -3329,6 +3523,136 @@ export default function App() {
                         ))}
                       </p>
                     </div>
+
+                    {/* INVESTMENT COMMISSION METRICS - BUDGET EFFICIENCY INDEX */}
+                    {(() => {
+                      const calcMetrics = (proj: StartupData, res: ReturnType<typeof calculateResult>) => {
+                        const activeRevenue = proj.som > 0 ? proj.som : (proj.sam > 0 ? proj.sam : 100);
+                        const baseK = res.subfactors.K;
+                        const baseS = res.subfactors.S;
+                        const baseT = res.subfactors.T;
+                        const baseU = res.subfactors.U;
+
+                        const capexRatio = 0.5 - (baseK / 10) * 0.4; 
+                        const capex = Math.max(0.1, activeRevenue * capexRatio);
+                        
+                        const opexRatio = 0.25 - (baseS / 10) * 0.15;
+                        const opexYr = activeRevenue * opexRatio;
+                        
+                        const salariesYr = opexYr * 0.4;
+                        const jobs = Math.max(1, Math.round(salariesYr / 1.0));
+                        
+                        const bep = Math.max(3, Math.round(36 - (baseT / 10) * 33));
+                        
+                        const growth = 1 + (baseU / 10) * 0.5;
+                        const revY1 = activeRevenue;
+                        const revY2 = revY1 * growth;
+                        const revY3 = revY2 * growth;
+                        const rev3Yr = revY1 + revY2 + revY3;
+                        
+                        const salaryTaxes3Yr = (salariesYr * 0.432) * 3;
+                        const revTaxes3Yr = rev3Yr * 0.06;
+                        const totalTaxes = salaryTaxes3Yr + revTaxes3Yr;
+                        
+                        const bei = totalTaxes / capex;
+                        
+                        return { capex, jobs, bep, bei };
+                      };
+
+                      const metricsA = calcMetrics(compareA, resultsA);
+                      const metricsB = calcMetrics(compareB, resultsB);
+
+                      return (
+                        <div className="bg-slate-800 text-white p-6 md:p-8 rounded-3xl mt-6 shadow-lg border border-slate-700">
+                          <h3 className="font-display font-extrabold text-white text-lg uppercase tracking-wide border-b border-slate-700 pb-3 flex items-center justify-between mb-6">
+                            <span>💼 Сводная инвестиционная карта для экспертной комиссии</span>
+                            <span className="text-[10px] text-amber-400 font-mono font-normal bg-amber-400/10 px-2 py-1 rounded-md">BEI Index</span>
+                          </h3>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                              <thead>
+                                <tr className="border-b border-slate-700 text-slate-400 uppercase tracking-wider text-[10px]">
+                                  <th className="py-3 px-4">Показатель</th>
+                                  <th className="py-3 px-4 text-center">Проект А</th>
+                                  <th className="py-3 px-4 text-center">Проект Б</th>
+                                  <th className="py-3 px-4">Победитель раунда</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-700/50">
+                                <tr>
+                                  <td className="py-3 px-4 font-bold text-slate-300">Название стартапа</td>
+                                  <td className="py-3 px-4 text-center font-bold text-indigo-300">{compareA.name}</td>
+                                  <td className="py-3 px-4 text-center font-bold text-emerald-300">{compareB.name}</td>
+                                  <td className="py-3 px-4">—</td>
+                                </tr>
+                                <tr>
+                                  <td className="py-3 px-4 font-bold text-slate-300">SSI (Отраслевой индекс)</td>
+                                  <td className="py-3 px-4 text-center">{resultsA.finalSsi.toFixed(2)}</td>
+                                  <td className="py-3 px-4 text-center">{resultsB.finalSsi.toFixed(2)}</td>
+                                  <td className="py-3 px-4">
+                                    {resultsA.finalSsi > resultsB.finalSsi ? <span className="text-indigo-400 font-bold">Проект А (+{(resultsA.finalSsi - resultsB.finalSsi).toFixed(2)})</span> : (resultsA.finalSsi < resultsB.finalSsi ? <span className="text-emerald-400 font-bold">Проект Б (+{(resultsB.finalSsi - resultsA.finalSsi).toFixed(2)})</span> : <span className="text-slate-500">Паритет</span>)}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="py-3 px-4 font-bold text-slate-300 flex flex-col">
+                                    <span>CAPEX (Сумма гранта)</span>
+                                    <span className="text-[9px] font-normal text-slate-500">Оценка стартовых вложений</span>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">{metricsA.capex.toFixed(1)} млн ₽</td>
+                                  <td className="py-3 px-4 text-center">{metricsB.capex.toFixed(1)} млн ₽</td>
+                                  <td className="py-3 px-4">
+                                    {metricsA.capex < metricsB.capex ? <span className="text-indigo-400 font-bold">Проект А (дешевле)</span> : (metricsA.capex > metricsB.capex ? <span className="text-emerald-400 font-bold">Проект Б (дешевле)</span> : <span className="text-slate-500">Одинаково</span>)}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="py-3 px-4 font-bold text-slate-300 flex flex-col">
+                                    <span>Точка безубыточности</span>
+                                    <span className="text-[9px] font-normal text-slate-500">Месяцев до автономности</span>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">{metricsA.bep} мес.</td>
+                                  <td className="py-3 px-4 text-center">{metricsB.bep} мес.</td>
+                                  <td className="py-3 px-4">
+                                    {metricsA.bep < metricsB.bep ? <span className="text-indigo-400 font-bold">Проект А (быстрее)</span> : (metricsA.bep > metricsB.bep ? <span className="text-emerald-400 font-bold">Проект Б (быстрее)</span> : <span className="text-slate-500">Одинаково</span>)}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="py-3 px-4 font-bold text-slate-300 flex flex-col">
+                                    <span>Новые рабочие места</span>
+                                    <span className="text-[9px] font-normal text-slate-500">За 3 года реализации</span>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">{metricsA.jobs} чел.</td>
+                                  <td className="py-3 px-4 text-center">{metricsB.jobs} чел.</td>
+                                  <td className="py-3 px-4">
+                                    {metricsA.jobs > metricsB.jobs ? <span className="text-indigo-400 font-bold">Проект А (больше)</span> : (metricsA.jobs < metricsB.jobs ? <span className="text-emerald-400 font-bold">Проект Б (больше)</span> : <span className="text-slate-500">Одинаково</span>)}
+                                  </td>
+                                </tr>
+                                <tr className="bg-slate-900/50">
+                                  <td className="py-3 px-4 font-black text-amber-300 flex flex-col">
+                                    <span>BEI — Бюджетная эффективность</span>
+                                    <span className="text-[9px] font-normal text-amber-300/60">Σ(налоги) / Сумма_гранта за 3 года</span>
+                                  </td>
+                                  <td className="py-3 px-4 text-center font-bold text-amber-300">{metricsA.bei.toFixed(2)}×</td>
+                                  <td className="py-3 px-4 text-center font-bold text-amber-300">{metricsB.bei.toFixed(2)}×</td>
+                                  <td className="py-3 px-4">
+                                    {metricsA.bei > metricsB.bei ? (
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-indigo-400 font-bold">Проект А</span>
+                                        <span className="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded border border-amber-500/30">Победитель</span>
+                                      </div>
+                                    ) : (metricsA.bei < metricsB.bei ? (
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-emerald-400 font-bold">Проект Б</span>
+                                        <span className="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded border border-amber-500/30">Победитель</span>
+                                      </div>
+                                    ) : <span className="text-slate-500">Паритет</span>)}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                   </div>
                 )}
