@@ -991,17 +991,7 @@ export default function App() {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent pointer-events-none z-20"></div>
-        <div className="absolute top-8 md:top-12 left-6 md:left-12 z-30">
-           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white drop-shadow-lg tracking-tight flex items-center gap-3">
-             <span className="bg-emerald-600 text-white rounded px-3 py-1 text-sm font-black tracking-wider">SSI</span>
-             <span>Navigator</span>
-           </h1>
-           <p className="text-indigo-100 text-xl md:text-3xl lg:text-4xl font-bold mt-2 md:mt-4 opacity-95 drop-shadow-md tracking-wide max-w-2xl leading-tight">
-             Технопарк СКФУ — Лаборатория прединвестиционной экспресс-оценки стартапов
-           </p>
-        </div>
-        
-        <div className="absolute top-6 right-6 md:top-10 md:right-12 z-30 bg-white/95 backdrop-blur-md border border-white/20 rounded-2xl p-5 flex flex-col shadow-2xl max-w-[300px]">
+        <div className="absolute top-6 left-6 md:top-10 md:left-12 z-30 bg-white/95 backdrop-blur-md border border-white/20 rounded-2xl p-5 flex flex-col shadow-2xl max-w-[300px]">
           <div className="flex items-start justify-between mb-4 gap-4">
             <div className="flex flex-col">
               <div className="flex items-center">
@@ -1022,6 +1012,14 @@ export default function App() {
           <p className="text-[11px] md:text-xs text-slate-600 leading-snug font-semibold">
             Навигатор готовности заявки стартапа и оценка бизнес-успешности
           </p>
+        </div>
+
+        <div className="absolute top-8 md:top-12 right-6 md:right-12 z-30 text-right">
+           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white drop-shadow-lg tracking-tight">Технопарк СКФУ</h1>
+           <p className="text-indigo-100 text-xl md:text-3xl lg:text-4xl font-bold mt-2 md:mt-4 opacity-95 drop-shadow-md tracking-wide max-w-2xl leading-tight">
+             Лаборатория прединвестиционной<br />
+             экспресс-оценки стартапов
+           </p>
         </div>
       </div>
 
