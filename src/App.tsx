@@ -63,6 +63,7 @@ import { DefenseScheduleView } from './components/DefenseScheduleView';
 import { WordReportView } from './components/WordReportView';
 import { MiniLily } from './components/MiniLily';
 import { getAccessToken } from './firebase';
+import SupervisorAccessModal from './components/SupervisorAccessModal';
 
 function getPastelBackground(ssi: number): { bg: string, text: string, border: string, badgeBg: string, badgeText: string } {
   if (ssi >= 8.5) {
@@ -160,26 +161,36 @@ export default function App() {
     (user?.email && SUPERVISOR_EMAILS.includes(user.email.toLowerCase())) || supervisorOverride
   );
 
-  const SUPERVISOR_PASSWORD = '2h2322Lg';
+  const [showSupervisorModal, setShowSupervisorModal] = useState(false);
+
+  const SUPERVISOR_PASSWORD_HASH = 'b01c9c8af5356bfde8edfa0663d78a55676735220a4c56abdbe4870a0700fd7d';
 
   const requestSupervisorAccess = () => {
-    // If already supervisor, allow
     if (isSupervisor) {
       setCurrentView('supervisor');
       return;
     }
+    setShowSupervisorModal(true);
+  };
 
-    // For students: require supervisor mailbox password prompt
-    const pwd = window.prompt('Введите пароль от почты научного руководителя');
+  const handleSupervisorModalSubmit = async (pwd: string) => {
+    setShowSupervisorModal(false);
     if (!pwd) return;
-    if (pwd === SUPERVISOR_PASSWORD) {
-      setSupervisorOverride(true);
-      setCurrentView('supervisor');
-      showToast('✅ Пароль принят — доступ предоставлен.', 'success');
-      return;
+    try {
+      const enc = new TextEncoder().encode(pwd);
+      const digest = await (window.crypto.subtle.digest('SHA-256', enc) as Promise<ArrayBuffer>);
+      const hashArray = Array.from(new Uint8Array(digest));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      if (hashHex === SUPERVISOR_PASSWORD_HASH) {
+        setSupervisorOverride(true);
+        setCurrentView('supervisor');
+        showToast('✅ Пароль принят — доступ предоставлен.', 'success');
+        return;
+      }
+    } catch (e) {
+      console.error(e);
     }
 
-    // wrong password -> increment attempts and possibly unlock after 2
     const attempts = supervisorFailedAttempts + 1;
     setSupervisorFailedAttempts(attempts);
     if (attempts >= 2) {
@@ -1059,6 +1070,11 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
+        <SupervisorAccessModal
+          open={showSupervisorModal}
+          onClose={() => setShowSupervisorModal(false)}
+          onSubmit={handleSupervisorModalSubmit}
+        />
 
         {currentView === 'applications' && (
           <ApplicationsView onNewApplication={() => { setCurrentView('calculator'); setActiveTab('agent'); }} />
