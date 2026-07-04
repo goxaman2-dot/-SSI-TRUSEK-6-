@@ -31,6 +31,7 @@ interface SidebarProps {
   setCalcTab: (tab: 'anketa' | 'expert' | 'result' | 'compare' | 'agent' | 'archive_student' | 'archive_supervisor') => void;
   onOpenConsent: () => void;
   onLogout: () => void;
+  onRequestSupervisor?: () => void;
   user: { name: string; email: string; phone: string };
   subfactors: Subfactors;
   consentAccepted: boolean;
@@ -39,7 +40,7 @@ interface SidebarProps {
   currentStartup?: string;
 }
 
-export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenConsent, onLogout, user, subfactors, consentAccepted, isApproved, onApprove, currentStartup }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenConsent, onLogout, onRequestSupervisor, user, subfactors, consentAccepted, isApproved, onApprove, currentStartup }: SidebarProps) {
   const [isCalcExpanded, setIsCalcExpanded] = useState(true);
 
   const menuSections = [
@@ -90,6 +91,10 @@ export function Sidebar({ activeTab, setActiveTab, calcTab, setCalcTab, onOpenCo
       const el = document.getElementById('calc-tabs');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
     } else {
+      if (item.id === 'supervisor' && typeof onRequestSupervisor === 'function') {
+        onRequestSupervisor();
+        return;
+      }
       setActiveTab(item.id);
     }
   };

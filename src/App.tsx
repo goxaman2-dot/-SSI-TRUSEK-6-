@@ -139,7 +139,52 @@ export default function App() {
     });
   }, []);
 
-  const isSupervisor = Boolean(user?.name?.includes('Мандрица') || user?.name?.includes('Ренат') || user?.name?.includes('Максим') || user?.name?.includes('Кузьменко') || user?.name?.includes('руководител'));
+  const SUPERVISOR_EMAILS = ['d_artman@mail.ru'];
+
+  // Supervisor access control: by approved emails or by temporary override/unlock
+  const [supervisorFailedAttempts, setSupervisorFailedAttempts] = useState<number>(() => {
+    try { return Number(localStorage.getItem('ssi_supervisor_attempts') || '0'); } catch { return 0; }
+  });
+  const [supervisorOverride, setSupervisorOverride] = useState<boolean>(() => {
+    try { return localStorage.getItem('ssi_supervisor_override') === 'true'; } catch { return false; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('ssi_supervisor_attempts', String(supervisorFailedAttempts)); } catch {}
+  }, [supervisorFailedAttempts]);
+  useEffect(() => {
+    try { localStorage.setItem('ssi_supervisor_override', supervisorOverride ? 'true' : 'false'); } catch {}
+  }, [supervisorOverride]);
+
+  const isSupervisor = Boolean(
+    (user?.email && SUPERVISOR_EMAILS.includes(user.email.toLowerCase())) || supervisorOverride
+  );
+
+  const requestSupervisorAccess = () => {
+    // If already supervisor, allow
+    if (isSupervisor) {
+      setCurrentView('supervisor');
+      return;
+    }
+    const entered = window.prompt('Введите email научного руководителя для доступа в кабинет:');
+    if (!entered) return;
+    const email = entered.trim().toLowerCase();
+    if (SUPERVISOR_EMAILS.includes(email)) {
+      showToast('✅ Email подтверждён — доступ предоставлен.', 'success');
+      setCurrentView('supervisor');
+      return;
+    }
+    // wrong email
+    const attempts = supervisorFailedAttempts + 1;
+    setSupervisorFailedAttempts(attempts);
+    if (attempts >= 2) {
+      setSupervisorOverride(true);
+      setCurrentView('supervisor');
+      showToast('⚠️ Введено неверно дважды — доступ временно разблокирован.', 'info');
+    } else {
+      showToast(`❌ Неверный email. Осталось попыток: ${2 - attempts}`, 'error');
+    }
+  };
   
   const [currentView, setCurrentView] = useState<string>('calculator');
 
@@ -974,6 +1019,7 @@ export default function App() {
             setUser(null);
             localStorage.removeItem('ssi_user_auth');
           }}
+          onRequestSupervisor={requestSupervisorAccess}
           user={user}
           subfactors={results.subfactors}
           consentAccepted={hasAcceptedConsent}
