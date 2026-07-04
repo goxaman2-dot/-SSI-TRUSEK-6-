@@ -202,7 +202,20 @@ export default function App() {
     }
   };
   
-  const [currentView, setCurrentView] = useState<string>('calculator');
+  const [currentView, setCurrentView] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('ssi_last_view');
+      return saved || 'calculator';
+    } catch {
+      return 'calculator';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ssi_last_view', currentView);
+    } catch {}
+  }, [currentView]);
 
   const [data, setData] = useState<StartupData>(() => {
     try {
