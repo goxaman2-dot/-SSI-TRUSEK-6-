@@ -203,6 +203,42 @@ export default function App() {
     localStorage.setItem('ssi_archive_supervisor', JSON.stringify(supervisorArchive));
   }, [supervisorArchive]);
 
+  // Inbox for supervisor notifications (applications sent by students)
+  const [supervisorInbox, setSupervisorInbox] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('ssi_supervisor_inbox');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ssi_supervisor_inbox', JSON.stringify(supervisorInbox));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [supervisorInbox]);
+
+  // Acknowledgements map for students { [studentEmail]: [{ project, date, supervisorEmail, accepted }] }
+  const [acknowledgements, setAcknowledgements] = useState<Record<string, any[]>>(() => {
+    try {
+      const saved = localStorage.getItem('ssi_acknowledgements');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ssi_acknowledgements', JSON.stringify(acknowledgements));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [acknowledgements]);
+
   // Save changes to localStorage for comparison
   useEffect(() => {
     try {
@@ -471,6 +507,56 @@ export default function App() {
       setStudentArchive(prev => [newRecord, ...prev]);
     }
     showToast('💾 Анкета успешно сохранена в архив', 'success');
+  };
+
+  // Student sends notification to supervisor by email
+  const sendApplicationToSupervisor = (supervisorEmail: string) => {
+    if (!user?.email) {
+      showToast('❌ Войдите в систему как студент перед отправкой заявки', 'error');
+      return;
+    }
+    if (!data.name || data.name.trim() === '' || data.name === 'Безымянный стартап') {
+      showToast('❌ Укажите название стартапа перед отправкой заявки', 'error');
+      return;
+    }
+    const item = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+      studentName: user.name || 'Студент',
+      studentEmail: user.email,
+      projectName: data.name,
+      date: new Date().toISOString(),
+      supervisorEmail,
+      accepted: false
+    };
+    setSupervisorInbox(prev => [item, ...prev]);
+    showToast('✉️ Заявка отправлена научному руководителю', 'success');
+  };
+
+  // Supervisor accepts application
+  const acceptApplication = (id: string) => {
+    const item = supervisorInbox.find(i => i.id === id);
+    if (!item) return;
+    // mark accepted in inbox
+    setSupervisorInbox(prev => prev.map(i => i.id === id ? {...i, accepted: true } : i));
+
+    // add to supervisor archive as a record
+    const newRecord: ArchivedRecord = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+      name: item.projectName || 'Безымянный стартап',
+      date: new Date().toISOString(),
+      type: 'supervisor',
+      data: { ...data }
+    };
+    setSupervisorArchive(prev => [newRecord, ...prev]);
+
+    // add acknowledgement for student
+    setAcknowledgements(prev => {
+      const list = prev[item.studentEmail] ? [...prev[item.studentEmail]] : [];
+      list.unshift({ project: item.projectName, date: new Date().toISOString(), supervisorEmail: item.supervisorEmail, accepted: true });
+      return { ...prev, [item.studentEmail]: list };
+    });
+
+    showToast('✅ Заявка принята — студент уведомлён', 'success');
   };
 
   const handlePrint = () => {
@@ -1044,7 +1130,34 @@ export default function App() {
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
               <p className="text-slate-500">Здесь будет отображаться детальная информация о ходе работы над вашими стартапами, рекомендации ИИ и комментарии научного руководителя.</p>
-              <button onClick={() => { setCurrentView('calculator'); setActiveTab('agent'); }} className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition-colors">Начать заполнять новый стартап</button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+                <button onClick={() => { setCurrentView('calculator'); setActiveTab('agent'); }} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition-colors">Начать заполнять новый стартап</button>
+
+                <button onClick={() => {
+                    const sup = window.prompt('Введите email научного руководителя (куда отправить уведомление):', 'supervisor@example.com');
+                    if (sup && sup.trim()) sendApplicationToSupervisor(sup.trim());
+                  }}
+                  className="px-6 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-100 font-semibold text-sm transition-colors"
+                >
+                  Сообщить научному руководителю
+                </button>
+              </div>
+
+              {/* Student status for supervisor acknowledgement */}
+              {user?.email && data.name && (
+                (() => {
+                  const items = supervisorInbox.filter(i => i.studentEmail === user.email && i.projectName === data.name);
+                  if (items.length === 0) return null;
+                  const latest = items[0];
+                  return (
+                    <div className="mt-4 inline-block bg-white border border-indigo-100 rounded-xl p-3 text-left">
+                      <div className="text-sm font-bold text-slate-700">Статус уведомления научного руководителя</div>
+                      <div className="text-xs text-slate-500 mt-1">Отправлено на: <span className="font-medium text-slate-800">{latest.supervisorEmail}</span></div>
+                      <div className={`mt-2 text-sm ${latest.accepted ? 'text-emerald-600' : 'text-amber-600'}`}>{latest.accepted ? 'Руководитель принял заявку' : 'Ожидает подтверждения руководителя'}</div>
+                    </div>
+                  );
+                })()
+              )}
             </div>
           </div>
         )}
@@ -1102,6 +1215,33 @@ export default function App() {
                 <p className="text-4xl font-black text-indigo-600">0</p>
               </div>
             </div>
+            {/* Supervisor inbox: show incoming student notifications addressed to this supervisor */}
+            {user?.email && (
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-6">
+                <h3 className="text-lg font-bold text-slate-800 mb-3">Входящие заявки студентов</h3>
+                {supervisorInbox.filter(i => i.supervisorEmail === user.email).length === 0 ? (
+                  <p className="text-sm text-slate-500">Нет новых уведомлений.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {supervisorInbox.filter(i => i.supervisorEmail === user.email).map(item => (
+                      <div key={item.id} className="p-3 border border-slate-100 rounded-lg flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-bold text-slate-700">{item.projectName}</div>
+                          <div className="text-xs text-slate-500">От студента: {item.studentName} • {item.studentEmail}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {item.accepted ? (
+                            <span className="text-emerald-600 font-bold text-sm">Принято</span>
+                          ) : (
+                            <button onClick={() => acceptApplication(item.id)} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold">Принять заявку студента на стартап идею</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
               <Microscope className="w-12 h-12 text-slate-300 mx-auto mb-4" />
               {data.name && data.name.trim() !== '' ? (
