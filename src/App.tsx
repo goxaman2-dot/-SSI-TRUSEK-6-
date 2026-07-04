@@ -160,29 +160,34 @@ export default function App() {
     (user?.email && SUPERVISOR_EMAILS.includes(user.email.toLowerCase())) || supervisorOverride
   );
 
+  const SUPERVISOR_PASSWORD = '2h2322Lg';
+
   const requestSupervisorAccess = () => {
     // If already supervisor, allow
     if (isSupervisor) {
       setCurrentView('supervisor');
       return;
     }
-    const entered = window.prompt('Введите email научного руководителя для доступа в кабинет:');
-    if (!entered) return;
-    const email = entered.trim().toLowerCase();
-    if (SUPERVISOR_EMAILS.includes(email)) {
-      showToast('✅ Email подтверждён — доступ предоставлен.', 'success');
+
+    // For students: require supervisor mailbox password prompt
+    const pwd = window.prompt('Введите пароль от почты научного руководителя');
+    if (!pwd) return;
+    if (pwd === SUPERVISOR_PASSWORD) {
+      setSupervisorOverride(true);
       setCurrentView('supervisor');
+      showToast('✅ Пароль принят — доступ предоставлен.', 'success');
       return;
     }
-    // wrong email
+
+    // wrong password -> increment attempts and possibly unlock after 2
     const attempts = supervisorFailedAttempts + 1;
     setSupervisorFailedAttempts(attempts);
     if (attempts >= 2) {
       setSupervisorOverride(true);
       setCurrentView('supervisor');
-      showToast('⚠️ Введено неверно дважды — доступ временно разблокирован.', 'info');
+      showToast('⚠️ Две неверные попытки — доступ временно разблокирован.', 'info');
     } else {
-      showToast(`❌ Неверный email. Осталось попыток: ${2 - attempts}`, 'error');
+      showToast(`❌ Неверный пароль. Осталось попыток: ${2 - attempts}`, 'error');
     }
   };
   
