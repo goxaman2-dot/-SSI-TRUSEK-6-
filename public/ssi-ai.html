@@ -87,7 +87,7 @@ td.n{text-align:right;white-space:nowrap}.nodata{color:var(--warn)}
         <input id="url" placeholder="адрес API">
       </div>
       <div id="cst"></div>
-      <div class="hint">OpenRouter: бесплатный ключ на openrouter.ai, модели с пометкой <code>:free</code>, до 50 анализов в день. Groq: бесплатный ключ на console.groq.com, быстрый, но берёт до 24 тыс. знаков материалов. Мигающая кнопка означает, что сервис нейросети ответил на проверочный запрос и готов анализировать проект. Ключ хранится только в этом браузере и отправляется напрямую провайдеру. Нейросеть извлекает 16 исходных показателей из материалов; расчёт SSI выполняется локально по формулам методики, поэтому одинаковые показатели всегда дают одинаковый индекс.</div>
+      <div class="hint">GigaChat: работает через посредника в Yandex Cloud, ключ вводить не нужно, бесплатно в пределах годового объёма Сбера. OpenRouter: бесплатный ключ на openrouter.ai, модели с пометкой <code>:free</code>, до 50 анализов в день. Groq: бесплатный ключ на console.groq.com, быстрый, но берёт до 24 тыс. знаков материалов. Мигающая кнопка означает, что сервис нейросети ответил на проверочный запрос и готов анализировать проект. Ключ хранится только в этом браузере и отправляется напрямую провайдеру. Нейросеть извлекает 16 исходных показателей из материалов; расчёт SSI выполняется локально по формулам методики, поэтому одинаковые показатели всегда дают одинаковый индекс.</div>
     </details>
   </div>
 
@@ -134,6 +134,7 @@ const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:
 const PV={
   openrouter:{n:'OpenRouter',c:'#6467f2',m:'nvidia/nemotron-3-super-120b-a12b:free',u:'https://openrouter.ai/api/v1/chat/completions',lim:120000,fb:['qwen/qwen3.8-27b:free','google/gemma-4-31b-it:free']},
   groq:{n:'Groq',c:'#f55036',m:'openai/gpt-oss-120b',u:'https://api.groq.com/openai/v1/chat/completions',lim:24000,models:['openai/gpt-oss-120b','openai/gpt-oss-20b']},
+  gigachat:{n:'GigaChat',c:'#21a038',m:'GigaChat-2-Max',u:'https://functions.yandexcloud.net/d4ethm11in060n5im75a',lim:90000,nokey:1,models:['GigaChat-2-Max','GigaChat-2-Pro','GigaChat-2']}, // через посредника в Yandex Cloud, ключ хранится в функции
   claude:{n:'Claude AI',c:'#d97757',m:'claude-sonnet-5-5',u:'https://api.anthropic.com/v1/messages'}
 };
 /* бесплатные модели OpenRouter загружаются из его открытого каталога, чтобы список был актуальным */
@@ -151,8 +152,8 @@ function pick(){
   $('provs').querySelectorAll('.pv').forEach(b=>{b.classList.toggle('on',b.dataset.p===prov);const st=ST[b.dataset.p];['live','chk','bad','na'].forEach(c=>b.classList.toggle(c,st===c));b.title=st==='na'?'В claude.ai внешние сервисы нейросетей заблокированы. Используйте версию на GitHub Pages':st==='live'?'Нейросеть подключена и готова анализировать проект':st==='bad'?'Ключ не принят или сервис недоступен: '+(ERR[b.dataset.p]||''):'Введите API-ключ'});
   const st=ST[prov];$('cst').innerHTML=st==='live'?'<span style="color:var(--ok)">● '+PV[prov].n+' подключена — можно запускать анализ</span>':st==='bad'?'<span style="color:var(--bad)">● Нет связи: '+esc(ERR[prov]||'')+'</span>':st==='chk'?'Проверка подключения…':st==='na'?'<span style="color:var(--warn)">● '+PV[prov].n+' работает только в версии на GitHub Pages: из claude.ai страница не может обращаться к внешним сервисам. Здесь выберите Claude AI.</span>':'';
   const acc=INC&&prov==='claude';document.querySelector('#cfg .row').hidden=acc;if(acc&&st==='live')$('cst').innerHTML='<span style="color:var(--ok)">● Claude AI подключён через ваш аккаунт claude.ai — ключ не нужен, можно запускать анализ</span>';
-  $('pname').textContent=PV[prov].n;$('model').value=ls.get('ssi_model_'+prov)||PV[prov].m;$('url').value=ls.get('ssi_url_'+prov)||PV[prov].u;$('key').value=ls.get('ssi_key_'+prov)||'';fillModels();
-  $('cfg').open=!$('key').value&&!INC;
+  $('pname').textContent=PV[prov].n;$('model').value=ls.get('ssi_model_'+prov)||PV[prov].m;$('url').value=ls.get('ssi_url_'+prov)||PV[prov].u;$('key').value=ls.get('ssi_key_'+prov)||'';$('key').hidden=!!PV[prov].nokey;fillModels();
+  $('cfg').open=!$('key').value&&!INC&&!PV[prov].nokey;
 }
 ['model','key','url'].forEach(i=>$(i).onchange=save);
 function save(){['model','key','url'].forEach(i=>ls.set(`ssi_${i}_${prov}`,$(i).value.trim()));check(prov)}
@@ -161,16 +162,17 @@ const ST={},ERR={};
 async function check(p){
   if(INC){ST[p]=p!=='claude'?'na':SMP?'live':SMP===null?'bad':'chk';if(SMP===null)ERR.claude='доступ к Claude в этом окне не предоставлен';pick();return}
   const key=ls.get('ssi_key_'+p),u=(ls.get('ssi_url_'+p)||PV[p].u).replace(/\/+$/,'');
-  if(!key){ST[p]='';pick();return}
+  if(!key&&!PV[p].nokey){ST[p]='';pick();return}
   ST[p]='chk';pick();
   let url,h={};
   if(p==='gemini')url=`${u}?key=${encodeURIComponent(key)}&pageSize=1`;
   else if(p==='claude'){url=u.replace(/messages$/,'models');h={'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}}
+  else if(p==='gigachat'){url=u} // посредник сам подставляет ключ Сбера
   else if(p==='openrouter'){url=u.replace(/chat\/completions$/,'key');h={Authorization:'Bearer '+key}} // /models у OpenRouter открыт всем, ключ проверяет /key
   else{url=u.replace(/chat\/completions$/,'models');h={Authorization:'Bearer '+key}}
   try{const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);
     const r=await fetch(url,{headers:h,signal:c.signal});clearTimeout(t);
-    if(r.ok){ST[p]='live'}else{const j=await r.json().catch(()=>({}));ST[p]='bad';ERR[p]=j.error?.message||('HTTP '+r.status)}
+    if(r.ok){ST[p]='live';if(p==='gigachat'){const j=await r.json().catch(()=>({}));const ids=(j.data||[]).map(x=>x.id).filter(x=>!/embed/i.test(x));if(ids.length){PV.gigachat.models=ids;if(prov==='gigachat')fillModels()}}}else{const j=await r.json().catch(()=>({}));ST[p]='bad';ERR[p]=j.error?.message||j.message||('HTTP '+r.status)}
   }catch(e){ST[p]='bad';ERR[p]=e.name==='AbortError'?'сервис не ответил за 12 с':'запрос заблокирован (сеть или CORS)'}
   pick();
 }
@@ -239,7 +241,7 @@ async function askAI(p){
     catch(e){const m={not_granted:'доступ к Claude не разрешён',rate_limited:'исчерпан лимит запросов, повторите позже',prompt_too_large:'материалы слишком объёмные, сократите их',invalid_json:'Claude вернул ответ не в формате JSON, повторите анализ',session_expired:'войдите в claude.ai заново',refused:'Claude отклонил запрос'};
       throw new Error('Claude AI: '+(m[e.code]||e.message||'сбой сервиса, повторите анализ'))}
   }
-  if(!key){$('cfg').open=true;$('key').focus();throw new Error('Укажите API-ключ для '+PV[prov].n)}
+  if(!key&&!PV[prov].nokey){$('cfg').open=true;$('key').focus();throw new Error('Укажите API-ключ для '+PV[prov].n)}
   let r,j,text;
   const post=async(u,h,b)=>{r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json',...h},body:JSON.stringify(b)});
     j=await r.json().catch(()=>({}));if(!r.ok){const raw=j.error?.metadata?.raw;throw new Error(PV[prov].n+': '+(r.status===429?'бесплатные модели сейчас перегружены, повторите через минуту или выберите другую модель':(j.error?.message||j.message||('HTTP '+r.status)))+(raw&&r.status!==429?' ('+String(raw).slice(0,120)+')':''))}};
@@ -251,10 +253,10 @@ async function askAI(p){
     await post(url,{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       {model,max_tokens:6000,temperature:0,messages:[{role:'user',content:p}]});
     text=j.content?.map(x=>x.text||'').join('')||'';
-  }else{ // OpenRouter и Groq: OpenAI-совместимый протокол
-    await post(url,{Authorization:'Bearer '+key},
+  }else{ // OpenRouter, Groq и GigaChat (через посредника): OpenAI-совместимый протокол
+    await post(url,PV[prov].nokey?{}:{Authorization:'Bearer '+key},
       {model,temperature:0,max_tokens:8000,
-       ...(prov==='openrouter'?{models:[...new Set([model,...PV.openrouter.fb])].slice(0,3),reasoning:{exclude:true}}:{response_format:{type:'json_object'}}), // запасные бесплатные модели, если выбранная перегружена
+       ...(prov==='gigachat'?{}:prov==='openrouter'?{models:[...new Set([model,...PV.openrouter.fb])].slice(0,3),reasoning:{exclude:true}}:{response_format:{type:'json_object'}}), // запасные бесплатные модели, если выбранная перегружена
        messages:[{role:'system',content:'Отвечай только валидным JSON без пояснений.'},{role:'user',content:p}]});
     text=j.choices?.[0]?.message?.content||'';if(j.model)S.used=j.model;
   }
