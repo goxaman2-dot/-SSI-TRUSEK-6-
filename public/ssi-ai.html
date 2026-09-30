@@ -134,7 +134,7 @@ const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:
 const PV={
   gemini:{n:'Gemini',c:'#1a73e8',m:'gemini-2.5-flash',u:'https://generativelanguage.googleapis.com/v1beta/models'},
   claude:{n:'Claude AI',c:'#d97757',m:'claude-sonnet-5-5',u:'https://api.anthropic.com/v1/messages'},
-  deepseek:{n:'DeepSeek',c:'#4d6bfe',m:'deepseek-chat',u:'https://api.deepseek.com/chat/completions'}
+  deepseek:{n:'DeepSeek',c:'#4d6bfe',m:'deepseek-flash',u:'https://api.deepseek.com/chat/completions'}
 };
 /* Среда claude.ai: Claude доступен через аккаунт зрителя (capability sample), внешние API блокируются политикой безопасности */
 const INC=!!window.claude;let SMP,DLC;
