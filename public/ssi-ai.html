@@ -133,7 +133,7 @@ const S={files:[],ai:null,r:null,v:null};
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const PV={
   openrouter:{n:'OpenRouter',c:'#6467f2',m:'nvidia/nemotron-3-super-120b-a12b:free',u:'https://openrouter.ai/api/v1/chat/completions',lim:120000,fb:['qwen/qwen3.8-27b:free','google/gemma-4-31b-it:free']},
-  groq:{n:'Groq',c:'#f55036',m:'openai/gpt-oss-120b',u:'https://api.groq.com/openai/v1/chat/completions',lim:24000,models:['openai/gpt-oss-120b','openai/gpt-oss-20b','llama-3.3-70b-versatile','llama-3.1-8b-instant']},
+  groq:{n:'Groq',c:'#f55036',m:'openai/gpt-oss-120b',u:'https://api.groq.com/openai/v1/chat/completions',lim:24000,models:['openai/gpt-oss-120b','openai/gpt-oss-20b']},
   claude:{n:'Claude AI',c:'#d97757',m:'claude-sonnet-5-5',u:'https://api.anthropic.com/v1/messages'}
 };
 /* бесплатные модели OpenRouter загружаются из его открытого каталога, чтобы список был актуальным */
