@@ -134,8 +134,7 @@ const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:
 const PV={
   gemini:{n:'Gemini',c:'#1a73e8',m:'gemini-2.5-flash',u:'https://generativelanguage.googleapis.com/v1beta/models'},
   claude:{n:'Claude AI',c:'#d97757',m:'claude-sonnet-5-5',u:'https://api.anthropic.com/v1/messages'},
-  deepseek:{n:'DeepSeek',c:'#4d6bfe',m:'deepseek-chat',u:'https://api.deepseek.com/chat/completions'},
-  qwen:{n:'Qwen',c:'#615ced',m:'qwen-plus',u:'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions'}
+  deepseek:{n:'DeepSeek',c:'#4d6bfe',m:'deepseek-chat',u:'https://api.deepseek.com/chat/completions'}
 };
 /* Среда claude.ai: Claude доступен через аккаунт зрителя (capability sample), внешние API блокируются политикой безопасности */
 const INC=!!window.claude;let SMP,DLC;
@@ -151,7 +150,7 @@ function pick(){
   $('cfg').open=!$('key').value&&!INC;
 }
 ['model','key','url'].forEach(i=>$(i).onchange=save);
-function save(){['model','key','url'].forEach(i=>ls.set(`ssi_${i}_${prov}`,$(i).value.trim()));if(prov==='qwen'&&document.activeElement===$('url'))ls.set('ssi_url_qwen_manual','1');check(prov)}
+function save(){['model','key','url'].forEach(i=>ls.set(`ssi_${i}_${prov}`,$(i).value.trim()));check(prov)}
 /* Проверка подключения: лёгкий запрос списка моделей; кнопка мигает только при успешном ответе сервиса */
 const ST={},ERR={};
 async function check(p){
@@ -165,11 +164,6 @@ async function check(p){
   else{url=u.replace(/chat\/completions$/,'models');h={Authorization:'Bearer '+key}}
   try{const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);
     const r=await fetch(url,{headers:h,signal:c.signal});clearTimeout(t);
-    if(!r.ok&&p==='qwen'&&(r.status===401||r.status===403)&&!ls.get('ssi_url_qwen_manual')){ // ключ мог быть выдан в другом регионе Alibaba Cloud
-      const alt=u.includes('-intl')?u.replace('dashscope-intl','dashscope'):u.replace('//dashscope.','//dashscope-intl.');
-      const r2=await fetch(alt.replace(/chat\/completions$/,'models'),{headers:h}).catch(()=>null);
-      if(r2&&r2.ok){ls.set('ssi_url_qwen',alt);if(prov==='qwen')$('url').value=alt;ST[p]='live';pick();return}
-    }
     if(r.ok){ST[p]='live'}else{const j=await r.json().catch(()=>({}));ST[p]='bad';ERR[p]=j.error?.message||('HTTP '+r.status)}
   }catch(e){ST[p]='bad';ERR[p]=e.name==='AbortError'?'сервис не ответил за 12 с':'запрос заблокирован (сеть или CORS)'}
   pick();
@@ -250,7 +244,7 @@ async function askAI(p){
     await post(url,{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       {model,max_tokens:6000,temperature:0,messages:[{role:'user',content:p}]});
     text=j.content?.map(x=>x.text||'').join('')||'';
-  }else{ // DeepSeek и Qwen: OpenAI-совместимый протокол
+  }else{ // DeepSeek: OpenAI-совместимый протокол
     await post(url,{Authorization:'Bearer '+key},
       {model,temperature:0,max_tokens:6000,response_format:{type:'json_object'},messages:[{role:'system',content:'Отвечай только валидным JSON.'},{role:'user',content:p}]});
     text=j.choices?.[0]?.message?.content||'';
