@@ -18,8 +18,11 @@ h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 20px;font-siz
 .btn:disabled{opacity:.45;cursor:not-allowed}.btn:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-1px)}
 .b1{background:#475467}.b2{background:var(--acc)}.b3{background:var(--ok)}
 .step{font-size:12px;background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px}
+.provs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}.provs b{font-size:14px;color:var(--mute);margin-right:4px}
+.pv{border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 16px;font:600 14px/1 inherit;font-family:inherit;cursor:pointer;display:flex;gap:7px;align-items:center}
+.pv i{width:9px;height:9px;border-radius:50%;background:var(--c)}.pv.on{border-color:var(--c);box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 25%,transparent)}.pv.ready::after{content:"✓";color:var(--ok);font-size:12px}
 details summary{cursor:pointer;color:var(--mute);font-size:14px}
-.row{display:grid;grid-template-columns:160px 1fr 1fr;gap:10px;margin-top:12px}
+.row{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:10px;margin-top:12px}
 @media(max-width:700px){.row{grid-template-columns:1fr}}
 input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
 .files{margin:12px 0 0;padding:0;list-style:none;font-size:14px}
@@ -65,12 +68,13 @@ td.n{text-align:right;white-space:nowrap}.nodata{color:var(--warn)}
     </div>
     <input type="file" id="fi" multiple hidden accept=".pdf,.docx,.txt,.md,.csv,.json,.rtf">
     <ul class="files" id="fl"></ul>
+    <div class="provs" id="provs"><b>Нейросеть:</b></div>
     <details style="margin-top:12px" id="cfg">
-      <summary>Подключение нейросети</summary>
+      <summary>Подключение: <span id="pname"></span> — модель, ключ, адрес API</summary>
       <div class="row">
-        <select id="prov"><option value="gemini">Google Gemini</option><option value="claude">Anthropic Claude</option></select>
         <input id="model" placeholder="модель">
         <input id="key" type="password" placeholder="API-ключ">
+        <input id="url" placeholder="адрес API">
       </div>
       <div class="hint">Ключ хранится только в этом браузере и отправляется напрямую провайдеру. Нейросеть извлекает 16 исходных показателей из материалов; расчёт SSI выполняется локально по формулам методики, поэтому одинаковые показатели всегда дают одинаковый индекс.</div>
     </details>
@@ -116,10 +120,23 @@ function calc(v,bt){
 const $=id=>document.getElementById(id);
 const S={files:[],ai:null,r:null,v:null};
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
-const MD={gemini:'gemini-2.5-flash',claude:'claude-sonnet-5-5'};
-$('prov').value=ls.get('ssi_prov')||'gemini';$('model').value=ls.get('ssi_model')||MD[$('prov').value];$('key').value=ls.get('ssi_key')||'';
-$('prov').onchange=()=>{$('model').value=MD[$('prov').value];save()};['model','key'].forEach(i=>$(i).onchange=save);if(!$('key').value)$('cfg').open=true;
-function save(){ls.set('ssi_prov',$('prov').value);ls.set('ssi_model',$('model').value);ls.set('ssi_key',$('key').value)}
+const PV={
+  gemini:{n:'Gemini',c:'#1a73e8',m:'gemini-2.5-flash',u:'https://generativelanguage.googleapis.com/v1beta/models'},
+  claude:{n:'Claude AI',c:'#d97757',m:'claude-sonnet-5-5',u:'https://api.anthropic.com/v1/messages'},
+  deepseek:{n:'DeepSeek',c:'#4d6bfe',m:'deepseek-chat',u:'https://api.deepseek.com/chat/completions'},
+  qwen:{n:'Qwen',c:'#615ced',m:'qwen-plus',u:'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions'}
+};
+let prov=PV[ls.get('ssi_prov')]?ls.get('ssi_prov'):'gemini';
+$('provs').insertAdjacentHTML('beforeend',Object.entries(PV).map(([k,p])=>`<button class="pv" data-p="${k}" style="--c:${p.c}"><i></i>${p.n}</button>`).join(''));
+$('provs').querySelectorAll('.pv').forEach(b=>b.onclick=()=>{prov=b.dataset.p;ls.set('ssi_prov',prov);pick()});
+function pick(){
+  $('provs').querySelectorAll('.pv').forEach(b=>{b.classList.toggle('on',b.dataset.p===prov);b.classList.toggle('ready',!!ls.get('ssi_key_'+b.dataset.p))});
+  $('pname').textContent=PV[prov].n;$('model').value=ls.get('ssi_model_'+prov)||PV[prov].m;$('url').value=ls.get('ssi_url_'+prov)||PV[prov].u;$('key').value=ls.get('ssi_key_'+prov)||'';
+  $('cfg').open=!$('key').value;
+}
+['model','key','url'].forEach(i=>$(i).onchange=save);
+function save(){['model','key','url'].forEach(i=>ls.set(`ssi_${i}_${prov}`,$(i).value.trim()));pick()}
+pick();
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const f2=n=>Number(n).toFixed(2).replace('.',',');const fx=(n,d=2)=>Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d});
 function toast(msg,err){const t=$('toast');t.textContent=msg;t.className=err?'err show':'show';clearTimeout(t._h);t._h=setTimeout(()=>t.className=err?'err':'',err?6000:3000)}
@@ -174,20 +191,25 @@ ${spec}
 ${txt}`;
 }
 async function askAI(p){
-  const key=$('key').value.trim(),model=$('model').value.trim(),prov=$('prov').value;
-  if(!key){$('cfg').open=true;$('key').focus();throw new Error('Укажите API-ключ нейросети в разделе «Подключение нейросети»')}
+  const key=$('key').value.trim(),model=$('model').value.trim(),url=$('url').value.trim()||PV[prov].u;
+  if(!key){$('cfg').open=true;$('key').focus();throw new Error('Укажите API-ключ для '+PV[prov].n)}
   let r,j,text;
+  const post=async(u,h,b)=>{r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json',...h},body:JSON.stringify(b)});
+    j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(PV[prov].n+': '+(j.error?.message||j.message||('HTTP '+r.status)))};
   if(prov==='gemini'){
-    r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{role:'user',parts:[{text:p}]}],generationConfig:{temperature:0,responseMimeType:'application/json'}})});
-    j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
+    await post(`${url}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{},
+      {contents:[{role:'user',parts:[{text:p}]}],generationConfig:{temperature:0,responseMimeType:'application/json'}});
     text=j.candidates?.[0]?.content?.parts?.map(x=>x.text).join('')||'';
-  }else{
-    r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model,max_tokens:6000,temperature:0,messages:[{role:'user',content:p}]})});
-    j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
+  }else if(prov==='claude'){
+    await post(url,{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      {model,max_tokens:6000,temperature:0,messages:[{role:'user',content:p}]});
     text=j.content?.map(x=>x.text||'').join('')||'';
+  }else{ // DeepSeek и Qwen: OpenAI-совместимый протокол
+    await post(url,{Authorization:'Bearer '+key},
+      {model,temperature:0,max_tokens:6000,response_format:{type:'json_object'},messages:[{role:'system',content:'Отвечай только валидным JSON.'},{role:'user',content:p}]});
+    text=j.choices?.[0]?.message?.content||'';
   }
+  S.model=PV[prov].n+' · '+model;
   const a=text.indexOf('{'),b=text.lastIndexOf('}');if(a<0)throw new Error('Модель не вернула JSON');
   return JSON.parse(text.slice(a,b+1));
 }
@@ -223,7 +245,7 @@ function render(){
   $('res').innerHTML=`<div class="card"><div class="head">
     <div><div class="score" style="color:${r.color}">${f2(r.ssi)}</div><div class="hint">SSI из 10</div></div>
     <div style="flex:1;min-width:240px"><h2 style="margin:0 0 4px;font-size:19px">${esc(ai.name||'Стартап')}</h2>
-      <span class="pill">тип: ${BT[ai.bizType]}</span><span class="pill">SSI<sub>базовый</sub> = ${f2(r.raw)}</span><span class="pill">MEI = ${f2(r.mei)}</span>
+      <span class="pill">тип: ${BT[ai.bizType]}</span><span class="pill">SSI<sub>базовый</sub> = ${f2(r.raw)}</span><span class="pill">MEI = ${f2(r.mei)}</span><span class="pill">ИИ: ${esc(S.model)}</span>
       <div style="margin-top:6px;font-weight:600;color:${r.color}">${esc(r.label)}</div></div></div>
     <p>${esc(ai.summary||'')}</p></div>
   <div class="card grid2"><div>${radar(r.F)}</div><div><b>Факторы TRUSEK-6</b>
@@ -250,7 +272,7 @@ function dl(blob,name){const a=document.createElement('a');a.href=URL.createObje
 function txt(){ // единые тексты отчёта
   const {ai,r}=S,top=Object.entries(r.F).sort((a,b)=>b[1]-a[1]),lo=top[top.length-1],hi=top[0];
   return {
-    intro:`Оценка проекта «${ai.name}» выполнена по методике SSI/TRUSEK-6. Нейросетевая модель извлекла из представленных материалов шестнадцать исходных показателей, после чего индекс рассчитан детерминированно, без участия модели, по выражению (1).`,
+    intro:`Оценка проекта «${ai.name}» выполнена по методике SSI/TRUSEK-6. Нейросетевая модель (${S.model}) извлекла из представленных материалов шестнадцать исходных показателей, после чего индекс рассчитан детерминированно, без участия модели, по выражению (1).`,
     where:`где SSI — индекс самодостаточности стартапа, баллы от 0 до 10; MEI — коэффициент рыночной поправки, учитывающий отношения SOM/TAV и SAM/TAM и ограниченный интервалом [0,3; 1,5]; wᵢ — вес i-го фактора для типа бизнеса «${BT[ai.bizType]}»; Fᵢ — нормированный балл i-го фактора TRUSEK-6, равный среднему двух его подметрик; K и T входят в расчёт инверсно.`,
     t1before:`Результаты расчёта по отдельным факторам приведены в таблице 1.`,
     t1after:`Наибольший вклад в индекс дал фактор ${FN[hi[0]]} (${f2(hi[1])} балла), наименьший балл получен по фактору ${FN[lo[0]]} (${f2(lo[1])}). С учётом MEI = ${f2(r.mei)} итоговое значение SSI составило ${f2(r.ssi)}, что соответствует уровню «${r.label}».`,
