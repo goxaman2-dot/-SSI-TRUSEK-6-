@@ -6,7 +6,9 @@
 <title>SSI ИИ-анализ</title>
 <style>
 :root{--bg:#f4f6fa;--card:#fff;--ink:#1c2433;--mute:#667085;--line:#e3e7ee;--acc:#1f5eff;--ok:#12a150;--warn:#d97706;--bad:#dc2626}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141c;--card:#171e29;--ink:#e6eaf2;--mute:#98a2b3;--line:#2a3342}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141c;--card:#171e29;--ink:#e6eaf2;--mute:#98a2b3;--line:#2a3342;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f141c;--card:#171e29;--ink:#e6eaf2;--mute:#98a2b3;--line:#2a3342;color-scheme:dark}
+.pv.na{opacity:.5}.pv.na::after{content:"только GitHub";font-size:11px;color:var(--mute)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .wrap{max-width:980px;margin:0 auto;padding:24px 16px 60px}
@@ -135,20 +137,25 @@ const PV={
   deepseek:{n:'DeepSeek',c:'#4d6bfe',m:'deepseek-chat',u:'https://api.deepseek.com/chat/completions'},
   qwen:{n:'Qwen',c:'#615ced',m:'qwen-plus',u:'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions'}
 };
-let prov=PV[ls.get('ssi_prov')]?ls.get('ssi_prov'):'gemini';
+/* Среда claude.ai: Claude доступен через аккаунт зрителя (capability sample), внешние API блокируются политикой безопасности */
+const INC=!!window.claude;let SMP,DLC;
+if(INC){claude.use('sample').then(x=>{SMP=x;check('claude')});claude.use('downloads').then(x=>DLC=x)}
+let prov=PV[ls.get('ssi_prov')]?ls.get('ssi_prov'):(INC?'claude':'gemini');
 $('provs').insertAdjacentHTML('beforeend',Object.entries(PV).map(([k,p])=>`<button class="pv" data-p="${k}" style="--c:${p.c}"><i></i>${p.n}</button>`).join(''));
 $('provs').querySelectorAll('.pv').forEach(b=>b.onclick=()=>{prov=b.dataset.p;ls.set('ssi_prov',prov);pick()});
 function pick(){
-  $('provs').querySelectorAll('.pv').forEach(b=>{b.classList.toggle('on',b.dataset.p===prov);const st=ST[b.dataset.p];['live','chk','bad'].forEach(c=>b.classList.toggle(c,st===c));b.title=st==='live'?'Нейросеть подключена и готова анализировать проект':st==='bad'?'Ключ не принят или сервис недоступен: '+(ERR[b.dataset.p]||''):'Введите API-ключ'});
-  const st=ST[prov];$('cst').innerHTML=st==='live'?'<span style="color:var(--ok)">● '+PV[prov].n+' подключена — можно запускать анализ</span>':st==='bad'?'<span style="color:var(--bad)">● Нет связи: '+esc(ERR[prov]||'')+'</span>':st==='chk'?'Проверка подключения…':'';
+  $('provs').querySelectorAll('.pv').forEach(b=>{b.classList.toggle('on',b.dataset.p===prov);const st=ST[b.dataset.p];['live','chk','bad','na'].forEach(c=>b.classList.toggle(c,st===c));b.title=st==='na'?'В claude.ai внешние сервисы нейросетей заблокированы. Используйте версию на GitHub Pages':st==='live'?'Нейросеть подключена и готова анализировать проект':st==='bad'?'Ключ не принят или сервис недоступен: '+(ERR[b.dataset.p]||''):'Введите API-ключ'});
+  const st=ST[prov];$('cst').innerHTML=st==='live'?'<span style="color:var(--ok)">● '+PV[prov].n+' подключена — можно запускать анализ</span>':st==='bad'?'<span style="color:var(--bad)">● Нет связи: '+esc(ERR[prov]||'')+'</span>':st==='chk'?'Проверка подключения…':st==='na'?'<span style="color:var(--warn)">● '+PV[prov].n+' работает только в версии на GitHub Pages: из claude.ai страница не может обращаться к внешним сервисам. Здесь выберите Claude AI.</span>':'';
+  const acc=INC&&prov==='claude';document.querySelector('#cfg .row').hidden=acc;if(acc&&st==='live')$('cst').innerHTML='<span style="color:var(--ok)">● Claude AI подключён через ваш аккаунт claude.ai — ключ не нужен, можно запускать анализ</span>';
   $('pname').textContent=PV[prov].n;$('model').value=ls.get('ssi_model_'+prov)||PV[prov].m;$('url').value=ls.get('ssi_url_'+prov)||PV[prov].u;$('key').value=ls.get('ssi_key_'+prov)||'';
-  $('cfg').open=!$('key').value;
+  $('cfg').open=!$('key').value&&!INC;
 }
 ['model','key','url'].forEach(i=>$(i).onchange=save);
 function save(){['model','key','url'].forEach(i=>ls.set(`ssi_${i}_${prov}`,$(i).value.trim()));check(prov)}
 /* Проверка подключения: лёгкий запрос списка моделей; кнопка мигает только при успешном ответе сервиса */
 const ST={},ERR={};
 async function check(p){
+  if(INC){ST[p]=p!=='claude'?'na':SMP?'live':SMP===null?'bad':'chk';if(SMP===null)ERR.claude='доступ к Claude в этом окне не предоставлен';pick();return}
   const key=ls.get('ssi_key_'+p),u=(ls.get('ssi_url_'+p)||PV[p].u).replace(/\/+$/,'');
   if(!key){ST[p]='';pick();return}
   ST[p]='chk';pick();
@@ -201,7 +208,7 @@ function drawFiles(){
 /* ===== 2. ИИ-анализ ===== */
 function prompt(){
   const spec=Object.entries(M).map(([k,m])=>`${k}: ${m.t}, ${m.u}`).join('\n');
-  const txt=S.files.map(f=>`### Файл: ${f.name}\n${f.text}`).join('\n\n').slice(0,150000);
+  const txt=S.files.map(f=>`### Файл: ${f.name}\n${f.text}`).join('\n\n').slice(0,INC?90000:150000);
   return `Ты эксперт технопарка, оценивающий студенческий стартап по методике SSI/TRUSEK-6 (индекс самодостаточности: U полезность, E эмоциональная вовлечённость, R повторяемость, K капиталоёмкость, T время до автономии, S социальный эффект; MEI рыночная поправка SOM/TAV и SAM/TAM).
 Извлеки из материалов значения 16 исходных показателей. Если показатель прямо не указан, оцени его по косвенным данным материалов и снизь confidence; если данных для оценки нет вовсе, верни value = null. Ничего не выдумывай сверх материалов.
 Показатели:
@@ -218,6 +225,14 @@ ${txt}`;
 }
 async function askAI(p){
   const key=$('key').value.trim(),model=$('model').value.trim(),url=$('url').value.trim()||PV[prov].u;
+  if(INC){
+    if(prov!=='claude')throw new Error(PV[prov].n+' доступна только в версии на GitHub Pages. Выберите Claude AI');
+    if(!SMP)throw new Error('Claude недоступен в этом окне');
+    try{const res=await SMP(p,{cache:false});S.model='Claude AI · аккаунт claude.ai';ST.claude='live';pick();
+      const t=res.text,a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0)throw {code:'invalid_json'};return JSON.parse(t.slice(a,b+1))}
+    catch(e){const m={not_granted:'доступ к Claude не разрешён',rate_limited:'исчерпан лимит запросов, повторите позже',prompt_too_large:'материалы слишком объёмные, сократите их',invalid_json:'Claude вернул ответ не в формате JSON, повторите анализ',session_expired:'войдите в claude.ai заново',refused:'Claude отклонил запрос'};
+      throw new Error('Claude AI: '+(m[e.code]||e.message||'сбой сервиса, повторите анализ'))}
+  }
   if(!key){$('cfg').open=true;$('key').focus();throw new Error('Укажите API-ключ для '+PV[prov].n)}
   let r,j,text;
   const post=async(u,h,b)=>{r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json',...h},body:JSON.stringify(b)});
@@ -294,7 +309,7 @@ $('drop').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
   try{await ({docx:toDocx,pdf:toPdf,pptx:toPptx})[b.dataset.f]();toast('Файл сформирован')}catch(e){toast('Ошибка экспорта: '+e.message,1)}
 });
 const fname=ext=>('SSI_'+(S.ai.name||'startup').replace(/[^\wа-яё]+/gi,'_').slice(0,40)+'.'+ext);
-function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+async function dl(blob,name){if(DLC){try{await DLC.save({filename:name,data:blob})}catch(e){if(e.code!=='declined')throw new Error('сохранение недоступно ('+e.code+')')}return}const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 function txt(){ // единые тексты отчёта
   const {ai,r}=S,top=Object.entries(r.F).sort((a,b)=>b[1]-a[1]),lo=top[top.length-1],hi=top[0];
   return {
@@ -333,7 +348,7 @@ async function toDocx(){
       tbl(['Код','Показатель','Значение','Основание','Дост., %'],Object.keys(M).map(k=>{const x=ai.metrics[k];return[k,`${M[k].t}, ${M[k].u}`,x.value===null?'—':fx(v[k]),x.basis||'',String(Math.round((x.confidence||0)*100))]}),[700,2800,1400,3555,900]),
       P(T.t2after),C('Сильные стороны',{b:1}),...list(ai.strengths||[]),C('Риски',{b:1}),...list(ai.risks||[]),C('Рекомендации',{b:1}),...list(ai.recommendations||[]),
       P('Индекс носит навигационный характер и не является инвестиционной рекомендацией.')]}]});
-  dl(await D.Packer.toBlob(doc),fname('docx'));
+  await dl(await D.Packer.toBlob(doc),fname('docx'));
 }
 async function toPptx(){
   await load(CDN.pptx);const {ai,r}=S,p=new PptxGenJS();
@@ -351,7 +366,7 @@ async function toPptx(){
   const bl=a=>(a||[]).map(t=>({text:t,options:{bullet:true,breakLine:true}}));
   s=p.addSlide();s.addText('Риски',{...f,x:.6,y:.4,w:6,h:.7,fontSize:24,bold:true});s.addText(bl(ai.risks),{...f,x:.6,y:1.2,w:5.9,h:5.6,fontSize:14,valign:'top'});
   s.addText('Рекомендации',{...f,x:6.9,y:.4,w:6,h:.7,fontSize:24,bold:true});s.addText(bl(ai.recommendations),{...f,x:6.9,y:1.2,w:5.9,h:5.6,fontSize:14,valign:'top'});
-  dl(await p.write({outputType:'blob'}),fname('pptx'));
+  await dl(await p.write({outputType:'blob'}),fname('pptx'));
 }
 async function toPdf(){
   await load(CDN.h2p);const {ai,r,v}=S,T=txt(),box=document.createElement('div');box.className='pdfbox';
@@ -371,7 +386,7 @@ async function toPdf(){
   pdf.setProperties({title:'',subject:'',author:'',keywords:'',creator:''});
   const u=new Uint8Array(pdf.output('arraybuffer')),s=new TextDecoder('latin1').decode(u),m=/\/Producer \(([^)]*)\)/.exec(s);
   if(m){const i=m.index+11;for(let k=0;k<m[1].length;k++)u[i+k]=32} // удаление подписи генератора без сдвига xref
-  dl(new Blob([u],{type:'application/pdf'}),fname('pdf'));
+  await dl(new Blob([u],{type:'application/pdf'}),fname('pdf'));
 }
 </script>
 </body>
