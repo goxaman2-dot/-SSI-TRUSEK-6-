@@ -132,14 +132,14 @@ const $=id=>document.getElementById(id);
 const S={files:[],ai:null,r:null,v:null};
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const PV={
-  openrouter:{n:'OpenRouter',c:'#6467f2',m:'qwen/qwen3.8-27b:free',u:'https://openrouter.ai/api/v1/chat/completions',lim:120000},
+  openrouter:{n:'OpenRouter',c:'#6467f2',m:'nvidia/nemotron-3-super-120b-a12b:free',u:'https://openrouter.ai/api/v1/chat/completions',lim:120000,fb:['qwen/qwen3.8-27b:free','openrouter/free']},
   groq:{n:'Groq',c:'#f55036',m:'openai/gpt-oss-120b',u:'https://api.groq.com/openai/v1/chat/completions',lim:24000,models:['openai/gpt-oss-120b','openai/gpt-oss-20b','llama-3.3-70b-versatile','llama-3.1-8b-instant']},
   claude:{n:'Claude AI',c:'#d97757',m:'claude-sonnet-5-5',u:'https://api.anthropic.com/v1/messages'}
 };
 /* бесплатные модели OpenRouter загружаются из его открытого каталога, чтобы список был актуальным */
 let ORFREE=null;
 function orModels(){return ORFREE||(ORFREE=fetch('https://openrouter.ai/api/v1/models').then(r=>r.json()).then(j=>j.data.filter(m=>/:free$/.test(m.id)&&(m.context_length||0)>=60000&&!/safety|omni|code|lyria/i.test(m.id)).map(m=>m.id)).catch(()=>[]))}
-async function fillModels(){const l=prov==='openrouter'?await orModels():(PV[prov].models||[]);$('mlist').innerHTML=l.map(x=>`<option value="${x}">`).join('')}
+async function fillModels(){const l=prov==='openrouter'?['openrouter/free',...await orModels()]:(PV[prov].models||[]);$('mlist').innerHTML=l.map(x=>`<option value="${x}">`).join('')}
 if(/^gemini-(1|2)\./.test(ls.get('ssi_model_gemini')||''))ls.set('ssi_model_gemini',''); // модели Gemini 1.x/2.x закрыты для новых ключей
 /* Среда claude.ai: Claude доступен через аккаунт зрителя (capability sample), внешние API блокируются политикой безопасности */
 const INC=!!window.claude;let SMP,DLC;
@@ -185,7 +185,8 @@ const CDN={
   pdfw:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
   docx:'https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.umd.cjs',
   pptx:'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js',
-  h2p:'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+  h2p:'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+  jrep:'https://cdn.jsdelivr.net/npm/jsonrepair@3.13.1/lib/umd/jsonrepair.min.js'
 };
 
 /* ===== 1. Загрузка материалов ===== */
@@ -241,7 +242,7 @@ async function askAI(p){
   if(!key){$('cfg').open=true;$('key').focus();throw new Error('Укажите API-ключ для '+PV[prov].n)}
   let r,j,text;
   const post=async(u,h,b)=>{r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json',...h},body:JSON.stringify(b)});
-    j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(PV[prov].n+': '+(j.error?.message||j.message||('HTTP '+r.status)))};
+    j=await r.json().catch(()=>({}));if(!r.ok){const raw=j.error?.metadata?.raw;throw new Error(PV[prov].n+': '+(r.status===429?'бесплатные модели сейчас перегружены, повторите через минуту или выберите другую модель':(j.error?.message||j.message||('HTTP '+r.status)))+(raw&&r.status!==429?' ('+String(raw).slice(0,120)+')':''))}};
   if(prov==='gemini'){
     await post(`${url}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{},
       {contents:[{role:'user',parts:[{text:p}]}],generationConfig:{temperature:0,responseMimeType:'application/json'}});
@@ -252,12 +253,15 @@ async function askAI(p){
     text=j.content?.map(x=>x.text||'').join('')||'';
   }else{ // OpenRouter и Groq: OpenAI-совместимый протокол
     await post(url,{Authorization:'Bearer '+key},
-      {model,temperature:0,max_tokens:6000,...(prov==='openrouter'?{}:{response_format:{type:'json_object'}}),messages:[{role:'system',content:'Отвечай только валидным JSON.'},{role:'user',content:p}]});
-    text=j.choices?.[0]?.message?.content||'';
+      {model,temperature:0,max_tokens:8000,
+       ...(prov==='openrouter'?{models:[...new Set([model,...PV.openrouter.fb])],reasoning:{exclude:true}}:{response_format:{type:'json_object'}}), // запасные бесплатные модели, если выбранная перегружена
+       messages:[{role:'system',content:'Отвечай только валидным JSON без пояснений.'},{role:'user',content:p}]});
+    text=j.choices?.[0]?.message?.content||'';if(j.model)S.used=j.model;
   }
-  S.model=PV[prov].n+' · '+model;ST[prov]='live';pick();
-  const a=text.indexOf('{'),b=text.lastIndexOf('}');if(a<0)throw new Error('Модель не вернула JSON');
-  return JSON.parse(text.slice(a,b+1));
+  S.model=PV[prov].n+' · '+(S.used||model);S.used=null;ST[prov]='live';pick();
+  text=String(text).replace(/```(?:json)?/gi,'');const a=text.indexOf('{'),b=text.lastIndexOf('}');if(a<0)throw new Error('Модель не вернула JSON, повторите анализ');
+  const raw=text.slice(a,b+1);try{return JSON.parse(raw)}catch(e){}
+  try{await load(CDN.jrep);return JSON.parse(JSONRepair.jsonrepair(raw))}catch(e){throw new Error('ответ нейросети не удалось разобрать, повторите анализ или выберите другую модель')}
 }
 $('bAi').onclick=async()=>{
   const b=$('bAi');b.disabled=true;b.classList.add('busy');
