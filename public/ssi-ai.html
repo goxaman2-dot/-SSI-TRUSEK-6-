@@ -20,7 +20,15 @@ h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 20px;font-siz
 .step{font-size:12px;background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px}
 .provs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}.provs b{font-size:14px;color:var(--mute);margin-right:4px}
 .pv{border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 16px;font:600 14px/1 inherit;font-family:inherit;cursor:pointer;display:flex;gap:7px;align-items:center}
-.pv i{width:9px;height:9px;border-radius:50%;background:var(--c)}.pv.on{border-color:var(--c);box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 25%,transparent)}.pv.ready::after{content:"✓";color:var(--ok);font-size:12px}
+.pv i{width:9px;height:9px;border-radius:50%;background:var(--c)}.pv.on{border-color:var(--c);box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 25%,transparent)}.pv{opacity:.55}.pv.on{opacity:1}
+.pv.live{opacity:1;border-color:var(--ok);animation:blink 1.1s ease-in-out infinite}.pv.live i{background:var(--ok);animation:dot 1.1s ease-in-out infinite}
+.pv.live::after{content:"готова";font-size:11px;color:var(--ok);font-weight:700}
+.pv.chk::after{content:"проверка…";font-size:11px;color:var(--mute)}.pv.bad{opacity:1;border-color:var(--bad)}.pv.bad::after{content:"нет связи";font-size:11px;color:var(--bad)}
+@keyframes blink{0%,100%{box-shadow:0 0 0 0 rgba(18,161,80,.55);background:var(--bg)}50%{box-shadow:0 0 0 6px rgba(18,161,80,0);background:rgba(18,161,80,.16)}}
+@keyframes dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(1.5)}}
+@media (prefers-reduced-motion:reduce){.pv.live,.pv.live i{animation-duration:2.4s}}
+.pv.on{outline:2px solid var(--c);outline-offset:2px}
+#cst{font-size:13px;margin-top:6px}
 details summary{cursor:pointer;color:var(--mute);font-size:14px}
 .row{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:10px;margin-top:12px}
 @media(max-width:700px){.row{grid-template-columns:1fr}}
@@ -76,7 +84,8 @@ td.n{text-align:right;white-space:nowrap}.nodata{color:var(--warn)}
         <input id="key" type="password" placeholder="API-ключ">
         <input id="url" placeholder="адрес API">
       </div>
-      <div class="hint">Ключ хранится только в этом браузере и отправляется напрямую провайдеру. Нейросеть извлекает 16 исходных показателей из материалов; расчёт SSI выполняется локально по формулам методики, поэтому одинаковые показатели всегда дают одинаковый индекс.</div>
+      <div id="cst"></div>
+      <div class="hint">Мигающая кнопка означает, что сервис нейросети ответил на проверочный запрос и готов анализировать проект. Ключ хранится только в этом браузере и отправляется напрямую провайдеру. Нейросеть извлекает 16 исходных показателей из материалов; расчёт SSI выполняется локально по формулам методики, поэтому одинаковые показатели всегда дают одинаковый индекс.</div>
     </details>
   </div>
 
@@ -130,13 +139,30 @@ let prov=PV[ls.get('ssi_prov')]?ls.get('ssi_prov'):'gemini';
 $('provs').insertAdjacentHTML('beforeend',Object.entries(PV).map(([k,p])=>`<button class="pv" data-p="${k}" style="--c:${p.c}"><i></i>${p.n}</button>`).join(''));
 $('provs').querySelectorAll('.pv').forEach(b=>b.onclick=()=>{prov=b.dataset.p;ls.set('ssi_prov',prov);pick()});
 function pick(){
-  $('provs').querySelectorAll('.pv').forEach(b=>{b.classList.toggle('on',b.dataset.p===prov);b.classList.toggle('ready',!!ls.get('ssi_key_'+b.dataset.p))});
+  $('provs').querySelectorAll('.pv').forEach(b=>{b.classList.toggle('on',b.dataset.p===prov);const st=ST[b.dataset.p];['live','chk','bad'].forEach(c=>b.classList.toggle(c,st===c));b.title=st==='live'?'Нейросеть подключена и готова анализировать проект':st==='bad'?'Ключ не принят или сервис недоступен: '+(ERR[b.dataset.p]||''):'Введите API-ключ'});
+  const st=ST[prov];$('cst').innerHTML=st==='live'?'<span style="color:var(--ok)">● '+PV[prov].n+' подключена — можно запускать анализ</span>':st==='bad'?'<span style="color:var(--bad)">● Нет связи: '+esc(ERR[prov]||'')+'</span>':st==='chk'?'Проверка подключения…':'';
   $('pname').textContent=PV[prov].n;$('model').value=ls.get('ssi_model_'+prov)||PV[prov].m;$('url').value=ls.get('ssi_url_'+prov)||PV[prov].u;$('key').value=ls.get('ssi_key_'+prov)||'';
   $('cfg').open=!$('key').value;
 }
 ['model','key','url'].forEach(i=>$(i).onchange=save);
-function save(){['model','key','url'].forEach(i=>ls.set(`ssi_${i}_${prov}`,$(i).value.trim()));pick()}
-pick();
+function save(){['model','key','url'].forEach(i=>ls.set(`ssi_${i}_${prov}`,$(i).value.trim()));check(prov)}
+/* Проверка подключения: лёгкий запрос списка моделей; кнопка мигает только при успешном ответе сервиса */
+const ST={},ERR={};
+async function check(p){
+  const key=ls.get('ssi_key_'+p),u=(ls.get('ssi_url_'+p)||PV[p].u).replace(/\/+$/,'');
+  if(!key){ST[p]='';pick();return}
+  ST[p]='chk';pick();
+  let url,h={};
+  if(p==='gemini')url=`${u}?key=${encodeURIComponent(key)}&pageSize=1`;
+  else if(p==='claude'){url=u.replace(/messages$/,'models');h={'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}}
+  else{url=u.replace(/chat\/completions$/,'models');h={Authorization:'Bearer '+key}}
+  try{const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);
+    const r=await fetch(url,{headers:h,signal:c.signal});clearTimeout(t);
+    if(r.ok){ST[p]='live'}else{const j=await r.json().catch(()=>({}));ST[p]='bad';ERR[p]=j.error?.message||('HTTP '+r.status)}
+  }catch(e){ST[p]='bad';ERR[p]=e.name==='AbortError'?'сервис не ответил за 12 с':'запрос заблокирован (сеть или CORS)'}
+  pick();
+}
+pick();Object.keys(PV).forEach(check);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const f2=n=>Number(n).toFixed(2).replace('.',',');const fx=(n,d=2)=>Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d});
 function toast(msg,err){const t=$('toast');t.textContent=msg;t.className=err?'err show':'show';clearTimeout(t._h);t._h=setTimeout(()=>t.className=err?'err':'',err?6000:3000)}
@@ -209,7 +235,7 @@ async function askAI(p){
       {model,temperature:0,max_tokens:6000,response_format:{type:'json_object'},messages:[{role:'system',content:'Отвечай только валидным JSON.'},{role:'user',content:p}]});
     text=j.choices?.[0]?.message?.content||'';
   }
-  S.model=PV[prov].n+' · '+model;
+  S.model=PV[prov].n+' · '+model;ST[prov]='live';pick();
   const a=text.indexOf('{'),b=text.lastIndexOf('}');if(a<0)throw new Error('Модель не вернула JSON');
   return JSON.parse(text.slice(a,b+1));
 }
