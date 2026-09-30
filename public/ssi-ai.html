@@ -82,12 +82,12 @@ td.n{text-align:right;white-space:nowrap}.nodata{color:var(--warn)}
     <details style="margin-top:12px" id="cfg">
       <summary>Подключение: <span id="pname"></span> — модель, ключ, адрес API</summary>
       <div class="row">
-        <input id="model" placeholder="модель">
+        <input id="model" placeholder="модель" list="mlist"><datalist id="mlist"></datalist>
         <input id="key" type="password" placeholder="API-ключ">
         <input id="url" placeholder="адрес API">
       </div>
       <div id="cst"></div>
-      <div class="hint">Мигающая кнопка означает, что сервис нейросети ответил на проверочный запрос и готов анализировать проект. Ключ хранится только в этом браузере и отправляется напрямую провайдеру. Нейросеть извлекает 16 исходных показателей из материалов; расчёт SSI выполняется локально по формулам методики, поэтому одинаковые показатели всегда дают одинаковый индекс.</div>
+      <div class="hint">OpenRouter: бесплатный ключ на openrouter.ai, модели с пометкой <code>:free</code>, до 50 анализов в день. Groq: бесплатный ключ на console.groq.com, быстрый, но берёт до 24 тыс. знаков материалов. Мигающая кнопка означает, что сервис нейросети ответил на проверочный запрос и готов анализировать проект. Ключ хранится только в этом браузере и отправляется напрямую провайдеру. Нейросеть извлекает 16 исходных показателей из материалов; расчёт SSI выполняется локально по формулам методики, поэтому одинаковые показатели всегда дают одинаковый индекс.</div>
     </details>
   </div>
 
@@ -132,21 +132,26 @@ const $=id=>document.getElementById(id);
 const S={files:[],ai:null,r:null,v:null};
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const PV={
-  gemini:{n:'Gemini',c:'#1a73e8',m:'gemini-3.8-flash',u:'https://generativelanguage.googleapis.com/v1beta/models'},
+  openrouter:{n:'OpenRouter',c:'#6467f2',m:'qwen/qwen3.8-27b:free',u:'https://openrouter.ai/api/v1/chat/completions',lim:120000},
+  groq:{n:'Groq',c:'#f55036',m:'openai/gpt-oss-120b',u:'https://api.groq.com/openai/v1/chat/completions',lim:24000,models:['openai/gpt-oss-120b','openai/gpt-oss-20b','llama-3.3-70b-versatile','llama-3.1-8b-instant']},
   claude:{n:'Claude AI',c:'#d97757',m:'claude-sonnet-5-5',u:'https://api.anthropic.com/v1/messages'}
 };
+/* бесплатные модели OpenRouter загружаются из его открытого каталога, чтобы список был актуальным */
+let ORFREE=null;
+function orModels(){return ORFREE||(ORFREE=fetch('https://openrouter.ai/api/v1/models').then(r=>r.json()).then(j=>j.data.filter(m=>/:free$/.test(m.id)&&(m.context_length||0)>=60000&&!/safety|omni|code|lyria/i.test(m.id)).map(m=>m.id)).catch(()=>[]))}
+async function fillModels(){const l=prov==='openrouter'?await orModels():(PV[prov].models||[]);$('mlist').innerHTML=l.map(x=>`<option value="${x}">`).join('')}
 if(/^gemini-(1|2)\./.test(ls.get('ssi_model_gemini')||''))ls.set('ssi_model_gemini',''); // модели Gemini 1.x/2.x закрыты для новых ключей
 /* Среда claude.ai: Claude доступен через аккаунт зрителя (capability sample), внешние API блокируются политикой безопасности */
 const INC=!!window.claude;let SMP,DLC;
 if(INC){claude.use('sample').then(x=>{SMP=x;check('claude')});claude.use('downloads').then(x=>DLC=x)}
-let prov=PV[ls.get('ssi_prov')]?ls.get('ssi_prov'):(INC?'claude':'gemini');
+let prov=PV[ls.get('ssi_prov')]?ls.get('ssi_prov'):(INC?'claude':'openrouter');
 $('provs').insertAdjacentHTML('beforeend',Object.entries(PV).map(([k,p])=>`<button class="pv" data-p="${k}" style="--c:${p.c}"><i></i>${p.n}</button>`).join(''));
 $('provs').querySelectorAll('.pv').forEach(b=>b.onclick=()=>{prov=b.dataset.p;ls.set('ssi_prov',prov);pick()});
 function pick(){
   $('provs').querySelectorAll('.pv').forEach(b=>{b.classList.toggle('on',b.dataset.p===prov);const st=ST[b.dataset.p];['live','chk','bad','na'].forEach(c=>b.classList.toggle(c,st===c));b.title=st==='na'?'В claude.ai внешние сервисы нейросетей заблокированы. Используйте версию на GitHub Pages':st==='live'?'Нейросеть подключена и готова анализировать проект':st==='bad'?'Ключ не принят или сервис недоступен: '+(ERR[b.dataset.p]||''):'Введите API-ключ'});
   const st=ST[prov];$('cst').innerHTML=st==='live'?'<span style="color:var(--ok)">● '+PV[prov].n+' подключена — можно запускать анализ</span>':st==='bad'?'<span style="color:var(--bad)">● Нет связи: '+esc(ERR[prov]||'')+'</span>':st==='chk'?'Проверка подключения…':st==='na'?'<span style="color:var(--warn)">● '+PV[prov].n+' работает только в версии на GitHub Pages: из claude.ai страница не может обращаться к внешним сервисам. Здесь выберите Claude AI.</span>':'';
   const acc=INC&&prov==='claude';document.querySelector('#cfg .row').hidden=acc;if(acc&&st==='live')$('cst').innerHTML='<span style="color:var(--ok)">● Claude AI подключён через ваш аккаунт claude.ai — ключ не нужен, можно запускать анализ</span>';
-  $('pname').textContent=PV[prov].n;$('model').value=ls.get('ssi_model_'+prov)||PV[prov].m;$('url').value=ls.get('ssi_url_'+prov)||PV[prov].u;$('key').value=ls.get('ssi_key_'+prov)||'';
+  $('pname').textContent=PV[prov].n;$('model').value=ls.get('ssi_model_'+prov)||PV[prov].m;$('url').value=ls.get('ssi_url_'+prov)||PV[prov].u;$('key').value=ls.get('ssi_key_'+prov)||'';fillModels();
   $('cfg').open=!$('key').value&&!INC;
 }
 ['model','key','url'].forEach(i=>$(i).onchange=save);
@@ -161,6 +166,7 @@ async function check(p){
   let url,h={};
   if(p==='gemini')url=`${u}?key=${encodeURIComponent(key)}&pageSize=1`;
   else if(p==='claude'){url=u.replace(/messages$/,'models');h={'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}}
+  else if(p==='openrouter'){url=u.replace(/chat\/completions$/,'key');h={Authorization:'Bearer '+key}} // /models у OpenRouter открыт всем, ключ проверяет /key
   else{url=u.replace(/chat\/completions$/,'models');h={Authorization:'Bearer '+key}}
   try{const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);
     const r=await fetch(url,{headers:h,signal:c.signal});clearTimeout(t);
@@ -207,7 +213,7 @@ function drawFiles(){
 /* ===== 2. ИИ-анализ ===== */
 function prompt(){
   const spec=Object.entries(M).map(([k,m])=>`${k}: ${m.t}, ${m.u}`).join('\n');
-  const txt=S.files.map(f=>`### Файл: ${f.name}\n${f.text}`).join('\n\n').slice(0,INC?90000:150000);
+  const txt=S.files.map(f=>`### Файл: ${f.name}\n${f.text}`).join('\n\n').slice(0,INC?90000:(PV[prov].lim||150000));
   return `Ты эксперт технопарка, оценивающий студенческий стартап по методике SSI/TRUSEK-6 (индекс самодостаточности: U полезность, E эмоциональная вовлечённость, R повторяемость, K капиталоёмкость, T время до автономии, S социальный эффект; MEI рыночная поправка SOM/TAV и SAM/TAM).
 Извлеки из материалов значения 16 исходных показателей. Если показатель прямо не указан, оцени его по косвенным данным материалов и снизь confidence; если данных для оценки нет вовсе, верни value = null. Ничего не выдумывай сверх материалов.
 Показатели:
@@ -244,9 +250,9 @@ async function askAI(p){
     await post(url,{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       {model,max_tokens:6000,temperature:0,messages:[{role:'user',content:p}]});
     text=j.content?.map(x=>x.text||'').join('')||'';
-  }else{ // резерв: OpenAI-совместимый протокол
+  }else{ // OpenRouter и Groq: OpenAI-совместимый протокол
     await post(url,{Authorization:'Bearer '+key},
-      {model,temperature:0,max_tokens:6000,response_format:{type:'json_object'},messages:[{role:'system',content:'Отвечай только валидным JSON.'},{role:'user',content:p}]});
+      {model,temperature:0,max_tokens:6000,...(prov==='openrouter'?{}:{response_format:{type:'json_object'}}),messages:[{role:'system',content:'Отвечай только валидным JSON.'},{role:'user',content:p}]});
     text=j.choices?.[0]?.message?.content||'';
   }
   S.model=PV[prov].n+' · '+model;ST[prov]='live';pick();
