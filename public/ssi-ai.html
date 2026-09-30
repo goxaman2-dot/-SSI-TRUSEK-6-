@@ -132,14 +132,14 @@ const $=id=>document.getElementById(id);
 const S={files:[],ai:null,r:null,v:null};
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const PV={
-  openrouter:{n:'OpenRouter',c:'#6467f2',m:'nvidia/nemotron-3-super-120b-a12b:free',u:'https://openrouter.ai/api/v1/chat/completions',lim:120000,fb:['qwen/qwen3.8-27b:free','openrouter/free']},
+  openrouter:{n:'OpenRouter',c:'#6467f2',m:'nvidia/nemotron-3-super-120b-a12b:free',u:'https://openrouter.ai/api/v1/chat/completions',lim:120000,fb:['qwen/qwen3.8-27b:free','google/gemma-4-31b-it:free']},
   groq:{n:'Groq',c:'#f55036',m:'openai/gpt-oss-120b',u:'https://api.groq.com/openai/v1/chat/completions',lim:24000,models:['openai/gpt-oss-120b','openai/gpt-oss-20b','llama-3.3-70b-versatile','llama-3.1-8b-instant']},
   claude:{n:'Claude AI',c:'#d97757',m:'claude-sonnet-5-5',u:'https://api.anthropic.com/v1/messages'}
 };
 /* бесплатные модели OpenRouter загружаются из его открытого каталога, чтобы список был актуальным */
 let ORFREE=null;
-function orModels(){return ORFREE||(ORFREE=fetch('https://openrouter.ai/api/v1/models').then(r=>r.json()).then(j=>j.data.filter(m=>/:free$/.test(m.id)&&(m.context_length||0)>=60000&&!/safety|omni|code|lyria/i.test(m.id)).map(m=>m.id)).catch(()=>[]))}
-async function fillModels(){const l=prov==='openrouter'?['openrouter/free',...await orModels()]:(PV[prov].models||[]);$('mlist').innerHTML=l.map(x=>`<option value="${x}">`).join('')}
+function orModels(){return ORFREE||(ORFREE=fetch('https://openrouter.ai/api/v1/models').then(r=>r.json()).then(j=>j.data.filter(m=>/:free$/.test(m.id)&&(m.context_length||0)>=60000&&!/safety|omni|code|lyria|nano|mini|lfm|flash|-xs-|2\.6b|preview/i.test(m.id)).map(m=>m.id)).catch(()=>[]))}
+async function fillModels(){const l=prov==='openrouter'?await orModels():(PV[prov].models||[]);$('mlist').innerHTML=l.map(x=>`<option value="${x}">`).join('')}
 if(/^gemini-(1|2)\./.test(ls.get('ssi_model_gemini')||''))ls.set('ssi_model_gemini',''); // модели Gemini 1.x/2.x закрыты для новых ключей
 /* Среда claude.ai: Claude доступен через аккаунт зрителя (capability sample), внешние API блокируются политикой безопасности */
 const INC=!!window.claude;let SMP,DLC;
@@ -254,7 +254,7 @@ async function askAI(p){
   }else{ // OpenRouter и Groq: OpenAI-совместимый протокол
     await post(url,{Authorization:'Bearer '+key},
       {model,temperature:0,max_tokens:8000,
-       ...(prov==='openrouter'?{models:[...new Set([model,...PV.openrouter.fb])],reasoning:{exclude:true}}:{response_format:{type:'json_object'}}), // запасные бесплатные модели, если выбранная перегружена
+       ...(prov==='openrouter'?{models:[...new Set([model,...PV.openrouter.fb])].slice(0,3),reasoning:{exclude:true}}:{response_format:{type:'json_object'}}), // запасные бесплатные модели, если выбранная перегружена
        messages:[{role:'system',content:'Отвечай только валидным JSON без пояснений.'},{role:'user',content:p}]});
     text=j.choices?.[0]?.message?.content||'';if(j.model)S.used=j.model;
   }
