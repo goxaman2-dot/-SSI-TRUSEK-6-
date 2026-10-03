@@ -87,7 +87,7 @@ td.n{text-align:right;white-space:nowrap}.nodata{color:var(--warn)}
         <input id="url" placeholder="адрес API">
       </div>
       <div id="cst"></div>
-      <div class="hint">GigaChat: работает через посредника в Yandex Cloud, ключ вводить не нужно, бесплатно в пределах годового объёма Сбера. OpenRouter: бесплатный ключ на openrouter.ai, модели с пометкой <code>:free</code>, до 50 анализов в день. Groq: бесплатный ключ на console.groq.com, быстрый, но берёт до 24 тыс. знаков материалов. Мигающая кнопка означает, что сервис нейросети ответил на проверочный запрос и готов анализировать проект. Ключ хранится только в этом браузере и отправляется напрямую провайдеру. Нейросеть извлекает 16 исходных показателей из материалов; расчёт SSI выполняется локально по формулам методики, поэтому одинаковые показатели всегда дают одинаковый индекс.</div>
+      <div class="hint">OpenRouter (основной): бесплатный ключ на openrouter.ai, модели с пометкой <code>:free</code>, до 50 анализов в день. Groq: бесплатный ключ на console.groq.com, быстрый, но берёт до 24 тыс. знаков материалов. Мигающая кнопка означает, что сервис нейросети ответил на проверочный запрос и готов анализировать проект. Ключ хранится только в этом браузере и отправляется напрямую провайдеру. Нейросеть извлекает 16 исходных показателей из материалов; расчёт SSI выполняется локально по формулам методики, поэтому одинаковые показатели всегда дают одинаковый индекс.</div>
     </details>
   </div>
 
@@ -134,7 +134,6 @@ const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:
 const PV={
   openrouter:{n:'OpenRouter',c:'#6467f2',m:'nvidia/nemotron-3-super-120b-a12b:free',u:'https://openrouter.ai/api/v1/chat/completions',lim:120000,fb:['qwen/qwen3.8-27b:free','google/gemma-4-31b-it:free']},
   groq:{n:'Groq',c:'#f55036',m:'openai/gpt-oss-120b',u:'https://api.groq.com/openai/v1/chat/completions',lim:24000,models:['openai/gpt-oss-120b','openai/gpt-oss-20b']},
-  gigachat:{n:'GigaChat',c:'#21a038',m:'GigaChat-2-Max',u:'https://functions.yandexcloud.net/d4ethm11in060n5im75a',lim:90000,nokey:1,models:['GigaChat-2-Max','GigaChat-2-Pro','GigaChat-2']}, // через посредника в Yandex Cloud, ключ хранится в функции
   claude:{n:'Claude AI',c:'#d97757',m:'claude-sonnet-5-5',u:'https://api.anthropic.com/v1/messages'}
 };
 /* бесплатные модели OpenRouter загружаются из его открытого каталога, чтобы список был актуальным */
@@ -145,6 +144,7 @@ if(/^gemini-(1|2)\./.test(ls.get('ssi_model_gemini')||''))ls.set('ssi_model_gemi
 /* Среда claude.ai: Claude доступен через аккаунт зрителя (capability sample), внешние API блокируются политикой безопасности */
 const INC=!!window.claude;let SMP,DLC;
 if(INC){claude.use('sample').then(x=>{SMP=x;check('claude')});claude.use('downloads').then(x=>DLC=x)}
+if(ls.get('ssi_prov')==='gigachat')ls.set('ssi_prov','openrouter'); // GigaChat через Yandex Cloud отключён
 let prov=PV[ls.get('ssi_prov')]?ls.get('ssi_prov'):(INC?'claude':'openrouter');
 $('provs').insertAdjacentHTML('beforeend',Object.entries(PV).map(([k,p])=>`<button class="pv" data-p="${k}" style="--c:${p.c}"><i></i>${p.n}</button>`).join(''));
 $('provs').querySelectorAll('.pv').forEach(b=>b.onclick=()=>{prov=b.dataset.p;ls.set('ssi_prov',prov);pick()});
@@ -167,12 +167,11 @@ async function check(p){
   let url,h={};
   if(p==='gemini')url=`${u}?key=${encodeURIComponent(key)}&pageSize=1`;
   else if(p==='claude'){url=u.replace(/messages$/,'models');h={'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}}
-  else if(p==='gigachat'){url=u} // посредник сам подставляет ключ Сбера
   else if(p==='openrouter'){url=u.replace(/chat\/completions$/,'key');h={Authorization:'Bearer '+key}} // /models у OpenRouter открыт всем, ключ проверяет /key
   else{url=u.replace(/chat\/completions$/,'models');h={Authorization:'Bearer '+key}}
   try{const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);
     const r=await fetch(url,{headers:h,signal:c.signal});clearTimeout(t);
-    if(r.ok){ST[p]='live';if(p==='gigachat'){const j=await r.json().catch(()=>({}));const ids=(j.data||[]).map(x=>x.id).filter(x=>!/embed/i.test(x));if(ids.length){PV.gigachat.models=ids;if(prov==='gigachat')fillModels()}}}else{const j=await r.json().catch(()=>({}));ST[p]='bad';ERR[p]=j.error?.message||j.message||('HTTP '+r.status)}
+    if(r.ok){ST[p]='live'}else{const j=await r.json().catch(()=>({}));ST[p]='bad';ERR[p]=j.error?.message||j.message||('HTTP '+r.status)}
   }catch(e){ST[p]='bad';ERR[p]=e.name==='AbortError'?'сервис не ответил за 12 с':'запрос заблокирован (сеть или CORS)'}
   pick();
 }
@@ -253,10 +252,10 @@ async function askAI(p){
     await post(url,{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       {model,max_tokens:6000,temperature:0,messages:[{role:'user',content:p}]});
     text=j.content?.map(x=>x.text||'').join('')||'';
-  }else{ // OpenRouter, Groq и GigaChat (через посредника): OpenAI-совместимый протокол
+  }else{ // OpenRouter и Groq: OpenAI-совместимый протокол
     await post(url,PV[prov].nokey?{}:{Authorization:'Bearer '+key},
       {model,temperature:0,max_tokens:8000,
-       ...(prov==='gigachat'?{}:prov==='openrouter'?{models:[...new Set([model,...PV.openrouter.fb])].slice(0,3),reasoning:{exclude:true}}:{response_format:{type:'json_object'}}), // запасные бесплатные модели, если выбранная перегружена
+       ...(prov==='openrouter'?{models:[...new Set([model,...PV.openrouter.fb])].slice(0,3),reasoning:{exclude:true}}:{response_format:{type:'json_object'}}), // запасные бесплатные модели, если выбранная перегружена
        messages:[{role:'system',content:'Отвечай только валидным JSON без пояснений.'},{role:'user',content:p}]});
     text=j.choices?.[0]?.message?.content||'';if(j.model)S.used=j.model;
   }
